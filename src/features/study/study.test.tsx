@@ -21,7 +21,7 @@ describe('source-backed theological study', () => {
   it('shows an honest gap instead of inventing a theologian for another verse', async () => {
     render(<StudySection verseId="John.3.16" />);
     await userEvent.click(screen.getByText('Theological study'));
-    expect(screen.getByText(/No sourced study note/)).toBeDefined();
+    expect(screen.getByText(/No reviewed comparison of theological interpretations/)).toBeDefined();
     expect(screen.getByRole('link', { name: 'Tyndale Open Study Notes' })).toBeDefined();
   });
 
