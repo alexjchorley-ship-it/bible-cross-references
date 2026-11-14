@@ -4,6 +4,7 @@ import {
   isHighlightColor,
   isPersonalNote,
   isVerseHighlight,
+  isReadingBookmark,
   mergeAnnotations,
   mergeHighlights,
   parseAnnotationsBackup,
@@ -101,5 +102,28 @@ describe('canonical annotations and backups', () => {
     expect(mergeHighlights([old], [next, other])).toEqual([next, other]);
     expect(mergeHighlights([highlight], [old])).toEqual([highlight]);
     expect(mergeHighlights([highlight], [highlight])).toEqual([highlight]);
+  });
+  it('validates bookmark colours and canonical Bible verse references', () => {
+    const item = { color: 'green', verseId: 'John.3.16', updatedAt: LATE };
+    expect(isReadingBookmark(item)).toBe(true);
+    expect(isReadingBookmark({ ...item, color: 'orange' })).toBe(false);
+    expect(isReadingBookmark({ ...item, verseId: 'John.3.99' })).toBe(false);
+    expect(isReadingBookmark({ ...item, updatedAt: 'yesterday' })).toBe(false);
+    expect(isReadingBookmark(null)).toBe(false);
+  });
+
+  it('round-trips unique bookmark locations in v2 JSON and accepts v1 backups', () => {
+    const green = { color: 'green' as const, verseId: 'Gen.1.1', updatedAt: LATE };
+    const amber = { color: 'amber' as const, verseId: 'John.3.16', updatedAt: LATE };
+    const content = serializeAnnotationsBackup([note], [highlight], [green, amber]);
+    expect(parseAnnotationsBackup(content).bookmarks).toEqual([green, amber]);
+    const v1 = JSON.stringify({ format: 'bible-study-annotations', schemaVersion: 1,
+      exportedAt: LATE, appVersion: '1.0', annotations: [note], highlights: [highlight] });
+    expect(parseAnnotationsBackup(v1).bookmarks).toEqual([]);
+    const duplicate = JSON.parse(content) as Record<string, unknown>;
+    duplicate['bookmarks'] = [green, { ...green, verseId: 'John.3.16' }];
+    expect(() => parseAnnotationsBackup(JSON.stringify(duplicate))).toThrow('duplicate bookmark');
+    duplicate['bookmarks'] = [{ ...green, verseId: 'Gen.999.1' }];
+    expect(() => parseAnnotationsBackup(JSON.stringify(duplicate))).toThrow('backup');
   });
 });
