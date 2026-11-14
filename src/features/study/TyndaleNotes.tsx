@@ -102,7 +102,7 @@ export function TyndaleNotes({ verseId }: { readonly verseId: string }) {
       {!verse && <p>{t('study.notCurated')}</p>}
       {verse && state?.slug !== slug && <p role="status">{t('study.loading')}</p>}
       {state?.slug === slug && state.error && <p role="alert">{state.error}</p>}
-      {matching?.verse.length === 0 && matching.context.length === 0 && (
+      {state?.error === null && matching?.verse.length === 0 && matching.context.length === 0 && (
         <p>{t('study.noTyndale')}</p>
       )}
       {matching?.verse.map((note) => (
