@@ -56,6 +56,12 @@ export const it: LocaleMessages = {
   'annotations.blue': 'Blu',
   'annotations.pink': 'Rosa',
 
+  'navigation.open': "Scegli libro e capitolo della Bibbia",
+  'navigation.chooseBook': "Scegli un libro",
+  'navigation.chooseChapter': "Scegli un capitolo",
+  'navigation.back': "Torna ai libri",
+  'navigation.close': "Chiudi navigazione biblica",
+
   'search.label': 'Vai a un passo biblico',
   'search.placeholder': 'Vai a…  Gv 3:16, Sal 23',
 
