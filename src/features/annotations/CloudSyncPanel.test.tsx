@@ -132,4 +132,14 @@ describe('cross-device synchronisation notebook panel', () => {
       expect(sync.syncCloudAnnotations).toHaveBeenCalled();
     });
   });
+  it('updates the account controls when authentication changes in another tab', async () => {
+    render(<CloudSyncPanel />);
+    vi.mocked(auth.cloudSession).mockReturnValue(session);
+    window.dispatchEvent(new Event('bible-cloud-auth'));
+    expect(await screen.findByRole('button', { name: 'Sign out' })).toBeDefined();
+    vi.mocked(auth.cloudSession).mockReturnValue(null);
+    window.dispatchEvent(new Event('bible-cloud-auth'));
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeDefined();
+  });
+
 });
