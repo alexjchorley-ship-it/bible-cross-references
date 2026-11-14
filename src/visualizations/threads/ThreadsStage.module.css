@@ -156,6 +156,28 @@
   cursor: pointer;
 }
 
+.verse[data-highlight='amber'] {
+  background: rgb(230 179 81 / 0.18);
+}
+
+.verse[data-highlight='green'] {
+  background: rgb(92 169 135 / 0.18);
+}
+
+.verse[data-highlight='blue'] {
+  background: rgb(108 168 237 / 0.18);
+}
+
+.verse[data-highlight='pink'] {
+  background: rgb(216 139 186 / 0.18);
+}
+
+.noteMark {
+  color: var(--color-accent);
+  font-family: sans-serif;
+  font-size: 0.85rem;
+}
+
 .verse:hover {
   background: rgb(236 235 230 / 0.04);
 }
