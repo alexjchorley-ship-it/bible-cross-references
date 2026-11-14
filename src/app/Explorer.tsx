@@ -9,7 +9,8 @@ import {
   useTransition,
   use,
 } from 'react';
-import { formatPassage, type Passage } from '../core/bible/passage.ts';
+import { formatPassage, parsePassageOsisId, type Passage } from '../core/bible/passage.ts';
+import { Notebook } from '../features/annotations/Notebook.tsx';
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary.tsx';
 import { getTranslationManifest } from '../translations/registry.ts';
 import controls from '../visualizations/shared/components/controls.module.css';
@@ -96,6 +97,7 @@ export function Explorer({ core }: { readonly core: VizCore }) {
   const [chosenTranslation, chooseTranslation] = useOptimistic(location.translation);
   // Bumped by the home link: part of every view's key, so each one remounts from scratch.
   const [generation, setGeneration] = useState(0);
+  const [notebookOpen, setNotebookOpen] = useState(false);
   // After the switch or the home link, keyboard focus follows into the newly shown view: this is
   // the element to focus there.
   const focusTarget = useRef<string | null>(null);
@@ -238,10 +240,19 @@ export function Explorer({ core }: { readonly core: VizCore }) {
           navigate({ ...location, view: view.id, passage });
         }}
       />
+      <button
+        type="button"
+        className={styles.notebookOpen}
+        onClick={() => setNotebookOpen(true)}
+      >
+        {t('annotations.notebook')}
+      </button>
     </>
   );
 
-  return VIEWS.map((view) => {
+  return (
+    <>
+      {VIEWS.map((view) => {
     const isActive = view === active;
     return (
       <div
@@ -315,5 +326,17 @@ export function Explorer({ core }: { readonly core: VizCore }) {
         </ErrorBoundary>
       </div>
     );
-  });
+      })}
+      <Notebook
+        open={notebookOpen}
+        onClose={() => setNotebookOpen(false)}
+        onOpenVerse={(verseId) => {
+          const target = parsePassageOsisId(verseId, versification);
+          if (target) {
+            navigate({ ...locationRef.current, view: 'threads', passage: target });
+          }
+        }}
+      />
+    </>
+  );
 }
