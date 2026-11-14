@@ -70,7 +70,8 @@ describe('searchable and exportable personal notebook', () => {
   it('offers a safe JSON download without contacting any account', async () => {
     const makeUrl = vi.fn(() => 'blob:bible-test');
     const releaseUrl = vi.fn();
-    vi.stubGlobal('URL', Object.assign(URL, {
+    const existingURL = URL;
+    vi.stubGlobal('URL', Object.assign(class extends existingURL {}, {
       createObjectURL: makeUrl,
       revokeObjectURL: releaseUrl,
     }));

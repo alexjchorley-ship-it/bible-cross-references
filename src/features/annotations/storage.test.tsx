@@ -83,7 +83,7 @@ function installIndexedDB() {
           };
         },
         abort() {
-          this.onabort?.(new Event('abort'));
+          queueMicrotask(() => { this.onabort?.(new Event('abort')); });
         },
       };
       queueMicrotask(() => {
@@ -256,6 +256,6 @@ describe('local-first verse annotation storage', () => {
     render(<LiveState />);
     await storage.startAnnotations();
     await storage.upsertPersonalNote(note);
-    expect(screen.getByText('1:ready')).toBeDefined();
+    expect(await screen.findByText('1:ready')).toBeDefined();
   });
 });
