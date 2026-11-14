@@ -30,6 +30,12 @@ export async function chooseVerse(
   const chapterRows = page.locator(PANEL).locator('button[class*="verseRow"]');
   if ((await chapterRows.count()) > 0) {
     await openPanel(page);
+    if (!(await chapterRows.first().isVisible())) {
+      const heading = chapterRows.first().locator('xpath=ancestor::section[1]').locator('h3 button');
+      if ((await heading.getAttribute('aria-expanded')) === 'false') {
+        await heading.click();
+      }
+    }
     await chapterRows.nth(verse - 1).click();
   } else {
     await page.locator(ACTIVE).locator('ol li[class*="verse"]').nth(verse - 1).click();
