@@ -131,7 +131,7 @@ export function CloudSyncPanel() {
               required
               autoComplete="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => { setEmail(event.target.value); }}
             />
           </label>
           <label>
@@ -143,7 +143,7 @@ export function CloudSyncPanel() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => { setPassword(event.target.value); }}
             />
           </label>
           <div className={styles.toolbar}>
