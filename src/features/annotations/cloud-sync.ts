@@ -1,0 +1,57 @@
+import { cloudRequest } from './cloud-auth.ts';
+import {
+  applyCloudRecords,
+  exportCloudRecords,
+  type CloudAnnotation,
+} from './storage.ts';
+
+const COLUMNS = 'kind,item_id,verse_id,body,color,created_at,updated_at,deleted';
+let activeSync: Promise<void> | null = null;
+
+function isCloudAnnotation(row: unknown): row is CloudAnnotation {
+  if (!row || typeof row !== 'object') return false;
+  const data = row as Partial<CloudAnnotation>;
+  return (data.kind === 'note' || data.kind === 'highlight') &&
+    typeof data.item_id === 'string' && typeof data.verse_id === 'string' &&
+    typeof data.created_at === 'string' && typeof data.updated_at === 'string' &&
+    typeof data.deleted === 'boolean' &&
+    (data.body === null || typeof data.body === 'string') &&
+    (data.color === null || data.color === 'amber' || data.color === 'green' ||
+      data.color === 'blue' || data.color === 'pink');
+}
+
+async function fetchRemote(): Promise<CloudAnnotation[]> {
+  const result = await cloudRequest(
+    `/rest/v1/bible_annotations?select=${COLUMNS}&order=updated_at.asc&limit=10000`,
+  );
+  if (!Array.isArray(result) || !result.every(isCloudAnnotation)) {
+    throw new Error('Cloud returned unexpected annotation data.');
+  }
+  if (result.length === 10000) {
+    throw new Error('Cloud has too many annotations for a safe full sync.');
+  }
+  return result;
+}
+
+async function reconcile(): Promise<void> {
+  // First ingest newer remote changes, then push local records and tombstones.
+  // The SQL RPC only accepts changes newer than what is already in the database.
+  await applyCloudRecords(await fetchRemote());
+  const changes = await exportCloudRecords();
+  for (let index = 0; index < changes.length; index += 200) {
+    await cloudRequest('/rest/v1/rpc/merge_bible_annotations', {
+      method: 'POST',
+      body: JSON.stringify({ changes: changes.slice(index, index + 200) }),
+    });
+  }
+  // A second read picks up any server-side conflict winners.
+  await applyCloudRecords(await fetchRemote());
+}
+
+/** Reentrant-safe; IndexedDB always remains the first destination for edits. */
+export function syncCloudAnnotations(): Promise<void> {
+  activeSync ??= reconcile().finally(() => {
+    activeSync = null;
+  });
+  return activeSync;
+}
