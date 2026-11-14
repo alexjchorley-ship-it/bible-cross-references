@@ -10,6 +10,7 @@ vi.mock('./storage.ts', () => ({
   setVerseHighlight: vi.fn(() => Promise.resolve(undefined)),
   upsertPersonalNote: vi.fn(() => Promise.resolve(undefined)),
   deletePersonalNote: vi.fn(() => Promise.resolve(undefined)),
+  setReadingBookmark: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';
@@ -25,6 +26,7 @@ function current(notes: readonly PersonalNote[] = [], highlights: readonly Verse
   vi.mocked(storage.useAnnotations).mockReturnValue({
     notes,
     highlights,
+    bookmarks: [],
     status: 'ready',
     error: null,
   });
@@ -91,6 +93,7 @@ describe('verse highlights and personal notes', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
       notes: [],
       highlights: [],
+      bookmarks: [],
       status: 'unavailable',
       error: 'Permission denied.',
     });
@@ -153,5 +156,21 @@ describe('verse highlights and personal notes', () => {
         expect.objectContaining({ body: 'Keep this on navigation' }),
       );
     });
+  });
+});
+
+describe('colour-coded reading positions', () => {
+  it('offers bookmark colours independently of permanent highlights', async () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready', error: null, notes: [], highlights: [],
+      bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
+    });
+    render(<VerseAnnotations verseId="John.3.16" />);
+    await userEvent.click(screen.getByRole('button', { name: /Bookmark/ }));
+    const group = screen.getByRole('group', { name: 'Reading bookmark colours' });
+    expect(group).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: 'Green' }));
+    expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', 'John.3.16');
+    expect(storage.setVerseHighlight).not.toHaveBeenCalled();
   });
 });
