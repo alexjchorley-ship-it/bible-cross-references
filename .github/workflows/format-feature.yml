@@ -1,0 +1,29 @@
+name: One-off format feature branch
+on:
+  push:
+    branches: [feat/pages-and-cross-device-sync]
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'alexjchorley-ship-it/bible-cross-references'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write docs/HOSTED_PWA_AND_SYNC.md docs/SUPABASE_SETUP.md src/features/annotations/CloudSyncPanel.tsx src/features/annotations/cloud-auth.ts src/features/annotations/cloud-auth.test.ts src/features/annotations/cloud-sync.ts src/features/annotations/cloud-sync.test.ts src/features/annotations/storage.ts src/features/annotations/storage.test.tsx src/features/annotations/Notebook.tsx
+      - name: Commit formatted sources if needed
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add docs src/features/annotations
+            git commit -m 'Format cloud sync source and docs'
+            git push origin HEAD:feat/pages-and-cross-device-sync
+          fi
