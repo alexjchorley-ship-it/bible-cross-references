@@ -1,8 +1,8 @@
 name: CI
 
-# Development branch: run checks deliberately rather than emailing the owner
-# on every intermediate commit. Restore pull_request triggers before final review.
+# Every PR is tested, but newer revisions replace obsolete runs.
 on:
+  pull_request:
   workflow_dispatch:
 
 concurrency:
