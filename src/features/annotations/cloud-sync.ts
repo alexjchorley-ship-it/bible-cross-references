@@ -21,16 +21,20 @@ function isCloudAnnotation(row: unknown): row is CloudAnnotation {
 }
 
 async function fetchRemote(): Promise<CloudAnnotation[]> {
-  const result = await cloudRequest(
-    `/rest/v1/bible_annotations?select=${COLUMNS}&order=updated_at.asc&limit=10000`,
-  );
-  if (!Array.isArray(result) || !result.every(isCloudAnnotation)) {
-    throw new Error('Cloud returned unexpected annotation data.');
+  const rows: CloudAnnotation[] = [];
+  // PostgREST limits responses per request: fetch pages rather than silently
+  // dropping older notes when the notebook grows.
+  for (let offset = 0; offset < 100000; offset += 500) {
+    const result = await cloudRequest(
+      `/rest/v1/bible_annotations?select=${COLUMNS}&order=updated_at.asc,kind.asc,item_id.asc&limit=500&offset=${offset}`,
+    );
+    if (!Array.isArray(result) || !result.every(isCloudAnnotation)) {
+      throw new Error('Cloud returned unexpected annotation data.');
+    }
+    rows.push(...result);
+    if (result.length < 500) return rows;
   }
-  if (result.length === 10000) {
-    throw new Error('Cloud has too many annotations for a safe full sync.');
-  }
-  return result;
+  throw new Error('Cloud returned too many annotations for a safe full sync.');
 }
 
 async function reconcile(): Promise<void> {
