@@ -10,6 +10,44 @@ export async function waitForApp(page: Page): Promise<void> {
   await page.locator(`${ACTIVE} footer`).first().waitFor();
 }
 
+/** A reader chooses a Bible book and then its chapter; no reference typing is necessary. */
+export async function chooseChapter(page: Page, book: string, chapter: number): Promise<void> {
+  await page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]').click();
+  const picker = page.locator('dialog[open]');
+  await picker.getByRole('button', { name: book, exact: true }).click();
+  await picker.getByRole('button', { name: `${book} ${String(chapter)}`, exact: true }).click();
+}
+
+/** A chapter can still navigate to a specific verse from its reading rows or detail panel. */
+export async function chooseVerse(
+  page: Page,
+  book: string,
+  chapter: number,
+  verse: number,
+): Promise<void> {
+  await chooseChapter(page, book, chapter);
+  const chapterRows = page.locator(PANEL).locator('button[class*="verseRow"]');
+  if ((await chapterRows.count()) > 0) {
+    await openPanel(page);
+    if (!(await chapterRows.first().isVisible())) {
+      const heading = chapterRows
+        .first()
+        .locator('xpath=ancestor::section[1]')
+        .locator('h3 button');
+      if ((await heading.getAttribute('aria-expanded')) === 'false') {
+        await heading.click();
+      }
+    }
+    await chapterRows.nth(verse - 1).click();
+  } else {
+    await page
+      .locator(ACTIVE)
+      .locator('ol li[class*="verse"]')
+      .nth(verse - 1)
+      .click();
+  }
+}
+
 /** Collects console errors, ignoring the software renderer's performance chatter. */
 export function collectErrors(page: Page): string[] {
   const errors: string[] = [];

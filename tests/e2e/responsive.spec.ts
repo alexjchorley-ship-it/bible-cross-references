@@ -112,7 +112,7 @@ test.describe('the layout holds at every width', () => {
     for (const control of [/Filters/, /Translation/]) {
       await expect(page.locator(ACTIVE).getByRole('button', { name: control })).toBeVisible();
     }
-    await expect(page.locator(ACTIVE).getByRole('searchbox')).toBeVisible();
+    await expect(page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]')).toBeVisible();
   });
 });
 
@@ -286,10 +286,10 @@ async function expectHeaderFits(page: Page, width: number, where: string): Promi
   // Three rows of controls would mean the masthead rule is not applying: the header is meant to
   // settle at one row, or two once the masthead takes its own.
   expect(measured.bottom, `${where}: header height`).toBeLessThan(140);
-  // Both menus found by their shape rather than their names: a regex of every language's word
+  // Two settings menus plus the book/chapter picker, identified by stable control semantics:
   // for "Filters" had already fallen behind by three languages.
   const menus = page.locator(`${ACTIVE} header button[aria-expanded]`);
-  await expect(menus, `${where}: both menus`).toHaveCount(2);
+  await expect(menus, `${where}: Bible picker and two menus`).toHaveCount(3);
   await expect(menus.first(), where).toBeVisible();
   await expect(menus.last(), where).toBeVisible();
 }

@@ -56,7 +56,7 @@ export default defineConfig(({ command, isPreview = false }) => ({
     setupFiles: ['./src/test-utils/setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text-summary', 'html', 'lcov'],
+      reporter: ['text', 'html', 'lcov'],
       include: ['src/**/*.{ts,tsx}', 'scripts/data/**/*.ts', 'vite/**/*.ts'],
       // The gate: `npm run check` fails below these, so a change that adds untested code is
       // caught before review. Branches sit lower on purpose — `noUncheckedIndexedAccess` makes

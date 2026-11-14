@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ACTIVE, PANEL, waitForApp } from './helpers.ts';
+import { ACTIVE, PANEL, chooseChapter, waitForApp } from './helpers.ts';
 
 /**
  * Back and Forward, which readers press far more often than any button this app draws.
@@ -82,17 +82,15 @@ test.describe('browser history', () => {
     await waitForApp(page);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3:16' })).toBeVisible();
 
-    const search = page.locator(ACTIVE).getByRole('searchbox');
-    await search.fill('Isaiah 53:5');
-    await search.press('Enter');
-    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53:5' })).toBeVisible();
+    await chooseChapter(page, 'Isaiah', 53);
+    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53' })).toBeVisible();
 
     await page.goBack();
     await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3:16' })).toBeVisible();
     expect(query(page)).toContain('ref=John.3.16');
 
     await page.goForward();
-    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53:5' })).toBeVisible();
+    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53' })).toBeVisible();
   });
 
   test('changing the translation does not add a step to go Back through', async ({ page }) => {
@@ -101,9 +99,8 @@ test.describe('browser history', () => {
     // three translations of one verse should not have to press Back three times to leave it.
     await page.goto('./?ref=Gen.1.1');
     await waitForApp(page);
-    await page.locator(ACTIVE).getByRole('searchbox').fill('John 3:16');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
-    await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3:16' })).toBeVisible();
+    await chooseChapter(page, 'John', 3);
+    await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3' })).toBeVisible();
 
     await page
       .locator(ACTIVE)
@@ -161,10 +158,8 @@ test.describe('browser history', () => {
     await waitForApp(page);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
-    const search = page.locator(ACTIVE).getByRole('searchbox');
-    await search.fill('Isaiah 53:5');
-    await search.press('Enter');
-    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53:5' })).toBeVisible();
+    await chooseChapter(page, 'Isaiah', 53);
+    await expect(page.locator(PANEL).getByRole('heading', { name: 'Isaiah 53' })).toBeVisible();
 
     expect(query(page)).toContain('lang=en');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -181,11 +176,13 @@ test.describe('browser history', () => {
     // reached, and the reader is trapped on one page.
     await page.goto('./?ref=John.3.16');
     await waitForApp(page);
-    const search = page.locator(ACTIVE).getByRole('searchbox');
-    for (const reference of ['Isaiah 53:5', 'Genesis 1:1', 'Psalm 23']) {
-      await search.fill(reference);
-      await search.press('Enter');
-      await expect(page.locator(PANEL)).toContainText(reference.split(' ')[0] ?? '');
+    for (const [book, chapter, heading] of [
+      ['Isaiah', 53, 'Isaiah 53'],
+      ['Genesis', 1, 'Genesis 1'],
+      ['Psalms', 23, 'Psalm 23'],
+    ] as const) {
+      await chooseChapter(page, book, chapter);
+      await expect(page.locator(PANEL).getByRole('heading', { name: heading })).toBeVisible();
     }
 
     for (let step = 0; step < 3; step += 1) {

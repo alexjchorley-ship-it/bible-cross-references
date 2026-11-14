@@ -1,11 +1,13 @@
 name: CI
 
+# Every PR is tested, but newer revisions replace obsolete runs.
 on:
-  push:
-    branches: [main]
   pull_request:
-  # Redeploy by hand, e.g. after changing the Pages settings.
   workflow_dispatch:
+
+concurrency:
+  group: bible-study-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

@@ -21,12 +21,12 @@ export const ROOT_DIR = resolve(import.meta.dirname, '..');
 export const SITE_NAME = 'Bible Cross-References';
 
 /**
- * Where the built site is served. GitHub Pages serves this repository (bible-cross-references) at
- * trekhleb.dev/bible-cross-references/, under the owner's custom domain. Set `BASE_PATH` and
+ * Where the built site is served. The fork uses GitHub Pages at
+ * alexjchorley-ship-it.github.io/bible-cross-references/. The upstream author remains credited. Set `BASE_PATH` and
  * `SITE_ORIGIN` to build for another location, e.g. `BASE_PATH=/` for the root of a domain.
  */
 export const DEPLOY_BASE = '/bible-cross-references/';
-export const SITE_ORIGIN = process.env['SITE_ORIGIN'] ?? 'https://trekhleb.dev';
+export const SITE_ORIGIN = process.env['SITE_ORIGIN'] ?? 'https://alexjchorley-ship-it.github.io';
 
 /**
  * A base path always ends in a slash. Vite normalizes its own, but `SITE_URL` is built here and
@@ -38,7 +38,7 @@ function withTrailingSlash(path: string): string {
   return path.endsWith('/') ? path : `${path}/`;
 }
 /**
- * The published site, e.g. `https://trekhleb.dev/bible-cross-references/`. Links meant for others
+ * The published site, e.g. `https://alexjchorley-ship-it.github.io/bible-cross-references/`. Links meant for others
  * (copied quotes) point here even from the dev server, which runs at the root.
  */
 export const SITE_URL = new URL(
