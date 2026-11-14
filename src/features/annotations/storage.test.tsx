@@ -23,6 +23,7 @@ function installIndexedDB() {
   let failRead = false;
   let failWrite = false;
   let failOpen = false;
+  let blockOpen = false;
   let db: IDBDatabase | null = null;
 
   function request<T>(result: T, failure = false): IDBRequest<T> {
@@ -112,6 +113,10 @@ function installIndexedDB() {
           handler.onerror?.(new Event('error'));
           return;
         }
+        if (blockOpen) {
+          handler.onblocked?.(new Event('blocked'));
+          return;
+        }
         handler.onupgradeneeded?.(new Event('upgradeneeded'));
         handler.onsuccess?.(new Event('success'));
       });
@@ -134,6 +139,9 @@ function installIndexedDB() {
     },
     failOpen() {
       failOpen = true;
+    },
+    blockOpen() {
+      blockOpen = true;
     },
   };
 }
@@ -265,5 +273,29 @@ describe('local-first verse annotation storage', () => {
     await storage.startAnnotations();
     await storage.upsertPersonalNote(note);
     expect(await screen.findByText('1:ready')).toBeDefined();
+  });
+  it('reports a blocked upgrade instead of silently treating storage as ready', async () => {
+    const fake = installIndexedDB();
+    fake.blockOpen();
+    const store = await import('./storage.ts');
+    await store.startAnnotations();
+    await expect(store.exportAnnotations()).rejects.toThrow('blocking');
+  });
+
+  it('closes the old database when another tab starts a schema upgrade', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.startAnnotations();
+    fake.database.onversionchange?.(new Event('versionchange'));
+    expect(fake.database.close).toHaveBeenCalledOnce();
+    await expect(store.exportAnnotations()).rejects.toThrow('Storage upgraded');
+  });
+
+  it('surfaces a failed database read before allowing new annotations', async () => {
+    const fake = installIndexedDB();
+    fake.failRead();
+    const store = await import('./storage.ts');
+    await store.startAnnotations();
+    await expect(store.exportAnnotations()).rejects.toThrow('Mock storage failure');
   });
 });
