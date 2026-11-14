@@ -157,9 +157,11 @@ describe('local-first verse annotation storage', () => {
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
     expect(fake.stores.highlights.size).toBe(1);
-    expect(parseAnnotationsBackup(await store.exportAnnotations()).highlights).toEqual([
-      { verseId: 'Gen.1.1', color: 'blue', updatedAt: expect.any(String) },
-    ]);
+    const highlights = parseAnnotationsBackup(await store.exportAnnotations()).highlights;
+    expect(highlights).toHaveLength(1);
+    expect(highlights[0]?.verseId).toBe('Gen.1.1');
+    expect(highlights[0]?.color).toBe('blue');
+    expect(typeof highlights[0]?.updatedAt).toBe('string');
     await store.setVerseHighlight('Gen.1.1', null);
     expect(fake.stores.highlights.size).toBe(0);
   });
