@@ -45,7 +45,7 @@ describe('licensed Tyndale study panel', () => {
   });
 
   it('loads the selected book and renders direct notes and wider passage context', async () => {
-    const request = vi.fn(() =>
+    const request = vi.fn((_url: string) =>
       Promise.resolve(new Response(JSON.stringify([genesis, context]), { status: 200 })),
     );
     vi.stubGlobal('fetch', request);
@@ -57,7 +57,7 @@ describe('licensed Tyndale study panel', () => {
     expect(screen.getByRole('heading', { name: 'Passage context · Creation context' })).toBeDefined();
     expect(screen.getByText('intentional').tagName.toLowerCase()).toBe('strong');
     expect(screen.getByText('good').tagName.toLowerCase()).toBe('em');
-    expect(screen.getByText(' also').tagName.toLowerCase()).toBe('strong');
+    expect(screen.getByText('also').tagName.toLowerCase()).toBe('strong');
     expect(screen.getByTitle('Gen.1.2').textContent).toBe('the next verse');
     expect(screen.getByText('God orders creation.')).toBeDefined();
     expect(screen.getByRole('link', { name: 'CC BY-SA 4.0' })).toBeDefined();
