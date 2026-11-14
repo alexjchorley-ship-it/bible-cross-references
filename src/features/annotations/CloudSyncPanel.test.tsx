@@ -56,7 +56,7 @@ describe('cross-device synchronisation notebook panel', () => {
     await waitFor(() => {
       expect(auth.signInCloud).toHaveBeenCalledWith('owner@example.com', 'passphrase123');
     });
-    expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe('');
+    expect(screen.getByLabelText<HTMLInputElement>('Password').value).toBe('');
   });
 
   it('handles confirmation-required signup without pretending a session exists', async () => {
@@ -125,6 +125,6 @@ describe('cross-device synchronisation notebook panel', () => {
     const user = await fillCredentials();
     await user.click(screen.getByRole('button', { name: 'Create account' }));
     expect(await screen.findByText(/account created/i)).toBeDefined();
-    await waitFor(() => expect(sync.syncCloudAnnotations).toHaveBeenCalled());
+    await waitFor(() => { expect(sync.syncCloudAnnotations).toHaveBeenCalled(); });
   });
 });
