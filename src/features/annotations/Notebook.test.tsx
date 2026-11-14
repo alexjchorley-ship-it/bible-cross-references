@@ -58,7 +58,8 @@ describe('searchable and exportable personal notebook', () => {
   });
 
   it('provides an explicit confirmation before clearing both stores', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal('confirm', confirm);
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Delete all annotations' }));
     expect(storage.deleteAllAnnotations).not.toHaveBeenCalled();

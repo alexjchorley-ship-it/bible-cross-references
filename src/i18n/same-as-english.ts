@@ -25,6 +25,7 @@ export const SAME_AS_ENGLISH: Readonly<Record<LocaleId, Readonly<Record<string, 
     'books.2Sam.name': '2 Samuel is spelled identically in Portuguese.',
   },
   de: {
+    'messages.study.tyndale': 'Tyndale Open Study Notes is the licensed publication title, not a translated descriptive label.',
     'messages.footer.sourceLabel': 'GitHub is a proper noun and is not translated.',
     'messages.menu.filters.votes.atLeast':
       'A mathematical symbol and a number (“≥ 4”), which read the same in both languages.',
@@ -43,6 +44,7 @@ export const SAME_AS_ENGLISH: Readonly<Record<LocaleId, Readonly<Record<string, 
     'books.Phlm.name': 'Philemon is spelled identically in German.',
   },
   it: {
+    'messages.study.tyndale': 'Tyndale Open Study Notes is the licensed publication title, not a translated descriptive label.',
     'messages.footer.sourceLabel': 'GitHub is a proper noun and is not translated.',
     'messages.menu.filters.votes.atLeast':
       'A mathematical symbol and a number (“≥ 4”), which read the same in both languages.',

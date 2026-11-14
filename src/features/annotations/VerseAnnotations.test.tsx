@@ -78,13 +78,13 @@ describe('verse highlights and personal notes', () => {
 
   it('asks before deleting a saved note', async () => {
     current([note]);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal('confirm', confirm);
     render(<VerseAnnotations verseId="Gen.1.1" />);
     await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
     expect(confirm).toHaveBeenCalled();
     expect(storage.deletePersonalNote).toHaveBeenCalledWith('read-1');
-    confirm.mockRestore();
   });
 
   it('never claims a save is possible if device storage is unavailable', async () => {

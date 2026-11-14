@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PILOT_STUDIES, studyForVerse } from './pilot-studies.ts';
 import { StudySection } from './StudySection.tsx';
+
+vi.mock('./TyndaleNotes.tsx', () => ({ TyndaleNotes: () => null }));
 
 describe('source-backed theological study', () => {
   it('keeps every interpretation tied to existing primary source records', () => {
@@ -22,14 +24,14 @@ describe('source-backed theological study', () => {
     render(<StudySection verseId="John.3.16" />);
     await userEvent.click(screen.getByText('Theological study'));
     expect(screen.getByText(/No reviewed comparison of theological interpretations/)).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Tyndale Open Study Notes' })).toBeDefined();
+    expect(screen.getByText(/No reviewed comparison/)).toBeDefined();
   });
 
   it('offers competing readings and links to their published research', async () => {
     render(<StudySection verseId="Gen.1.1" />);
     await userEvent.click(screen.getByText('Theological study'));
     expect(screen.getByText('An independent opening statement')).toBeDefined();
-    expect(screen.getByText(/dependent opening/)).toBeDefined();
+    expect(screen.getByRole('heading', { name: /A dependent opening:/ })).toBeDefined();
     expect(screen.getAllByRole('link').length).toBeGreaterThan(3);
   });
 });

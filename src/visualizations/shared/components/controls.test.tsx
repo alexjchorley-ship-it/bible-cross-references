@@ -3,66 +3,51 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { GENRES } from '../../../core/bible/genres.ts';
 import { CANONICAL_VERSIFICATION } from '../../../core/bible/versification.ts';
-import { verseIndex } from '../../../test-utils/fixtures.ts';
 import { GenreToggles } from './GenreToggles.tsx';
 import { ReferenceSearch } from './ReferenceSearch.tsx';
 
 describe('ReferenceSearch', () => {
-  function renderSearch() {
+  function renderPicker() {
     const onSelect = vi.fn();
     render(<ReferenceSearch versification={CANONICAL_VERSIFICATION} onSelect={onSelect} />);
-    return { onSelect, input: screen.getByRole('searchbox') };
+    return { onSelect, trigger: screen.getByRole('button', { name: 'Choose Bible book and chapter' }) };
   }
 
-  it('opens a verse that is typed in full', async () => {
-    const { onSelect, input } = renderSearch();
-    await userEvent.type(input, 'John 3:16{Enter}');
-    expect(onSelect).toHaveBeenCalledWith({ kind: 'verse', verse: verseIndex('John', 3, 16) });
-  });
-
-  it.each(['jn 3 16', 'Gen.1.1', 'ps 23', 'JOHN 3:16'])(
-    'accepts %s, the way a reader actually types it',
-    async (typed) => {
-      const { onSelect, input } = renderSearch();
-      await userEvent.type(input, `${typed}{Enter}`);
-      expect(onSelect).toHaveBeenCalled();
-    },
-  );
-
-  it('opens a whole chapter when no verse is given', async () => {
-    const { onSelect, input } = renderSearch();
-    await userEvent.type(input, 'Psalm 23{Enter}');
+  it('opens a Bible book and then a chapter, without typing', async () => {
+    const { onSelect, trigger } = renderPicker();
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: 'Psalms' }));
+    expect(onSelect).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Psalms 23' }));
     expect(onSelect).toHaveBeenCalledWith({ kind: 'chapter', book: 'Ps', chapter: 23 });
   });
 
-  it('says what is wrong instead of doing nothing', async () => {
-    const { onSelect, input } = renderSearch();
-    await userEvent.type(input, 'Hesitations 4:4{Enter}');
+  it('permits moving back to the full book list, then choosing another book', async () => {
+    const { onSelect, trigger } = renderPicker();
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: 'Genesis' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Back to books' }));
+    await userEvent.click(screen.getByRole('button', { name: 'John' }));
+    await userEvent.click(screen.getByRole('button', { name: 'John 3' }));
+    expect(onSelect).toHaveBeenCalledWith({ kind: 'chapter', book: 'John', chapter: 3 });
+  });
+
+  it('only offers real books and valid chapters', async () => {
+    const { onSelect, trigger } = renderPicker();
+    await userEvent.click(trigger);
+    expect(screen.queryByRole('button', { name: 'Hesitations' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Jude' }));
+    expect(screen.getByRole('button', { name: 'Jude 1' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Jude 2' })).toBeNull();
     expect(onSelect).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert').textContent).toBeTruthy();
   });
 
-  it('points the box at its own message, so it is announced', async () => {
-    const { input } = renderSearch();
-    await userEvent.type(input, 'nonsense{Enter}');
-    const described = input.getAttribute('aria-describedby');
-    expect(described).toBeTruthy();
-    expect(document.getElementById(described ?? '')).not.toBeNull();
-  });
-
-  it('clears the message once the next reference is good', async () => {
-    const { input } = renderSearch();
-    await userEvent.type(input, 'nonsense{Enter}');
-    expect(screen.getByRole('alert')).toBeDefined();
-    await userEvent.clear(input);
-    await userEvent.type(input, 'John 3:16{Enter}');
-    expect(screen.queryByRole('alert')).toBeNull();
-  });
-
-  it('does nothing for an empty box', async () => {
-    const { onSelect, input } = renderSearch();
-    await userEvent.type(input, '{Enter}');
+  it('leaves navigation unchanged if the picker is closed without selecting a chapter', async () => {
+    const { onSelect, trigger } = renderPicker();
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: 'Close Bible navigation' }));
     expect(onSelect).not.toHaveBeenCalled();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 });
 
