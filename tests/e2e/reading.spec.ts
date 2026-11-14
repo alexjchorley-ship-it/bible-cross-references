@@ -72,6 +72,9 @@ test.describe('reading the Bible', () => {
     await openPassage(page, 'John.3.16');
     await chooseVerse(page, 'Psalms', 23, 1);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Psalm 23:1' })).toBeVisible();
+    // Selecting a chapter and then its verse are two meaningful history entries.
+    await page.goBack();
+    await expect(page.locator(PANEL).getByRole('heading', { name: 'Psalm 23' })).toBeVisible();
     await page.goBack();
     await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3:16' })).toBeVisible();
   });
