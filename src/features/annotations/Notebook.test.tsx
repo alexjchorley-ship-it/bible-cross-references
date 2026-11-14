@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as storage from './storage.ts';
 import { Notebook } from './Notebook.tsx';
@@ -9,6 +9,7 @@ vi.mock('./storage.ts', () => ({
   exportAnnotations: vi.fn(() => Promise.resolve('{}')),
   importAnnotations: vi.fn(() => Promise.resolve({ notes: 1, highlights: 1 })),
   deleteAllAnnotations: vi.fn(() => Promise.resolve(undefined)),
+  setReadingBookmark: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';
@@ -19,6 +20,7 @@ const snapshot = {
     { id: 'a', verseId: 'Gen.1.1', body: 'First light', createdAt: now, updatedAt: now },
     { id: 'b', verseId: 'John.3.16', body: 'God so loved', createdAt: now, updatedAt: now },
   ],
+  bookmarks: [],
   highlights: [
     { verseId: 'Gen.1.1', color: 'amber' as const, updatedAt: now },
     { verseId: 'John.3.16', color: 'green' as const, updatedAt: now },
@@ -195,9 +197,65 @@ describe('searchable and exportable personal notebook', () => {
       error: null,
       notes: [],
       highlights: [],
+      bookmarks: [],
     });
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     expect(screen.getByText('No notes or highlights yet.')).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Open verse' })).toBeNull();
+  });
+  it('opens each colour at its own moving bookmark without changing highlights', async () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      ...snapshot,
+      bookmarks: [
+        { color: 'amber', verseId: 'John.3.16', updatedAt: now },
+        { color: 'green', verseId: 'Gen.1.1', updatedAt: now },
+      ],
+    });
+    const onOpenVerse = vi.fn();
+    const onClose = vi.fn();
+    render(<Notebook open onClose={onClose} onOpenVerse={onOpenVerse} />);
+    const section = screen.getByRole('region', { name: 'Reading bookmarks' });
+    const amber = within(section).getByRole('button', { name: /Amber: John 3 16/ });
+    await userEvent.click(amber);
+    expect(onOpenVerse).toHaveBeenCalledWith('John.3.16');
+    expect(onClose).toHaveBeenCalled();
+    expect(storage.setReadingBookmark).not.toHaveBeenCalled();
+    await userEvent.click(within(section).getByRole('button', { name: 'Remove green bookmark' }));
+    expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', null);
+  });
+
+  it('shows unset bookmarks as disabled and preserves all highlight entries', () => {
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const section = screen.getByRole('region', { name: 'Reading bookmarks' });
+    expect(
+      within(section)
+        .getByRole('button', { name: /Green: Not set/ })
+        .hasAttribute('disabled'),
+    ).toBe(true);
+    expect(screen.getByText('God so loved')).toBeDefined();
+  });
+
+  it('confirms bookmark counts when importing a v2 backup', async () => {
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal('confirm', confirm);
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const backup = {
+      format: 'bible-study-annotations',
+      schemaVersion: 2,
+      exportedAt: now,
+      appVersion: '1.0',
+      annotations: snapshot.notes,
+      highlights: snapshot.highlights,
+      bookmarks: [{ color: 'pink', verseId: 'Gen.1.1', updatedAt: now }],
+    };
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error('Missing backup input');
+    await userEvent.upload(
+      input,
+      new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' }),
+    );
+    await waitFor(() => {
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('1 bookmarks'));
+    });
   });
 });

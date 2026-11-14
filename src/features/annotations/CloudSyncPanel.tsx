@@ -23,7 +23,7 @@ export function CloudSyncPanel() {
   const runSync = useCallback(async () => {
     if (!cloudSession() || running.current || !navigator.onLine) return;
     running.current = true;
-    setStatus('Synchronising notes and highlights…');
+    setStatus('Synchronising notes, highlights and bookmarks…');
     try {
       await syncCloudAnnotations();
       setLastSynced(new Date().toLocaleTimeString());

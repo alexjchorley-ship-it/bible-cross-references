@@ -8,7 +8,7 @@ function isCloudAnnotation(row: unknown): row is CloudAnnotation {
   if (!row || typeof row !== 'object') return false;
   const data = row as Partial<CloudAnnotation>;
   return (
-    (data.kind === 'note' || data.kind === 'highlight') &&
+    (data.kind === 'note' || data.kind === 'highlight' || data.kind === 'bookmark') &&
     typeof data.item_id === 'string' &&
     typeof data.verse_id === 'string' &&
     typeof data.created_at === 'string' &&

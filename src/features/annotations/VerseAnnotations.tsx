@@ -5,6 +5,7 @@ import { HIGHLIGHT_COLORS, type HighlightColor, type PersonalNote } from './mode
 import {
   deletePersonalNote,
   setVerseHighlight,
+  setReadingBookmark,
   upsertPersonalNote,
   useAnnotations,
 } from './storage.ts';
@@ -118,13 +119,15 @@ function SavedNote({ note }: { readonly note: PersonalNote }) {
 /** The same verse actions appear under the original details in Arcs and Threads. */
 export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
-  const { status, error, highlights, notes } = useAnnotations();
+  const { status, error, highlights, notes, bookmarks } = useAnnotations();
   const [showColors, setShowColors] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [newText, setNewText] = useState('');
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const highlight = highlights.find((entry) => entry.verseId === verseId)?.color ?? null;
+  const verseBookmarks = bookmarks.filter((bookmark) => bookmark.verseId === verseId);
   const verseNotes = notes
     .filter((note) => note.verseId === verseId)
     .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -169,6 +172,16 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
         <button
           type="button"
           className={styles.button}
+          aria-expanded={showBookmarks}
+          onClick={() => {
+            setShowBookmarks(!showBookmarks);
+          }}
+        >
+          🔖 Bookmark{verseBookmarks.length > 0 ? ` (${verseBookmarks.length})` : ''}
+        </button>
+        <button
+          type="button"
+          className={styles.button}
           aria-expanded={showNotes}
           onClick={() => {
             setShowNotes(!showNotes);
@@ -207,6 +220,39 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           >
             {t('annotations.remove')}
           </button>
+        </div>
+      )}
+      {showBookmarks && (
+        <div className={styles.palette} role="group" aria-label="Reading bookmark colours">
+          {HIGHLIGHT_COLORS.map((color) => {
+            const current = bookmarks.find((bookmark) => bookmark.color === color);
+            const active = current?.verseId === verseId;
+            return (
+              <button
+                key={color}
+                type="button"
+                className={styles.swatch}
+                data-color={color}
+                aria-pressed={active}
+                disabled={status !== 'ready'}
+                title={
+                  current
+                    ? `Current ${color} bookmark: ${current.verseId}`
+                    : `New ${color} bookmark`
+                }
+                onClick={() => {
+                  void setReadingBookmark(color, active ? null : verseId);
+                }}
+              >
+                {t(COLOR_KEYS[color])}
+                {active ? ' ✓' : ''}
+              </button>
+            );
+          })}
+          <p className={styles.warning}>
+            One position per colour. Moving a colour replaces its previous bookmark, without
+            changing highlights.
+          </p>
         </div>
       )}
       {showNotes && (

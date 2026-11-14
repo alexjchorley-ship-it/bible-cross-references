@@ -7,6 +7,7 @@ import {
   deleteAllAnnotations,
   exportAnnotations,
   importAnnotations,
+  setReadingBookmark,
   useAnnotations,
 } from './storage.ts';
 import styles from './annotations.module.css';
@@ -26,7 +27,7 @@ export function Notebook({
   const { t } = useLocalization();
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const { notes, highlights, status, error: storageError } = useAnnotations();
+  const { notes, highlights, bookmarks, status, error: storageError } = useAnnotations();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ColourFilter>('all');
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +92,7 @@ export function Notebook({
     try {
       const json = await file.text();
       const parsed = parseAnnotationsBackup(json);
-      const proposed = `${t('annotations.import')}: ${String(parsed.annotations.length)} ${t('annotations.notes')}, ${String(parsed.highlights.length)} ${t('annotations.highlight')}?`;
+      const proposed = `${t('annotations.import')}: ${String(parsed.annotations.length)} ${t('annotations.notes')}, ${String(parsed.highlights.length)} ${t('annotations.highlight')}, ${String(parsed.bookmarks?.length ?? 0)} bookmarks?`;
       if (!window.confirm(proposed)) {
         return;
       }
@@ -117,6 +118,49 @@ export function Notebook({
           {t('annotations.close')}
         </button>
       </div>
+      <section className={styles.section} aria-label="Reading bookmarks">
+        <h3>Reading bookmarks</h3>
+        <p className={styles.warning}>
+          One moving bookmark per colour. Select a colour to resume that study.
+        </p>
+        <div className={styles.palette}>
+          {HIGHLIGHT_COLORS.map((color) => {
+            const bookmark = bookmarks.find((entry) => entry.color === color);
+            return (
+              <div key={color} className={styles.bookmarkGroup}>
+                <button
+                  type="button"
+                  className={styles.swatch}
+                  data-color={color}
+                  disabled={!bookmark}
+                  onClick={() => {
+                    if (bookmark) {
+                      onOpenVerse(bookmark.verseId);
+                      onClose();
+                    }
+                  }}
+                >
+                  {color.charAt(0).toUpperCase() + color.slice(1)}:{' '}
+                  {bookmark?.verseId.replaceAll('.', ' ') ?? 'Not set'}
+                </button>
+                {bookmark && (
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    disabled={status !== 'ready'}
+                    aria-label={`Remove ${color} bookmark`}
+                    onClick={() => {
+                      void setReadingBookmark(color, null);
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
       <CloudSyncPanel />
       <p className={styles.warning}>{t('annotations.storage')}</p>
       {status === 'unavailable' && <p role="alert">{t('annotations.unavailable')}</p>}
