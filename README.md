@@ -1,4 +1,19 @@
-# Bible Cross-References
+# Bible Cross-References — Private Bible Study Fork
+
+> **Personal-use release:** This fork adds **book → chapter navigation**, four-colour verse
+> highlights, persistent personal notes, **My Notebook**, and sourced **Tyndale Open Study
+> Notes**. **BSB** is the default Bible text. The original Arcs/Threads visualizations and
+> Hebrew/Greek resources are preserved.
+
+**[Run Bible Study privately on your Windows computer](docs/RUN_LOCALLY.md)** — Install
+Node.js 24+, download this repository's ZIP (Code → Download ZIP), extract it, and double-click
+`start-bible-study.cmd`. The reader opens locally at `http://127.0.0.1:4173/`; it is
+**not publicly hosted**. Your highlights and notes stay in your browser: export backups
+from My Notebook.
+
+The detailed original-project overview below describes the upstream design and links to
+the **upstream author's demonstration**, not a hosted version of this personal fork.
+Credit for the original project: **Oleksii Trekhleb**.
 
 [![Bible Cross-References: 344,799 connections between 31,102 verses, from Genesis to Revelation](public/social-preview.jpg)](https://trekhleb.dev/bible-cross-references/)
 
@@ -32,7 +47,7 @@ arcs](public/screenshots/arcs.jpg)
   arc colored by the genres it connects.
 - Zoom from the whole Bible down to single verses; hover a passage to see how many connections it
   has.
-- Search for any reference ("John 3:16", "Ps 23") or click a passage to see where its links land.
+- Choose a Bible book and chapter from the two-step picker, or click a passage to see where its links land.
 - Read it in six translations — English (Berean Standard Bible, King James Version), Portuguese,
   German, Italian and Spanish — with the interface in any of six languages: English, Portuguese,
   German, Italian, Spanish or Ukrainian; the choice is remembered and travels in the link you share

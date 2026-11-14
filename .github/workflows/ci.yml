@@ -1,7 +1,9 @@
 name: CI
 
-# Every PR is tested, but newer revisions replace obsolete runs.
+# All PRs and changes to main run CI. This private local app has no public deployment workflow.
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -86,11 +88,6 @@ jobs:
           name: site
           path: dist
           retention-days: 1
-      - name: Keep the built site for deployment
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
 
   # The flows a reader actually goes through, in a real browser against the built site: reading a
   # chapter, following a cross-reference, the original-language words, switching translation, the
@@ -190,24 +187,3 @@ jobs:
             playwright-report
             test-results
           retention-days: 7
-
-  # Publishes main to trekhleb.dev/bible-cross-references/, once every check has passed. The domain
-  # comes from the owner's user site; builds already use the /bible-cross-references/ base path.
-  deploy:
-    name: Deploy to GitHub Pages
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: [check, build, e2e, offline]
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    # One deployment at a time; a running one always finishes.
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v5
