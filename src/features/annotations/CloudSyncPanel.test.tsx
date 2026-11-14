@@ -111,9 +111,12 @@ describe('cross-device synchronisation notebook panel', () => {
     render(<CloudSyncPanel />);
     window.dispatchEvent(new Event('online'));
     window.dispatchEvent(new Event('bible-annotations-changed'));
-    await waitFor(() => {
-      expect(sync.syncCloudAnnotations).toHaveBeenCalled();
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(sync.syncCloudAnnotations).toHaveBeenCalled();
+      },
+      { timeout: 2000 },
+    );
   });
 
   it('can create and immediately sync an account when confirmation is disabled', async () => {
@@ -125,6 +128,8 @@ describe('cross-device synchronisation notebook panel', () => {
     const user = await fillCredentials();
     await user.click(screen.getByRole('button', { name: 'Create account' }));
     expect(await screen.findByText(/account created/i)).toBeDefined();
-    await waitFor(() => { expect(sync.syncCloudAnnotations).toHaveBeenCalled(); });
+    await waitFor(() => {
+      expect(sync.syncCloudAnnotations).toHaveBeenCalled();
+    });
   });
 });
