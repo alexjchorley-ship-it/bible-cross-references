@@ -72,16 +72,12 @@ describe('Supabase browser authentication', () => {
     await auth.signInCloud('reader@example.com', 'mypassword');
     network.mockResolvedValueOnce(Response.json([{ item_id: '1' }]));
     await auth.cloudRequest('/rest/v1/bible_annotations');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    expect(network).toHaveBeenLastCalledWith(
-      expect.stringContaining('/rest/v1/bible_annotations'),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer token',
-          apikey: expect.stringMatching(/^sb_publishable_/),
-        }),
-      }),
-    );
+    const calls = network.mock.calls as unknown as [string, RequestInit][];
+    const last = calls.at(-1);
+    expect(last?.[0]).toContain('/rest/v1/bible_annotations');
+    const headers = last?.[1].headers as Record<string, string>;
+    expect(headers['Authorization']).toBe('Bearer token');
+    expect(headers['apikey']).toMatch(/^sb_publishable_/);
   });
 
   it('refreshes an expired session before the next cloud request', async () => {
