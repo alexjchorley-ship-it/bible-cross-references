@@ -9,7 +9,12 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
   const [expanded, setExpanded] = useState(false);
   const study = studyForVerse(verseId);
   return (
-    <details className={styles.studyCard} onToggle={(event) => setExpanded(event.currentTarget.open)}>
+    <details
+      className={styles.studyCard}
+      onToggle={(event) => {
+        setExpanded(event.currentTarget.open);
+      }}
+    >
       <summary>{t('study.title')}</summary>
       {expanded && <TyndaleNotes verseId={verseId} />}
       {!study ? (

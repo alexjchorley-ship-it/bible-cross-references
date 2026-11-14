@@ -52,9 +52,7 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
     setOpen(false);
   }
 
-  const buttonLabel = passage
-    ? formatPassage(passage, versification, books)
-    : t('navigation.open');
+  const buttonLabel = passage ? formatPassage(passage, versification, books) : t('navigation.open');
 
   return (
     <>
@@ -79,7 +77,9 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
         ref={dialog}
         aria-labelledby={titleId}
         className={styles.dialog}
-        onClose={() => { setOpen(false); }}
+        onClose={() => {
+          setOpen(false);
+        }}
       >
         <header className={styles.dialogHeader}>
           {book !== null && (
@@ -90,21 +90,21 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
               onClick={() => {
                 setBook(null);
                 if (scroll.current) {
-      scroll.current.scrollTop = 0;
-    }
+                  scroll.current.scrollTop = 0;
+                }
               }}
             >
               <PreviousIcon />
             </button>
           )}
-          <h2 id={titleId}>
-            {book === null ? t('navigation.chooseBook') : books[book].name}
-          </h2>
+          <h2 id={titleId}>{book === null ? t('navigation.chooseBook') : books[book].name}</h2>
           <button
             type="button"
             className={styles.iconButton}
             aria-label={t('navigation.close')}
-            onClick={() => { setOpen(false); }}
+            onClick={() => {
+              setOpen(false);
+            }}
           >
             <CloseIcon />
           </button>
@@ -121,7 +121,9 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
                         key={item.id}
                         className={styles.book}
                         type="button"
-                        onClick={() => { chooseBook(item.id); }}
+                        onClick={() => {
+                          chooseBook(item.id);
+                        }}
                       >
                         {books[item.id].name}
                       </button>
@@ -143,7 +145,9 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
                     className={styles.chapter}
                     type="button"
                     aria-label={`${books[book].name} ${chapter}`}
-                    onClick={() => { chooseChapter(chapter); }}
+                    onClick={() => {
+                      chooseChapter(chapter);
+                    }}
                   >
                     {chapter}
                   </button>

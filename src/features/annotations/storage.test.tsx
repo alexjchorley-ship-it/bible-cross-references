@@ -83,7 +83,9 @@ function installIndexedDB() {
           };
         },
         abort() {
-          queueMicrotask(() => { this.onabort?.(new Event('abort')); });
+          queueMicrotask(() => {
+            this.onabort?.(new Event('abort'));
+          });
         },
       };
       queueMicrotask(() => {
@@ -204,7 +206,7 @@ describe('local-first verse annotation storage', () => {
     expect(fake.stores.notes.size).toBe(2);
     expect(fake.stores.notes.get(note.id)).toEqual(note);
     const parsed = JSON.parse(await store.exportAnnotations()) as {
-      highlights: Array<{ color: string }>;
+      highlights: { color: string }[];
     };
     expect(parsed.highlights[0]?.color).toBe('green');
     await expect(store.importAnnotations('{}')).rejects.toThrow('backup');
@@ -251,7 +253,11 @@ describe('local-first verse annotation storage', () => {
     const storage = await import('./storage.ts');
     function LiveState() {
       const state = storage.useAnnotations();
-      return <output>{String(state.notes.length)}:{state.status}</output>;
+      return (
+        <output>
+          {String(state.notes.length)}:{state.status}
+        </output>
+      );
     }
     render(<LiveState />);
     await storage.startAnnotations();

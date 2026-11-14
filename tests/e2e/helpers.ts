@@ -10,7 +10,6 @@ export async function waitForApp(page: Page): Promise<void> {
   await page.locator(`${ACTIVE} footer`).first().waitFor();
 }
 
-
 /** A reader chooses a Bible book and then its chapter; no reference typing is necessary. */
 export async function chooseChapter(page: Page, book: string, chapter: number): Promise<void> {
   await page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]').click();
@@ -31,14 +30,21 @@ export async function chooseVerse(
   if ((await chapterRows.count()) > 0) {
     await openPanel(page);
     if (!(await chapterRows.first().isVisible())) {
-      const heading = chapterRows.first().locator('xpath=ancestor::section[1]').locator('h3 button');
+      const heading = chapterRows
+        .first()
+        .locator('xpath=ancestor::section[1]')
+        .locator('h3 button');
       if ((await heading.getAttribute('aria-expanded')) === 'false') {
         await heading.click();
       }
     }
     await chapterRows.nth(verse - 1).click();
   } else {
-    await page.locator(ACTIVE).locator('ol li[class*="verse"]').nth(verse - 1).click();
+    await page
+      .locator(ACTIVE)
+      .locator('ol li[class*="verse"]')
+      .nth(verse - 1)
+      .click();
   }
 }
 

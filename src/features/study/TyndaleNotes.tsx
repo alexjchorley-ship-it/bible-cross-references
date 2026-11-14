@@ -14,9 +14,10 @@ function renderNode(value: TyndaleNode, index: number): ReactNode {
   if (typeof value === 'string') {
     return value;
   }
-  const children = value.c?.map((child, offset) => (
-    <span key={offset}>{renderNode(child, offset)}</span>
-  )) ?? value.v ?? null;
+  const children =
+    value.c?.map((child, offset) => <span key={offset}>{renderNode(child, offset)}</span>) ??
+    value.v ??
+    null;
   if (value.t === 'em') {
     return <em key={index}>{children}</em>;
   }
@@ -24,7 +25,11 @@ function renderNode(value: TyndaleNode, index: number): ReactNode {
     return <strong key={index}>{children}</strong>;
   }
   if (value.t === 'ref') {
-    return <span key={index} title={value.r ?? undefined}>{children}</span>;
+    return (
+      <span key={index} title={value.r ?? undefined}>
+        {children}
+      </span>
+    );
   }
   if (value.t === 'p') {
     return <p key={index}>{children}</p>;
@@ -41,7 +46,9 @@ function CommentaryCard({
 }) {
   return (
     <section className={styles.studyCard}>
-      <h4>{category} · {note.title}</h4>
+      <h4>
+        {category} · {note.title}
+      </h4>
       <div>{note.content.map(renderNode)}</div>
     </section>
   );

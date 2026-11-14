@@ -71,10 +71,13 @@ describe('searchable and exportable personal notebook', () => {
     const makeUrl = vi.fn(() => 'blob:bible-test');
     const releaseUrl = vi.fn();
     const existingURL = URL;
-    vi.stubGlobal('URL', Object.assign(class extends existingURL {}, {
-      createObjectURL: makeUrl,
-      revokeObjectURL: releaseUrl,
-    }));
+    vi.stubGlobal(
+      'URL',
+      Object.assign(class extends existingURL {}, {
+        createObjectURL: makeUrl,
+        revokeObjectURL: releaseUrl,
+      }),
+    );
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Export backup' }));
     await waitFor(() => {
@@ -97,11 +100,17 @@ describe('searchable and exportable personal notebook', () => {
 
   it('does not allow importing or exporting when IndexedDB is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      ...snapshot, status: 'unavailable', error: 'Disk denied.',
+      ...snapshot,
+      status: 'unavailable',
+      error: 'Disk denied.',
     });
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     expect(screen.getByText('Disk denied.')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Export backup' }).hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Import backup' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Export backup' }).hasAttribute('disabled')).toBe(
+      true,
+    );
+    expect(screen.getByRole('button', { name: 'Import backup' }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 });

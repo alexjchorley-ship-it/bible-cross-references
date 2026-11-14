@@ -56,18 +56,33 @@ describe('licensed commentary verse lookup', () => {
 
   it('separates original verse-specific notes from passage-wide context', () => {
     const verse = { book: 'Gen', chapter: 1, verse: 1 } as const;
-    const rows = notesForVerse([introduction, direct, noReference, { ...direct, id: 'BookIntro', type: 'BookIntro' }], verse);
+    const rows = notesForVerse(
+      [introduction, direct, noReference, { ...direct, id: 'BookIntro', type: 'BookIntro' }],
+      verse,
+    );
     expect(rows.verse).toEqual([direct]);
     expect(rows.context).toEqual([introduction]);
     const second = notesForVerse([introduction, direct], { book: 'Gen', chapter: 1, verse: 2 });
     expect(second.verse).toEqual([]);
     expect(second.context).toEqual([introduction]);
-    expect(notesForVerse([direct], { book: 'Exod', chapter: 1, verse: 1 })).toEqual({ verse: [], context: [] });
+    expect(notesForVerse([direct], { book: 'Exod', chapter: 1, verse: 1 })).toEqual({
+      verse: [],
+      context: [],
+    });
   });
 
   it('verifies the returned book structure, retains only actual StudyNote records and caches it', async () => {
-    const request = vi.fn(async (_url: string) =>
-      new Response(JSON.stringify([direct, introduction, { ...direct, type: 'BookIntro' }, { nonsense: true }]), { status: 200 }),
+    const request = vi.fn(
+      async (_url: string) =>
+        new Response(
+          JSON.stringify([
+            direct,
+            introduction,
+            { ...direct, type: 'BookIntro' },
+            { nonsense: true },
+          ]),
+          { status: 200 },
+        ),
     );
     vi.stubGlobal('fetch', request);
     const notes = await loadTyndaleBook('genesis');
@@ -94,7 +109,10 @@ describe('licensed commentary verse lookup', () => {
   });
 
   it('rejects a malformed source archive', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"items":[]}', { status: 200 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"items":[]}', { status: 200 })),
+    );
     await expect(loadTyndaleBook('philemon')).rejects.toThrow('damaged');
   });
 });

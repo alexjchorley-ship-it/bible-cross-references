@@ -13,19 +13,22 @@ export const de: LocaleMessages = {
   'view.threads.open': 'Im Zusammenhang lesen',
   'view.switch': 'Darstellungen',
 
-  'study.tyndale': "Tyndale Open Study Notes",
-  'study.loading': "Studiennotizen werden geladen…",
-  'study.offline': "Studiennotizen offline nicht verfügbar. Für dieses Buch einmal online verbinden.",
-  'study.noTyndale': "Für diesen Vers oder Abschnitt gibt es keine Tyndale-Notiz.",
-  'study.direct': "Kommentar zum Vers",
-  'study.context': "Zusammenhang des Abschnitts",
-  'study.adaptation': "JSON-Aufbereitung: One Blue Thread",
-  'study.credit': "© 2022 Tyndale House Publishers. Aus Tyndale Open Study Notes übernommen; ohne Karten, Bilder und Zusatzkästen.",
+  'study.tyndale': 'Tyndale Open Study Notes',
+  'study.loading': 'Studiennotizen werden geladen…',
+  'study.offline':
+    'Studiennotizen offline nicht verfügbar. Für dieses Buch einmal online verbinden.',
+  'study.noTyndale': 'Für diesen Vers oder Abschnitt gibt es keine Tyndale-Notiz.',
+  'study.direct': 'Kommentar zum Vers',
+  'study.context': 'Zusammenhang des Abschnitts',
+  'study.adaptation': 'JSON-Aufbereitung: One Blue Thread',
+  'study.credit':
+    '© 2022 Tyndale House Publishers. Aus Tyndale Open Study Notes übernommen; ohne Karten, Bilder und Zusatzkästen.',
   'study.title': 'Theologisches Studium',
   'study.overview': 'Überblick',
   'study.interpretations': 'Auslegungen',
   'study.sources': 'Wissenschaftliche Quellen',
-  'study.notCurated': "Für diesen Vers liegt noch kein geprüfter Vergleich theologischer Auslegungen vor.",
+  'study.notCurated':
+    'Für diesen Vers liegt noch kein geprüfter Vergleich theologischer Auslegungen vor.',
   'study.linkedOnly':
     'Diese Auslegung fasst verlinkte Forschung zusammen und ist kein direktes Zitat.',
   'study.language': 'Kommentar auf Englisch',
@@ -57,11 +60,11 @@ export const de: LocaleMessages = {
   'annotations.blue': 'Blau',
   'annotations.pink': 'Rosa',
 
-  'navigation.open': "Bibelbuch und Kapitel auswählen",
-  'navigation.chooseBook': "Buch auswählen",
-  'navigation.chooseChapter': "Kapitel auswählen",
-  'navigation.back': "Zurück zu den Büchern",
-  'navigation.close': "Bibelnavigation schließen",
+  'navigation.open': 'Bibelbuch und Kapitel auswählen',
+  'navigation.chooseBook': 'Buch auswählen',
+  'navigation.chooseChapter': 'Kapitel auswählen',
+  'navigation.back': 'Zurück zu den Büchern',
+  'navigation.close': 'Bibelnavigation schließen',
 
   'search.label': 'Zu einer Bibelstelle springen',
   'search.placeholder': 'Springe zu…  Joh 3,16, Ps 23',

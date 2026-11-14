@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { ACTIVE, PANEL, collectErrors, chooseChapter, chooseVerse, openPassage, openShare, waitForApp } from './helpers.ts';
+import {
+  ACTIVE,
+  PANEL,
+  collectErrors,
+  chooseChapter,
+  chooseVerse,
+  openPassage,
+  openShare,
+  waitForApp,
+} from './helpers.ts';
 
 test.describe('reading the Bible', () => {
   test('the arcs are drawn, and say how much is shown', async ({ page }) => {
@@ -32,8 +41,13 @@ test.describe('reading the Bible', () => {
     await page.goto('./');
     await waitForApp(page);
     await page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]').click();
-    await expect(page.locator('dialog[open]').getByRole('button', { name: 'Hesitations' })).toHaveCount(0);
-    await page.locator('dialog[open]').getByRole('button', { name: 'Close Bible navigation' }).click();
+    await expect(
+      page.locator('dialog[open]').getByRole('button', { name: 'Hesitations' }),
+    ).toHaveCount(0);
+    await page
+      .locator('dialog[open]')
+      .getByRole('button', { name: 'Close Bible navigation' })
+      .click();
     await expect(page).not.toHaveURL(/ref=/);
   });
 

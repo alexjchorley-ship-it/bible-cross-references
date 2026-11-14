@@ -98,7 +98,9 @@ async function main() {
       checksums: Object.fromEntries(entries),
     }),
   );
-  process.stdout.write(`Checked ${String(entries.length)} books of licensed Tyndale study notes.\n`);
+  process.stdout.write(
+    `Checked ${String(entries.length)} books of licensed Tyndale study notes.\n`,
+  );
 }
 
 await main();

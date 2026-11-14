@@ -59,7 +59,7 @@ describe('verse highlights and personal notes', () => {
         expect.objectContaining({ body: 'Love of God', verseId: 'John.3.16' }),
       );
     });
-    expect((screen.getByPlaceholderText('Write a note…') as HTMLTextAreaElement).value).toBe('');
+    expect(screen.getByPlaceholderText('Write a note…').value).toBe('');
   });
 
   it('shows existing notes and saves edits when the editor loses focus', async () => {
@@ -89,7 +89,10 @@ describe('verse highlights and personal notes', () => {
 
   it('never claims a save is possible if device storage is unavailable', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      notes: [], highlights: [], status: 'unavailable', error: 'Permission denied.',
+      notes: [],
+      highlights: [],
+      status: 'unavailable',
+      error: 'Permission denied.',
     });
     render(<VerseAnnotations verseId="Gen.1.1" />);
     expect(screen.getByText('Device storage is unavailable; notes cannot be saved.')).toBeDefined();
