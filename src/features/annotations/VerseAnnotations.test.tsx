@@ -7,9 +7,9 @@ import { VerseAnnotations } from './VerseAnnotations.tsx';
 
 vi.mock('./storage.ts', () => ({
   useAnnotations: vi.fn(),
-  setVerseHighlight: vi.fn(async () => undefined),
-  upsertPersonalNote: vi.fn(async () => undefined),
-  deletePersonalNote: vi.fn(async () => undefined),
+  setVerseHighlight: vi.fn(() => Promise.resolve(undefined)),
+  upsertPersonalNote: vi.fn(() => Promise.resolve(undefined)),
+  deletePersonalNote: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';

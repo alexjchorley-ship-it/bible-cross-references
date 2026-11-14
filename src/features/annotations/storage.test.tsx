@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { PersonalNote } from './model.ts';
+import { parseAnnotationsBackup, type PersonalNote } from './model.ts';
 
 const early = '2026-01-01T12:00:00.000Z';
 const late = '2026-11-14T12:00:00.000Z';
@@ -45,7 +45,7 @@ function installIndexedDB() {
     createObjectStore(name: string) {
       declared.add(name);
     },
-    transaction(_names: string | string[], _mode: string) {
+    transaction() {
       const transaction = {
         error: null,
         oncomplete: null as ((event: Event) => void) | null,
@@ -99,7 +99,7 @@ function installIndexedDB() {
   db = database as unknown as IDBDatabase;
 
   const factory = {
-    open(_name: string, _version: number) {
+    open() {
       const handler = {
         result: db,
         error: failOpen ? new Error('Database denied') : null,
@@ -158,7 +158,7 @@ describe('local-first verse annotation storage', () => {
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
     expect(fake.stores.highlights.size).toBe(1);
-    expect(JSON.parse(await store.exportAnnotations()).highlights).toEqual([
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).highlights).toEqual([
       { verseId: 'Gen.1.1', color: 'blue', updatedAt: expect.any(String) },
     ]);
     await store.setVerseHighlight('Gen.1.1', null);
@@ -172,7 +172,7 @@ describe('local-first verse annotation storage', () => {
     const draft = { ...note, body: 'Faith: γῆ', updatedAt: '2026-11-15T12:00:00.000Z' };
     await store.upsertPersonalNote(draft);
     expect(fake.stores.notes.get(note.id)).toEqual(draft);
-    expect(JSON.parse(await store.exportAnnotations()).annotations).toEqual([draft]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toEqual([draft]);
     await store.deletePersonalNote(note.id);
     expect(fake.stores.notes.size).toBe(0);
   });

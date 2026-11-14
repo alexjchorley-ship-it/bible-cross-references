@@ -6,9 +6,9 @@ import { Notebook } from './Notebook.tsx';
 
 vi.mock('./storage.ts', () => ({
   useAnnotations: vi.fn(),
-  exportAnnotations: vi.fn(async () => '{}'),
-  importAnnotations: vi.fn(async () => ({ notes: 1, highlights: 1 })),
-  deleteAllAnnotations: vi.fn(async () => undefined),
+  exportAnnotations: vi.fn(() => Promise.resolve('{}')),
+  importAnnotations: vi.fn(() => Promise.resolve({ notes: 1, highlights: 1 })),
+  deleteAllAnnotations: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';

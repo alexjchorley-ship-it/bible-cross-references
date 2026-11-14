@@ -72,18 +72,17 @@ describe('licensed commentary verse lookup', () => {
   });
 
   it('verifies the returned book structure, retains only actual StudyNote records and caches it', async () => {
-    const request = vi.fn(
-      async (_url: string) =>
+    const request = vi.fn((url: string) => {
+      if (!url.includes('data/commentary/genesis.json')) {
+        throw new Error('Unexpected commentary source.');
+      }
+      return Promise.resolve(
         new Response(
-          JSON.stringify([
-            direct,
-            introduction,
-            { ...direct, type: 'BookIntro' },
-            { nonsense: true },
-          ]),
+          JSON.stringify([direct, introduction, { ...direct, type: 'BookIntro' }, { nonsense: true }]),
           { status: 200 },
         ),
-    );
+      );
+    });
     vi.stubGlobal('fetch', request);
     const notes = await loadTyndaleBook('genesis');
     expect(notes).toEqual([direct, introduction]);
@@ -100,10 +99,10 @@ describe('licensed commentary verse lookup', () => {
   });
 
   it('reports unavailable commentary honestly, and permits a retry', async () => {
-    const request = vi.fn(async () => new Response('Not found', { status: 404 }));
+    const request = vi.fn(() => Promise.resolve(new Response('Not found', { status: 404 })));
     vi.stubGlobal('fetch', request);
     await expect(loadTyndaleBook('zephaniah')).rejects.toThrow('not available offline');
-    request.mockImplementation(async () => new Response(JSON.stringify([direct]), { status: 200 }));
+    request.mockImplementation(() => Promise.resolve(new Response(JSON.stringify([direct]), { status: 200 })));
     expect(await loadTyndaleBook('zephaniah')).toEqual([direct]);
     expect(request).toHaveBeenCalledTimes(2);
   });
@@ -111,7 +110,7 @@ describe('licensed commentary verse lookup', () => {
   it('rejects a malformed source archive', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response('{"items":[]}', { status: 200 })),
+      vi.fn(() => Promise.resolve(new Response('{"items":[]}', { status: 200 }))),
     );
     await expect(loadTyndaleBook('philemon')).rejects.toThrow('damaged');
   });
