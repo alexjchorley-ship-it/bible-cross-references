@@ -477,3 +477,52 @@ describe('one-per-colour reading bookmarks', () => {
     );
   });
 });
+
+describe('bookmark cloud deletion and backup safety', () => {
+  it('deletes all four colour positions with durable cloud tombstones', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('green', 'Gen.1.1');
+    await store.setReadingBookmark('amber', 'John.3.16');
+    await store.setReadingBookmark('blue', 'Rev.22.21');
+    await store.deleteAllAnnotations();
+    expect(fake.stores.bookmarks.size).toBe(0);
+    const remote = (await store.exportCloudRecords()).filter((entry) => entry.kind === 'bookmark');
+    expect(remote).toHaveLength(3);
+    expect(remote.every((entry) => entry.deleted)).toBe(true);
+  });
+
+  it('applies a newer remote bookmark deletion without reviving an older one', async () => {
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('green', 'Gen.1.1');
+    const now = '2028-01-01T00:00:00.000Z';
+    await store.applyCloudRecords([{
+      kind: 'bookmark', item_id: 'green', verse_id: 'Gen.1.1', body: null,
+      color: 'green', created_at: now, updated_at: now, deleted: true,
+    }]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).bookmarks).toEqual([]);
+    expect((await store.exportCloudRecords()).find((entry) => entry.kind === 'bookmark')?.deleted).toBe(true);
+  });
+
+  it('imports new bookmark colours without erasing existing different colours', async () => {
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('amber', 'Gen.1.1');
+    const backup = JSON.stringify({
+      format: 'bible-study-annotations', schemaVersion: 2,
+      exportedAt: late, appVersion: '1.0', annotations: [], highlights: [],
+      bookmarks: [{ color: 'pink', verseId: 'John.3.16', updatedAt: late }],
+    });
+    await store.importAnnotations(backup);
+    const bookmarks = parseAnnotationsBackup(await store.exportAnnotations()).bookmarks;
+    expect(bookmarks).toHaveLength(2);
+    expect(bookmarks?.find((item) => item.color === 'amber')?.verseId).toBe('Gen.1.1');
+    expect(bookmarks?.find((item) => item.color === 'pink')?.verseId).toBe('John.3.16');
+  });
+
+  it('rejects malformed bookmark positions without touching stored data', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await expect(store.setReadingBookmark('amber', 'Gen.0.999')).rejects.toThrow('Invalid');
+    expect(fake.stores.bookmarks.size).toBe(0);
+  });
+});
