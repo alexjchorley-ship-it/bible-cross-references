@@ -493,6 +493,7 @@ describe('bookmark cloud deletion and backup safety', () => {
   });
 
   it('applies a newer remote bookmark deletion without reviving an older one', async () => {
+    installIndexedDB();
     const store = await import('./storage.ts');
     await store.setReadingBookmark('green', 'Gen.1.1');
     const now = '2028-01-01T00:00:00.000Z';
@@ -505,6 +506,7 @@ describe('bookmark cloud deletion and backup safety', () => {
   });
 
   it('imports new bookmark colours without erasing existing different colours', async () => {
+    installIndexedDB();
     const store = await import('./storage.ts');
     await store.setReadingBookmark('amber', 'Gen.1.1');
     const backup = JSON.stringify({
