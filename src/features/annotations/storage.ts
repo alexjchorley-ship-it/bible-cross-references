@@ -298,9 +298,11 @@ export async function importAnnotations(
     const bookmarks = [...snapshot.bookmarks];
     for (const bookmark of backup.bookmarks ?? []) {
       const current = bookmarks.find((entry) => entry.color === bookmark.color);
-      if ((!current || bookmark.updatedAt > current.updatedAt) &&
-          (!deleted.get(recordId('bookmark', bookmark.color)) ||
-            bookmark.updatedAt > (deleted.get(recordId('bookmark', bookmark.color)) ?? ''))) {
+      if (
+        (!current || bookmark.updatedAt > current.updatedAt) &&
+        (!deleted.get(recordId('bookmark', bookmark.color)) ||
+          bookmark.updatedAt > (deleted.get(recordId('bookmark', bookmark.color)) ?? ''))
+      ) {
         if (current) bookmarks.splice(bookmarks.indexOf(current), 1);
         bookmarks.push(bookmark);
       }
@@ -335,26 +337,40 @@ export async function importAnnotations(
 }
 
 /** Move only this colour's reading position; other colours remain untouched. */
-export function setReadingBookmark(color: ReadingBookmark['color'], verseId: string | null): Promise<void> {
+export function setReadingBookmark(
+  color: ReadingBookmark['color'],
+  verseId: string | null,
+): Promise<void> {
   if (!isHighlightColor(color) || (verseId !== null && !isCanonicalVerseId(verseId))) {
     return Promise.reject(new Error('Invalid bookmark colour or verse.'));
   }
-  return enqueue((db) => write(db, ['bookmarks', 'sync_deletions'], (transaction) => {
-    const store = transaction.objectStore('bookmarks');
-    const deleted = transaction.objectStore('sync_deletions');
-    const key = recordId('bookmark', color);
-    const prior = snapshot.bookmarks.find((entry) => entry.color === color);
-    const updatedAt = new Date().toISOString();
-    if (verseId === null) {
-      store.delete(color);
-      if (prior) deleted.put({ id: key, kind: 'bookmark', item_id: color,
-        verse_id: prior.verseId, body: null, color, created_at: prior.updatedAt,
-        updated_at: updatedAt, deleted: true } satisfies DeletionRecord);
-    } else {
-      store.put({ color, verseId, updatedAt } satisfies ReadingBookmark);
-      deleted.delete(key);
-    }
-  }));
+  return enqueue((db) =>
+    write(db, ['bookmarks', 'sync_deletions'], (transaction) => {
+      const store = transaction.objectStore('bookmarks');
+      const deleted = transaction.objectStore('sync_deletions');
+      const key = recordId('bookmark', color);
+      const prior = snapshot.bookmarks.find((entry) => entry.color === color);
+      const updatedAt = new Date().toISOString();
+      if (verseId === null) {
+        store.delete(color);
+        if (prior)
+          deleted.put({
+            id: key,
+            kind: 'bookmark',
+            item_id: color,
+            verse_id: prior.verseId,
+            body: null,
+            color,
+            created_at: prior.updatedAt,
+            updated_at: updatedAt,
+            deleted: true,
+          } satisfies DeletionRecord);
+      } else {
+        store.put({ color, verseId, updatedAt } satisfies ReadingBookmark);
+        deleted.delete(key);
+      }
+    }),
+  );
 }
 
 export function deleteAllAnnotations(): Promise<void> {
@@ -389,10 +405,17 @@ export function deleteAllAnnotations(): Promise<void> {
         } satisfies DeletionRecord);
       }
       for (const bookmark of snapshot.bookmarks) {
-        store.put({ id: recordId('bookmark', bookmark.color), kind: 'bookmark',
-          item_id: bookmark.color, verse_id: bookmark.verseId, body: null,
-          color: bookmark.color, created_at: bookmark.updatedAt,
-          updated_at: now, deleted: true } satisfies DeletionRecord);
+        store.put({
+          id: recordId('bookmark', bookmark.color),
+          kind: 'bookmark',
+          item_id: bookmark.color,
+          verse_id: bookmark.verseId,
+          body: null,
+          color: bookmark.color,
+          created_at: bookmark.updatedAt,
+          updated_at: now,
+          deleted: true,
+        } satisfies DeletionRecord);
       }
       transaction.objectStore('bookmarks').clear();
       transaction.objectStore('notes').clear();
@@ -427,9 +450,14 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
       deleted: false,
     })),
     ...snapshot.bookmarks.map((bookmark) => ({
-      kind: 'bookmark' as const, item_id: bookmark.color, verse_id: bookmark.verseId,
-      body: null, color: bookmark.color, created_at: bookmark.updatedAt,
-      updated_at: bookmark.updatedAt, deleted: false,
+      kind: 'bookmark' as const,
+      item_id: bookmark.color,
+      verse_id: bookmark.verseId,
+      body: null,
+      color: bookmark.color,
+      created_at: bookmark.updatedAt,
+      updated_at: bookmark.updatedAt,
+      deleted: false,
     })),
     ...tombstones,
   ];
@@ -473,9 +501,16 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
             updatedAt: row.updated_at,
           } satisfies PersonalNote);
           deletions.delete(id);
-        } else if (row.kind === 'bookmark' && isHighlightColor(row.color) && row.item_id === row.color) {
-          bookmarks.put({ color: row.color, verseId: row.verse_id,
-            updatedAt: row.updated_at } satisfies ReadingBookmark);
+        } else if (
+          row.kind === 'bookmark' &&
+          isHighlightColor(row.color) &&
+          row.item_id === row.color
+        ) {
+          bookmarks.put({
+            color: row.color,
+            verseId: row.verse_id,
+            updatedAt: row.updated_at,
+          } satisfies ReadingBookmark);
           deletions.delete(id);
         } else if (row.kind === 'highlight' && row.color !== null) {
           highlights.put({
@@ -518,9 +553,15 @@ async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotatio
       updated_at: h.updatedAt,
       deleted: false,
     })),
-    ...bookmarks.map((b) => ({kind: 'bookmark' as const, item_id: b.color,
-      verse_id: b.verseId, body: null, color: b.color,
-      created_at: b.updatedAt, updated_at: b.updatedAt, deleted: false,
+    ...bookmarks.map((b) => ({
+      kind: 'bookmark' as const,
+      item_id: b.color,
+      verse_id: b.verseId,
+      body: null,
+      color: b.color,
+      created_at: b.updatedAt,
+      updated_at: b.updatedAt,
+      deleted: false,
     })),
     ...deletions,
   ];

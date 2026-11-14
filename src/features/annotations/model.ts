@@ -18,10 +18,12 @@ export interface ReadingBookmark {
 }
 
 export function isReadingBookmark(value: unknown): value is ReadingBookmark {
-  return object(value) &&
+  return (
+    object(value) &&
     isHighlightColor(value['color']) &&
     isCanonicalVerseId(value['verseId']) &&
-    isDate(value['updatedAt']);
+    isDate(value['updatedAt'])
+  );
 }
 
 export interface PersonalNote {
@@ -108,7 +110,7 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
   if (ids.size !== value['annotations'].length || verses.size !== value['highlights'].length) {
     throw new Error('The backup contains duplicate note IDs or highlighted verses.');
   }
-  const bookmarks = value['schemaVersion'] === 2 ? value['bookmarks'] as ReadingBookmark[] : [];
+  const bookmarks = value['schemaVersion'] === 2 ? (value['bookmarks'] as ReadingBookmark[]) : [];
   if (new Set(bookmarks.map((bookmark) => bookmark.color)).size !== bookmarks.length) {
     throw new Error('The backup contains duplicate bookmark colours.');
   }

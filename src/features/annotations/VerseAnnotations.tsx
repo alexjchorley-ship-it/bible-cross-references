@@ -169,8 +169,14 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           {t('annotations.highlight')}
           {highlight ? ` · ${t(COLOR_KEYS[highlight])}` : ''}
         </button>
-        <button type="button" className={styles.button} aria-expanded={showBookmarks}
-          onClick={() => { setShowBookmarks(!showBookmarks); }}>
+        <button
+          type="button"
+          className={styles.button}
+          aria-expanded={showBookmarks}
+          onClick={() => {
+            setShowBookmarks(!showBookmarks);
+          }}
+        >
           🔖 Bookmark{verseBookmarks.length > 0 ? ` (${verseBookmarks.length})` : ''}
         </button>
         <button
@@ -221,14 +227,32 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           {HIGHLIGHT_COLORS.map((color) => {
             const current = bookmarks.find((bookmark) => bookmark.color === color);
             const active = current?.verseId === verseId;
-            return <button key={color} type="button" className={styles.swatch}
-              data-color={color} aria-pressed={active} disabled={status !== 'ready'}
-              title={current ? `Current ${color} bookmark: ${current.verseId}` : `New ${color} bookmark`}
-              onClick={() => { void setReadingBookmark(color, active ? null : verseId); }}>
-                {t(COLOR_KEYS[color])}{active ? ' ✓' : ''}
-              </button>;
+            return (
+              <button
+                key={color}
+                type="button"
+                className={styles.swatch}
+                data-color={color}
+                aria-pressed={active}
+                disabled={status !== 'ready'}
+                title={
+                  current
+                    ? `Current ${color} bookmark: ${current.verseId}`
+                    : `New ${color} bookmark`
+                }
+                onClick={() => {
+                  void setReadingBookmark(color, active ? null : verseId);
+                }}
+              >
+                {t(COLOR_KEYS[color])}
+                {active ? ' ✓' : ''}
+              </button>
+            );
           })}
-          <p className={styles.warning}>One position per colour. Moving a colour replaces its previous bookmark, without changing highlights.</p>
+          <p className={styles.warning}>
+            One position per colour. Moving a colour replaces its previous bookmark, without
+            changing highlights.
+          </p>
         </div>
       )}
       {showNotes && (

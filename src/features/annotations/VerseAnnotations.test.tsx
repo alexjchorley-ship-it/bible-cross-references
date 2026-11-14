@@ -162,7 +162,10 @@ describe('verse highlights and personal notes', () => {
 describe('colour-coded reading positions', () => {
   it('offers bookmark colours independently of permanent highlights', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      status: 'ready', error: null, notes: [], highlights: [],
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
       bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="John.3.16" />);

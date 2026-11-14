@@ -120,20 +120,44 @@ export function Notebook({
       </div>
       <section className={styles.section} aria-label="Reading bookmarks">
         <h3>Reading bookmarks</h3>
-        <p className={styles.warning}>One moving bookmark per colour. Select a colour to resume that study.</p>
+        <p className={styles.warning}>
+          One moving bookmark per colour. Select a colour to resume that study.
+        </p>
         <div className={styles.palette}>
           {HIGHLIGHT_COLORS.map((color) => {
             const bookmark = bookmarks.find((entry) => entry.color === color);
-            return <div key={color} className={styles.bookmarkGroup}>
-              <button type="button" className={styles.swatch} data-color={color}
-                disabled={!bookmark}
-                onClick={() => { if (bookmark) { onOpenVerse(bookmark.verseId); onClose(); } }}>
-                {color.charAt(0).toUpperCase() + color.slice(1)}: {bookmark?.verseId.replaceAll('.', ' ') ?? 'Not set'}
-              </button>
-              {bookmark && <button type="button" className={styles.smallButton}
-                disabled={status !== 'ready'} aria-label={`Remove ${color} bookmark`}
-                onClick={() => { void setReadingBookmark(color, null); }}>Remove</button>}
-            </div>;
+            return (
+              <div key={color} className={styles.bookmarkGroup}>
+                <button
+                  type="button"
+                  className={styles.swatch}
+                  data-color={color}
+                  disabled={!bookmark}
+                  onClick={() => {
+                    if (bookmark) {
+                      onOpenVerse(bookmark.verseId);
+                      onClose();
+                    }
+                  }}
+                >
+                  {color.charAt(0).toUpperCase() + color.slice(1)}:{' '}
+                  {bookmark?.verseId.replaceAll('.', ' ') ?? 'Not set'}
+                </button>
+                {bookmark && (
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    disabled={status !== 'ready'}
+                    aria-label={`Remove ${color} bookmark`}
+                    onClick={() => {
+                      void setReadingBookmark(color, null);
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            );
           })}
         </div>
       </section>
