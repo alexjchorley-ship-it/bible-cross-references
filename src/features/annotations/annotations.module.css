@@ -1,0 +1,217 @@
+.section {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.025);
+}
+
+.toolbar,
+.palette,
+.noteFooter,
+.notebookHeader,
+.notebookActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.button,
+.smallButton,
+.swatch,
+.notebookButton {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.035);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.button:hover,
+.smallButton:hover,
+.notebookButton:hover {
+  background: rgb(255 255 255 / 0.11);
+}
+
+.button:disabled,
+.smallButton:disabled,
+.swatch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.swatch {
+  min-block-size: 2.5rem;
+  border-inline-start: 0.45rem solid transparent;
+}
+
+.swatch[data-color='amber'] {
+  border-inline-start-color: #e6b351;
+}
+
+.swatch[data-color='green'] {
+  border-inline-start-color: #5ca987;
+}
+
+.swatch[data-color='blue'] {
+  border-inline-start-color: #6ca8ed;
+}
+
+.swatch[data-color='pink'] {
+  border-inline-start-color: #d88bba;
+}
+
+.swatch[aria-pressed='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.notes,
+.note {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.note {
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.textarea,
+.search {
+  inline-size: 100%;
+  box-sizing: border-box;
+  min-block-size: 5rem;
+  resize: vertical;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #1b1b1b;
+  color: var(--color-text);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.noteFooter {
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.warning {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.notebookOpen {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.5rem;
+  margin-inline-start: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.notebookDialog {
+  position: fixed;
+  z-index: 1000;
+  inset: 5% auto auto 50%;
+  inline-size: min(40rem, calc(100vw - 2rem));
+  max-block-size: 90vh;
+  padding: var(--space-4);
+  overflow-y: auto;
+  transform: translateX(-50%);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: #171717;
+  color: var(--color-text);
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 0.5);
+}
+
+.notebookDialog::backdrop {
+  background: rgb(0 0 0 / 0.75);
+}
+
+.notebookHeader {
+  justify-content: space-between;
+}
+
+.notebookHeader h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+}
+
+.notebookList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.notebookItem {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.notebookItem p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.notebookActions {
+  margin-block: var(--space-3);
+}
+
+.studyCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.studyCard h4,
+.studyCard p {
+  margin: 0;
+}
+
+.studySources {
+  display: grid;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-4);
+}
+
+.studySources a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+@media (max-width: 47.99rem) {
+  .notebookOpen {
+    font-size: 0.72rem;
+    padding-inline: var(--space-1);
+  }
+
+  .notebookDialog {
+    inset-block-start: 1rem;
+    max-block-size: calc(100vh - 2rem);
+    padding: var(--space-3);
+  }
+}

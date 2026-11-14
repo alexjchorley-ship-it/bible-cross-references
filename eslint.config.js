@@ -41,12 +41,18 @@ export default defineConfig([
   },
   {
     // Node-side code: the data pipeline CLIs report progress on stdout.
-    files: ['scripts/**/*.ts', 'tests/**/*.ts', 'vite/**/*.ts', '*.config.{js,ts}'],
+    files: [
+      'scripts/**/*.ts',
+      'scripts/**/*.mjs',
+      'tests/**/*.ts',
+      'vite/**/*.ts',
+      '*.config.{js,ts}',
+    ],
     languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     extends: [tseslint.configs.disableTypeChecked],
   },
   prettier,

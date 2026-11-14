@@ -5,23 +5,23 @@
 
 The existing application code is described as MIT in `package.json`. **Do not assume the data inherit MIT.** The entries below reproduce the fork's checked-in `data/sources.json`, including per-source claimed licences. Check original provider files, copyright notices, redistribution conditions and attribution before adding/remixing content.
 
-| Data ID | Source contents | Licence as declared upstream | Publisher homepage |
-|---|---|---|---|
-| `bsb` | Berean Standard Bible, plain text (one verse per line) | Public domain | [Source](https://berean.bible/) |
-| `kjv` | King James Version, eBible.org edition, verse-per-line text in a ZIP archive | Public domain (United Kingdom: Crown copyright) | [Source](https://ebible.org/Scriptures/details.php?id=eng-kjv2006) |
-| `blivre` | Bíblia Livre (Textus Receptus edition), verse-per-line text in a ZIP archive | CC BY 3.0 BR | [Source](https://sites.google.com/site/biblialivre/) |
-| `luther1912` | Lutherbibel 1912, eBible.org edition, verse-per-line text in a ZIP archive | Public domain | [Source](https://ebible.org/Scriptures/details.php?id=deu1912) |
-| `riveduta1927` | Riveduta 1927, eBible.org edition, verse-per-line text in a ZIP archive | Public domain | [Source](https://ebible.org/Scriptures/details.php?id=ita1927) |
-| `vbl` | Versión Biblia Libre, eBible.org edition, verse-per-line text in a ZIP archive | CC BY-SA 4.0 | [Source](https://ebible.org/Scriptures/details.php?id=spavbl) |
-| `openbible` | OpenBible.info cross-references (TSV in a ZIP archive) | CC BY 4.0 | [Source](https://www.openbible.info/labs/cross-references/) |
-| `stepbible-tagnt-mat-jhn` | Translators Amalgamated Greek NT (Matthew-John), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tagnt-act-rev` | Translators Amalgamated Greek NT (Acts-Revelation), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tahot-gen-deu` | Translators Amalgamated Hebrew OT (Genesis-Deuteronomy), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tahot-jos-est` | Translators Amalgamated Hebrew OT (Joshua-Esther), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tahot-job-sng` | Translators Amalgamated Hebrew OT (Job-Song of Songs), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tahot-isa-mal` | Translators Amalgamated Hebrew OT (Isaiah-Malachi), word-per-line with Strongs | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tbesg` | Translators Brief lexicon of Extended Strongs for Greek (dictionary forms and glosses) | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
-| `stepbible-tbesh` | Translators Brief lexicon of Extended Strongs for Hebrew (dictionary forms and glosses) | CC BY 4.0 | [Source](https://github.com/STEPBible/STEPBible-Data) |
+| Data ID                   | Source contents                                                                         | Licence as declared upstream                    | Publisher homepage                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------ |
+| `bsb`                     | Berean Standard Bible, plain text (one verse per line)                                  | Public domain                                   | [Source](https://berean.bible/)                                    |
+| `kjv`                     | King James Version, eBible.org edition, verse-per-line text in a ZIP archive            | Public domain (United Kingdom: Crown copyright) | [Source](https://ebible.org/Scriptures/details.php?id=eng-kjv2006) |
+| `blivre`                  | Bíblia Livre (Textus Receptus edition), verse-per-line text in a ZIP archive            | CC BY 3.0 BR                                    | [Source](https://sites.google.com/site/biblialivre/)               |
+| `luther1912`              | Lutherbibel 1912, eBible.org edition, verse-per-line text in a ZIP archive              | Public domain                                   | [Source](https://ebible.org/Scriptures/details.php?id=deu1912)     |
+| `riveduta1927`            | Riveduta 1927, eBible.org edition, verse-per-line text in a ZIP archive                 | Public domain                                   | [Source](https://ebible.org/Scriptures/details.php?id=ita1927)     |
+| `vbl`                     | Versión Biblia Libre, eBible.org edition, verse-per-line text in a ZIP archive          | CC BY-SA 4.0                                    | [Source](https://ebible.org/Scriptures/details.php?id=spavbl)      |
+| `openbible`               | OpenBible.info cross-references (TSV in a ZIP archive)                                  | CC BY 4.0                                       | [Source](https://www.openbible.info/labs/cross-references/)        |
+| `stepbible-tagnt-mat-jhn` | Translators Amalgamated Greek NT (Matthew-John), word-per-line with Strongs             | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tagnt-act-rev` | Translators Amalgamated Greek NT (Acts-Revelation), word-per-line with Strongs          | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tahot-gen-deu` | Translators Amalgamated Hebrew OT (Genesis-Deuteronomy), word-per-line with Strongs     | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tahot-jos-est` | Translators Amalgamated Hebrew OT (Joshua-Esther), word-per-line with Strongs           | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tahot-job-sng` | Translators Amalgamated Hebrew OT (Job-Song of Songs), word-per-line with Strongs       | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tahot-isa-mal` | Translators Amalgamated Hebrew OT (Isaiah-Malachi), word-per-line with Strongs          | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tbesg`         | Translators Brief lexicon of Extended Strongs for Greek (dictionary forms and glosses)  | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
+| `stepbible-tbesh`         | Translators Brief lexicon of Extended Strongs for Hebrew (dictionary forms and glosses) | CC BY 4.0                                       | [Source](https://github.com/STEPBible/STEPBible-Data)              |
 
 ## New study/commentary datasets: not imported yet
 

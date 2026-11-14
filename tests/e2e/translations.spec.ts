@@ -191,7 +191,8 @@ test.describe('other translations, on bible.com', () => {
     // The panel is up, in Portuguese, before its links are counted: a count of none taken
     // before the panel arrived would pass whatever the panel then showed.
     await expect(page.locator(PANEL)).toContainText(/Porque Deus amou ao mundo/u);
-    await expect(page.locator(PANEL).getByRole('group')).toHaveCount(0);
+    // Verse annotations have their own accessible group; only the external-links group must be absent.
+    await expect(page.locator(PANEL).getByRole('group', { name: /bible\.com/u })).toHaveCount(0);
     await expect(page.locator(PANEL).getByRole('link', { name: /bible\.com/u })).toHaveCount(0);
   });
 });

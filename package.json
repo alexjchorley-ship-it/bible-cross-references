@@ -9,8 +9,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "npm run data:build && vite",
-    "build": "npm run data:build && tsc -b && vite build",
+    "dev": "npm run data:build && npm run commentary:build && vite",
+    "build": "npm run data:build && npm run commentary:build && tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "typecoverage": "node scripts/type-coverage.ts",
@@ -30,6 +30,7 @@
     "data": "npm run data:fetch && npm run data:build",
     "data:fetch": "node scripts/data/fetch.ts",
     "data:build": "node scripts/data/build.ts",
+    "commentary:build": "node scripts/commentary/build.mjs",
     "locale:new": "node scripts/locale/new.ts"
   },
   "dependencies": {
