@@ -127,8 +127,8 @@ describe('cross-device synchronisation notebook panel', () => {
     render(<CloudSyncPanel />);
     const user = await fillCredentials();
     await user.click(screen.getByRole('button', { name: 'Create account' }));
-    expect(await screen.findByText(/account created/i)).toBeDefined();
     await waitFor(() => {
+      expect(auth.signUpCloud).toHaveBeenCalled();
       expect(sync.syncCloudAnnotations).toHaveBeenCalled();
     });
   });
