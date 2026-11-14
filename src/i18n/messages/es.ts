@@ -55,6 +55,12 @@ export const es: LocaleMessages = {
   'annotations.blue': 'Azul',
   'annotations.pink': 'Rosa',
 
+  'navigation.open': "Elegir libro y capítulo de la Biblia",
+  'navigation.chooseBook': "Elige un libro",
+  'navigation.chooseChapter': "Elige un capítulo",
+  'navigation.back': "Volver a los libros",
+  'navigation.close': "Cerrar navegación bíblica",
+
   'search.label': 'Ir a un pasaje de la Biblia',
   'search.placeholder': 'Ir a…  Jn 3:16, Sal 23',
 
