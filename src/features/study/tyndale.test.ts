@@ -45,11 +45,13 @@ describe('licensed commentary verse lookup', () => {
     if (!start) {
       throw new Error('Fixture missing.');
     }
+    const range = introduction.refs[0];
+    if (!range) throw new Error('Missing range fixture.');
     expect(coveringReference(start, { book: 'Gen', chapter: 1, verse: 1 })).toBe(true);
     expect(coveringReference(start, { book: 'Gen', chapter: 1, verse: 2 })).toBe(false);
     expect(coveringReference(start, { book: 'Exod', chapter: 1, verse: 1 })).toBe(false);
-    expect(coveringReference(introduction.refs[0]!, { book: 'Gen', chapter: 2, verse: 3 })).toBe(true);
-    expect(coveringReference(introduction.refs[0]!, { book: 'Gen', chapter: 2, verse: 4 })).toBe(false);
+    expect(coveringReference(range, { book: 'Gen', chapter: 2, verse: 3 })).toBe(true);
+    expect(coveringReference(range, { book: 'Gen', chapter: 2, verse: 4 })).toBe(false);
   });
 
   it('separates original verse-specific notes from passage-wide context', () => {
@@ -64,7 +66,7 @@ describe('licensed commentary verse lookup', () => {
   });
 
   it('verifies the returned book structure, retains only actual StudyNote records and caches it', async () => {
-    const request = vi.fn(async () =>
+    const request = vi.fn(async (_url: string) =>
       new Response(JSON.stringify([direct, introduction, { ...direct, type: 'BookIntro' }, { nonsense: true }]), { status: 200 }),
     );
     vi.stubGlobal('fetch', request);
