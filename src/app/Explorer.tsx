@@ -240,7 +240,13 @@ export function Explorer({ core }: { readonly core: VizCore }) {
           navigate({ ...location, view: view.id, passage });
         }}
       />
-      <button type="button" className={styles.notebookOpen} onClick={() => setNotebookOpen(true)}>
+      <button
+        type="button"
+        className={styles.notebookOpen}
+        onClick={() => {
+          setNotebookOpen(true);
+        }}
+      >
         {t('annotations.notebook')}
       </button>
     </>
@@ -328,7 +334,9 @@ export function Explorer({ core }: { readonly core: VizCore }) {
       })}
       <Notebook
         open={notebookOpen}
-        onClose={() => setNotebookOpen(false)}
+        onClose={() => {
+          setNotebookOpen(false);
+        }}
         onOpenVerse={(verseId) => {
           const target = parsePassageOsisId(verseId, versification);
           if (target) {

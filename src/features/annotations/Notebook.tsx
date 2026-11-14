@@ -77,7 +77,9 @@ export function Notebook({
       anchor.href = url;
       anchor.download = 'bible-study-annotations.json';
       anchor.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
       setNotice(t('annotations.export'));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t('annotations.error'));
@@ -157,7 +159,9 @@ export function Notebook({
           disabled={status !== 'ready'}
           onClick={() => {
             if (window.confirm(t('annotations.clear') + '?')) {
-              void deleteAllAnnotations().catch(() => setError(t('annotations.error')));
+              void deleteAllAnnotations().catch(() => {
+                setError(t('annotations.error'));
+              });
             }
           }}
         >
@@ -171,13 +175,17 @@ export function Notebook({
         aria-label={t('annotations.search')}
         placeholder={t('annotations.search')}
         value={search}
-        onChange={(event) => setSearch(event.target.value)}
+        onChange={(event) => {
+          setSearch(event.target.value);
+        }}
       />
       <select
         aria-label={t('annotations.highlight')}
         className={styles.button}
         value={filter}
-        onChange={(event) => setFilter(event.target.value as ColourFilter)}
+        onChange={(event) => {
+          setFilter(event.target.value as ColourFilter);
+        }}
       >
         <option value="all">{t('menu.filters.votes.all')}</option>
         {HIGHLIGHT_COLORS.map((color) => (

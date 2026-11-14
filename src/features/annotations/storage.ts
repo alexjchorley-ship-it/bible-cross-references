@@ -61,7 +61,9 @@ function database(): Promise<IDBDatabase> {
         db.createObjectStore('highlights', { keyPath: 'verseId' });
       }
     };
-    request.onerror = () => reject(request.error ?? new Error('Cannot open annotations.'));
+    request.onerror = () => {
+      reject(request.error ?? new Error('Cannot open annotations.'));
+    };
     request.onsuccess = () => {
       const db = request.result;
       db.onversionchange = () => {
@@ -75,8 +77,9 @@ function database(): Promise<IDBDatabase> {
       };
       resolve(db);
     };
-    request.onblocked = () =>
+    request.onblocked = () => {
       reject(new Error('Another tab is blocking an annotations storage upgrade.'));
+    };
   });
   return connection;
 }
@@ -84,8 +87,12 @@ function database(): Promise<IDBDatabase> {
 function all<T>(db: IDBDatabase, name: string): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const request = db.transaction(name, 'readonly').objectStore(name).getAll();
-    request.onsuccess = () => resolve(request.result as T[]);
-    request.onerror = () => reject(request.error ?? new Error('Cannot read annotations.'));
+    request.onsuccess = () => {
+      resolve(request.result as T[]);
+    };
+    request.onerror = () => {
+      reject(request.error ?? new Error('Cannot read annotations.'));
+    };
   });
 }
 
@@ -96,11 +103,15 @@ function write(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([...stores], 'readwrite');
-    transaction.oncomplete = () => resolve();
-    transaction.onabort = () =>
+    transaction.oncomplete = () => {
+      resolve();
+    };
+    transaction.onabort = () => {
       reject(transaction.error ?? new Error('Storage transaction aborted.'));
-    transaction.onerror = () =>
+    };
+    transaction.onerror = () => {
       reject(transaction.error ?? new Error('Storage transaction failed.'));
+    };
     try {
       change(transaction);
     } catch (error) {

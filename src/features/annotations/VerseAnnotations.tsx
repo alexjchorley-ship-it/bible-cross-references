@@ -79,7 +79,9 @@ function SavedNote({ note }: { readonly note: PersonalNote }) {
         className={styles.textarea}
         value={draft}
         rows={Math.max(3, draft.split('\n').length)}
-        onChange={(event) => edit(event.target.value)}
+        onChange={(event) => {
+          edit(event.target.value);
+        }}
         onBlur={() => {
           if (timer.current !== null) {
             clearTimeout(timer.current);
@@ -157,7 +159,9 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           type="button"
           className={styles.button}
           aria-expanded={showColors}
-          onClick={() => setShowColors(!showColors)}
+          onClick={() => {
+            setShowColors(!showColors);
+          }}
         >
           {t('annotations.highlight')}
           {highlight ? ` · ${t(COLOR_KEYS[highlight])}` : ''}
@@ -166,7 +170,9 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           type="button"
           className={styles.button}
           aria-expanded={showNotes}
-          onClick={() => setShowNotes(!showNotes)}
+          onClick={() => {
+            setShowNotes(!showNotes);
+          }}
         >
           {t('annotations.notes')} {verseNotes.length > 0 ? `(${String(verseNotes.length)})` : ''}
         </button>
@@ -214,7 +220,9 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
             placeholder={t('annotations.new')}
             value={newText}
             rows={3}
-            onChange={(event) => setNewText(event.target.value)}
+            onChange={(event) => {
+              setNewText(event.target.value);
+            }}
           />
           <button
             type="button"
