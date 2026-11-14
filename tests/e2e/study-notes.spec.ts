@@ -32,13 +32,13 @@ test.describe('Bible Study reader additions', () => {
     await expect(notebook).not.toBeVisible();
   });
 
-  test('study panel displays authentic verse-specific Tyndale notes and sourced disagreements', async ({
-    page,
-  }) => {
+  test('study panel shows sourced Tyndale notes and differing readings', async ({ page }) => {
     await openPassage(page, 'Gen.1.1');
     const panel = page.locator(PANEL);
     await panel.getByText('Theological study', { exact: true }).click();
-    await expect(panel.getByText(/This statement summarizes the entire creation account/)).toBeVisible();
+    await expect(
+      panel.getByText(/This statement summarizes the entire creation account/),
+    ).toBeVisible();
     await expect(panel.getByText('An independent opening statement')).toBeVisible();
     await expect(panel.getByText(/A dependent opening/)).toBeVisible();
     await expect(panel.getByRole('link', { name: 'CC BY-SA 4.0' })).toBeVisible();
