@@ -1,0 +1,42 @@
+name: One-off format feature branch
+
+on:
+  push:
+    branches: [feat/verse-notes-and-study]
+
+concurrency:
+  group: once-format-feature
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.repository == 'alexjchorley-ship-it/bible-cross-references' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: feat/verse-notes-and-study
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Apply safe auto-fixes
+        run: |
+          npx eslint --fix src/features/annotations src/features/study src/visualizations/shared/components/ReferenceSearch.tsx src/visualizations/shared/components/ReferenceSearch.test.tsx src/app/Explorer.tsx tests/e2e || true
+      - name: Format all touched source and tests
+        run: |
+          npx prettier --write src/features/annotations src/features/study src/visualizations/shared/components/ReferenceSearch.tsx src/visualizations/shared/components/ReferenceSearch.test.tsx src/visualizations/shared/components/ReferenceSearch.module.css src/visualizations/shared/components/PassagePanel.tsx src/visualizations/threads/ThreadsStage.tsx src/visualizations/threads/ThreadsStage.module.css src/visualizations/threads/ThreadsExplorer.tsx src/visualizations/arcs/ArcsExplorer.tsx src/app/Explorer.tsx src/app/Explorer.module.css src/i18n/messages tests/e2e scripts/commentary/build.mjs eslint.config.js package.json vite/site.ts .github/workflows/ci.yml
+      - name: Commit formatted files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: format the study app feature branch'
+            git push origin HEAD:feat/verse-notes-and-study
+          fi
