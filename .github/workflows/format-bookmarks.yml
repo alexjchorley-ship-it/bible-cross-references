@@ -1,0 +1,28 @@
+name: Format bookmark feature branch
+on:
+  push:
+    branches: [fix/mobile-verse-highlight-visibility]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/features/annotations src/visualizations/threads/ThreadsStage.module.css
+      - name: Commit formatted files
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add src/features/annotations src/visualizations/threads/ThreadsStage.module.css
+            git commit -m 'Format mobile highlights and reading bookmarks'
+            git push origin HEAD:fix/mobile-verse-highlight-visibility
+          fi
