@@ -7,7 +7,8 @@ import {
   versePassage,
   type Passage,
 } from '../../core/bible/passage.ts';
-import type { VerseIndex } from '../../core/bible/verse-ref.ts';
+import { toOsisId, type VerseIndex } from '../../core/bible/verse-ref.ts';
+import { useAnnotations } from '../../features/annotations/storage.ts';
 import { NextIcon, PreviousIcon, ShareVerseIcon } from '../../shared/ui/icons.tsx';
 import { collectConnections, type Connection } from '../shared/connections.ts';
 import type { LinkFilter } from '../shared/link-filter.ts';
@@ -81,6 +82,12 @@ export function ThreadsStage({
   const localization = useLocalization();
   const { t, n, books, genreName } = localization;
   const { versification, translation, crossReferences, verseGenres } = data;
+  const { notes, highlights } = useAnnotations();
+  const highlighted = useMemo(
+    () => new Map(highlights.map((entry) => [entry.verseId, entry.color])),
+    [highlights],
+  );
+  const annotated = useMemo(() => new Set(notes.map((note) => note.verseId)), [notes]);
   const readingRef = useRef<HTMLDivElement>(null);
   const canvasHostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -314,6 +321,9 @@ export function ThreadsStage({
             {verses.map((verse, offset) => {
               const text = translation.verseText(verse);
               const count = connectionsByVerse.get(verse)?.length ?? 0;
+              const verseId = toOsisId(versification.refAt(verse));
+              const color = highlighted.get(verseId);
+              const hasNotes = annotated.has(verseId);
               return (
                 <li
                   key={verse}
@@ -326,6 +336,8 @@ export function ThreadsStage({
                   }}
                   className={styles.verse}
                   data-selected={verse === selectedVerse}
+                  data-highlight={color}
+                  data-has-notes={hasNotes}
                   data-linked={linked !== null && verse >= linked.start && verse <= linked.end}
                   onPointerEnter={(event) => {
                     if (event.pointerType === 'mouse') setHoverVerse(verse);
@@ -344,13 +356,18 @@ export function ThreadsStage({
                   <button
                     type="button"
                     className={styles.number}
-                    aria-label={t('threads.verse')(n(offset + 1))}
+                    aria-label={
+                      t('threads.verse')(n(offset + 1)) +
+                      (color ? ` · ${t('annotations.marked')}` : '') +
+                      (hasNotes ? ` · ${t('annotations.hasNote')}` : '')
+                    }
                     aria-pressed={verse === selectedVerse}
                   >
                     {offset + 1}
                   </button>
                   <span className={text ? styles.text : `${styles.text} ${styles.omitted}`}>
                     {text || t('threads.omitted')(translation.manifest.abbreviation)}
+                    {hasNotes && <span className={styles.noteMark} aria-label={t('annotations.hasNote')}> ✎</span>}
                   </span>
                   <span className={styles.endSlot}>
                     <span className={styles.count} title={t('arcs.connections')(n(count), count)}>
