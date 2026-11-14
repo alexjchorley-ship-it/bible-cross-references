@@ -74,8 +74,8 @@
     }
   },
   "data/words/stepbible.json": {
-    "sha256": "f372b62acc700a5a62c621888500dcf1d7f7e244f17f9bee43cb3199c56d2e43",
-    "bytes": 1585580,
+    "sha256": "e5a99c0274f39e8dd357b7c128e22c5156f0412bc4c09be5c16087258742f7bf",
+    "bytes": 1585614,
     "shape": {
       "maxVerses": 100,
       "verseEntries": 124791,
