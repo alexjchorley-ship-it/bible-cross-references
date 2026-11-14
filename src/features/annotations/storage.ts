@@ -275,16 +275,26 @@ export async function importAnnotations(
 ): Promise<{ notes: number; highlights: number }> {
   const backup = parseAnnotationsBackup(json);
   await enqueue((db) => {
-    const notes = mergeAnnotations(snapshot.notes, backup.annotations);
-    const highlights = mergeHighlights(snapshot.highlights, backup.highlights);
-    return write(db, ['notes', 'highlights'], (transaction) => {
+    const deleted = new Map(tombstones.map((entry) => [entry.id, entry.updated_at]));
+    const notes = mergeAnnotations(snapshot.notes, backup.annotations).filter((note) => {
+      const removedAt = deleted.get(recordId('note', note.id));
+      return !removedAt || note.updatedAt > removedAt;
+    });
+    const highlights = mergeHighlights(snapshot.highlights, backup.highlights).filter((item) => {
+      const removedAt = deleted.get(recordId('highlight', item.verseId));
+      return !removedAt || item.updatedAt > removedAt;
+    });
+    return write(db, ['notes', 'highlights', 'sync_deletions'], (transaction) => {
       const noteStore = transaction.objectStore('notes');
       const highlightStore = transaction.objectStore('highlights');
+      const removalStore = transaction.objectStore('sync_deletions');
       for (const note of notes) {
         noteStore.put(note);
+        removalStore.delete(recordId('note', note.id));
       }
       for (const highlight of highlights) {
         highlightStore.put(highlight);
+        removalStore.delete(recordId('highlight', highlight.verseId));
       }
     });
   });
