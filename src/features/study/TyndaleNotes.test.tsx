@@ -8,9 +8,7 @@ const genesis: TyndaleStudyNote = {
   type: 'StudyNote',
   title: 'Genesis 1:1',
   sourceOrder: 2,
-  refs: [
-    { book: 'genesis', startChapter: 1, startVerse: 1, endChapter: 1, endVerse: 1 },
-  ],
+  refs: [{ book: 'genesis', startChapter: 1, startVerse: 1, endChapter: 1, endVerse: 1 }],
   content: [
     {
       t: 'p',
@@ -33,9 +31,7 @@ const context: TyndaleStudyNote = {
   type: 'StudyNote',
   title: 'Creation context',
   sourceOrder: 1,
-  refs: [
-    { book: 'genesis', startChapter: 1, startVerse: 1, endChapter: 2, endVerse: 3 },
-  ],
+  refs: [{ book: 'genesis', startChapter: 1, startVerse: 1, endChapter: 2, endVerse: 3 }],
   content: [{ t: 'p', c: ['God orders creation.'] }],
 };
 
@@ -53,9 +49,11 @@ describe('licensed Tyndale study panel', () => {
     render(<TyndaleNotes verseId="Gen.1.1" />);
     expect(screen.getByRole('status').textContent).toContain('Loading study notes');
     expect(
-      (await screen.findByRole('heading', { name: 'Verse commentary · Genesis 1:1' })),
+      await screen.findByRole('heading', { name: 'Verse commentary · Genesis 1:1' }),
     ).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'Passage context · Creation context' })).toBeDefined();
+    expect(
+      screen.getByRole('heading', { name: 'Passage context · Creation context' }),
+    ).toBeDefined();
     expect(screen.getByText('intentional').tagName.toLowerCase()).toBe('strong');
     expect(screen.getByText('good').tagName.toLowerCase()).toBe('em');
     expect(screen.getByText('also').tagName.toLowerCase()).toBe('strong');
@@ -121,7 +119,9 @@ describe('licensed Tyndale study panel', () => {
     );
     render(<TyndaleNotes verseId="Gen.1.2" />);
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Passage context · Creation context' })).toBeDefined();
+      expect(
+        screen.getByRole('heading', { name: 'Passage context · Creation context' }),
+      ).toBeDefined();
     });
     expect(screen.queryByRole('heading', { name: 'Verse commentary · Genesis 1:1' })).toBeNull();
   });

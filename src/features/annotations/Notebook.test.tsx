@@ -176,7 +176,10 @@ describe('searchable and exportable personal notebook', () => {
   });
 
   it('reports a failed clear and closes the notebook without losing its contents', async () => {
-    vi.stubGlobal('confirm', vi.fn(() => true));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true),
+    );
     vi.mocked(storage.deleteAllAnnotations).mockRejectedValueOnce(new Error('Locked'));
     const onClose = vi.fn();
     render(<Notebook open onClose={onClose} onOpenVerse={vi.fn()} />);

@@ -122,7 +122,7 @@ describe('verse highlights and personal notes', () => {
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Draft after failed edit' } });
     fireEvent.blur(editor);
-    expect((await screen.findByText('Could not save. Copy your text and try again.'))).toBeDefined();
+    expect(await screen.findByText('Could not save. Copy your text and try again.')).toBeDefined();
     fireEvent.change(editor, { target: { value: '   ' } });
     fireEvent.blur(editor);
     expect(vi.mocked(storage.upsertPersonalNote)).toHaveBeenCalledTimes(1);
@@ -130,7 +130,10 @@ describe('verse highlights and personal notes', () => {
 
   it('never deletes a note when the reader cancels confirmation', async () => {
     current([note]);
-    vi.stubGlobal('confirm', vi.fn(() => false));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => false),
+    );
     render(<VerseAnnotations verseId="Gen.1.1" />);
     await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
