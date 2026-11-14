@@ -23,10 +23,14 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
         </div>
       ) : (
         <>
-          <p className={styles.warning}>{t('study.language')} · {t('study.linkedOnly')}</p>
+          <p className={styles.warning}>
+            {t('study.language')} · {t('study.linkedOnly')}
+          </p>
           <h4>{t('study.overview')}</h4>
           <p>{study.overview}</p>
-          <p lang="he" dir="rtl" className={styles.hebrew}>{study.originalLanguage}</p>
+          <p lang="he" dir="rtl" className={styles.hebrew}>
+            {study.originalLanguage}
+          </p>
           <p>{study.originalLanguageNote}</p>
           <h4>{t('study.interpretations')}</h4>
           {study.interpretations.map((position) => (
@@ -54,7 +58,8 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
                 <a href={source.url} target="_blank" rel="noopener noreferrer">
                   {source.title}
                 </a>
-                {' — '}{source.author}. {source.location}
+                {' — '}
+                {source.author}. {source.location}
               </li>
             ))}
           </ol>

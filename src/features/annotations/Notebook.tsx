@@ -53,17 +53,18 @@ export function Notebook({
         color: colors.get(verseId) ?? null,
         notes: notes.filter((note) => note.verseId === verseId),
       }))
-      .filter((row) =>
-        (filter === 'all' || row.color === filter) &&
-        (query === '' ||
-          row.verseId.toLowerCase().includes(query) ||
-          row.notes.some((note) => note.body.toLowerCase().includes(query))),
+      .filter(
+        (row) =>
+          (filter === 'all' || row.color === filter) &&
+          (query === '' ||
+            row.verseId.toLowerCase().includes(query) ||
+            row.notes.some((note) => note.body.toLowerCase().includes(query))),
       )
       .toSorted((a, b) => {
         const first = parseOsisId(a.verseId);
         const second = parseOsisId(b.verseId);
-        const firstIndex = first ? CANONICAL_VERSIFICATION.indexOf(first) ?? 0 : 0;
-        const secondIndex = second ? CANONICAL_VERSIFICATION.indexOf(second) ?? 0 : 0;
+        const firstIndex = first ? (CANONICAL_VERSIFICATION.indexOf(first) ?? 0) : 0;
+        const secondIndex = second ? (CANONICAL_VERSIFICATION.indexOf(second) ?? 0) : 0;
         return firstIndex - secondIndex;
       });
   }, [notes, highlights, search, filter]);
@@ -181,13 +182,15 @@ export function Notebook({
         <option value="all">{t('menu.filters.votes.all')}</option>
         {HIGHLIGHT_COLORS.map((color) => (
           <option key={color} value={color}>
-            {t(color === 'amber'
-              ? 'annotations.amber'
-              : color === 'green'
-                ? 'annotations.green'
-                : color === 'blue'
-                  ? 'annotations.blue'
-                  : 'annotations.pink')}
+            {t(
+              color === 'amber'
+                ? 'annotations.amber'
+                : color === 'green'
+                  ? 'annotations.green'
+                  : color === 'blue'
+                    ? 'annotations.blue'
+                    : 'annotations.pink',
+            )}
           </option>
         ))}
       </select>
@@ -197,9 +200,15 @@ export function Notebook({
           <li className={styles.notebookItem} key={row.verseId}>
             <div className={styles.notebookHeader}>
               <strong>{row.verseId.replaceAll('.', ' ')}</strong>
-              {row.color && <span>{t('annotations.marked')}: {row.color}</span>}
+              {row.color && (
+                <span>
+                  {t('annotations.marked')}: {row.color}
+                </span>
+              )}
             </div>
-            {row.notes.map((note) => <p key={note.id}>{note.body}</p>)}
+            {row.notes.map((note) => (
+              <p key={note.id}>{note.body}</p>
+            ))}
             <button
               type="button"
               className={styles.button}

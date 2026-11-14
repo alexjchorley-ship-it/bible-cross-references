@@ -367,7 +367,12 @@ export function ThreadsStage({
                   </button>
                   <span className={text ? styles.text : `${styles.text} ${styles.omitted}`}>
                     {text || t('threads.omitted')(translation.manifest.abbreviation)}
-                    {hasNotes && <span className={styles.noteMark} aria-label={t('annotations.hasNote')}> ✎</span>}
+                    {hasNotes && (
+                      <span className={styles.noteMark} aria-label={t('annotations.hasNote')}>
+                        {' '}
+                        ✎
+                      </span>
+                    )}
                   </span>
                   <span className={styles.endSlot}>
                     <span className={styles.count} title={t('arcs.connections')(n(count), count)}>

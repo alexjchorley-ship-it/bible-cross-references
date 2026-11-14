@@ -65,11 +65,18 @@ describe('canonical annotations and backups', () => {
     expect(() => parseAnnotationsBackup('{')).toThrow();
     expect(() => parseAnnotationsBackup('null')).toThrow();
     expect(() => parseAnnotationsBackup('{}')).toThrow();
-    const valid = JSON.parse(serializeAnnotationsBackup([note], [highlight])) as Record<string, unknown>;
+    const valid = JSON.parse(serializeAnnotationsBackup([note], [highlight])) as Record<
+      string,
+      unknown
+    >;
     expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 2 }))).toThrow();
-    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, exportedAt: 'tomorrow' }))).toThrow();
+    expect(() =>
+      parseAnnotationsBackup(JSON.stringify({ ...valid, exportedAt: 'tomorrow' })),
+    ).toThrow();
     expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, format: 'unknown' }))).toThrow();
-    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, annotations: [note, note] }))).toThrow();
+    expect(() =>
+      parseAnnotationsBackup(JSON.stringify({ ...valid, annotations: [note, note] })),
+    ).toThrow();
     expect(() =>
       parseAnnotationsBackup(JSON.stringify({ ...valid, highlights: [highlight, highlight] })),
     ).toThrow();

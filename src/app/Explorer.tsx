@@ -240,11 +240,7 @@ export function Explorer({ core }: { readonly core: VizCore }) {
           navigate({ ...location, view: view.id, passage });
         }}
       />
-      <button
-        type="button"
-        className={styles.notebookOpen}
-        onClick={() => setNotebookOpen(true)}
-      >
+      <button type="button" className={styles.notebookOpen} onClick={() => setNotebookOpen(true)}>
         {t('annotations.notebook')}
       </button>
     </>
@@ -253,79 +249,82 @@ export function Explorer({ core }: { readonly core: VizCore }) {
   return (
     <>
       {VIEWS.map((view) => {
-    const isActive = view === active;
-    return (
-      <div
-        key={`${view.id}:${String(generation)}`}
-        className={styles.view}
-        data-view={view.id}
-        data-active={isActive}
-        inert={!isActive}
-      >
-        {/* One view failing (e.g. without WebGL) keeps the page frame, so the other stays one
+        const isActive = view === active;
+        return (
+          <div
+            key={`${view.id}:${String(generation)}`}
+            className={styles.view}
+            data-view={view.id}
+            data-active={isActive}
+            inert={!isActive}
+          >
+            {/* One view failing (e.g. without WebGL) keeps the page frame, so the other stays one
             switch away. */}
-        <ErrorBoundary
-          fallback={(error) => (
-            <VizPage masthead={masthead} credits={<Credits translation={translation.manifest} />}>
-              <p role="alert" className={styles.error}>
-                {t('error.viewFailed')(t(view.titleKey), error.message)}
-              </p>
-            </VizPage>
-          )}
-        >
-          <view.Component
-            data={data}
-            active={isActive}
-            passage={passage}
-            onNavigate={(target) => {
-              navigate({ ...location, view: view.id, passage: target });
-            }}
-            filter={filter}
-            onFilterChange={(next) => {
-              // A filter tweak replaces the history entry: Back returns to the previous passage.
-              navigate({ ...location, filter: next }, { replace: true });
-            }}
-            masthead={masthead}
-            translationMenu={translationMenu}
-            shareUrl={(target) =>
-              new URL(
-                explorerUrl(
-                  HOME,
-                  {
-                    passage: target,
-                    filter: DEFAULT_LINK_FILTER,
-                    translation: location.translation,
-                    locale: localeId,
-                  },
-                  '',
-                  versification,
-                  // A quote carries the name of the text it is in, so its link always names it
-                  // too: whoever opens it reads the words that were quoted, not their own
-                  // translation of them.
-                  null,
-                ),
-                import.meta.env.SITE_URL,
-              ).href
-            }
-            passageLinks={(target) =>
-              VIEWS.filter((other) => other !== view).map((other) => (
-                <InAppLink
-                  key={other.id}
-                  href={hrefOf(other, target)}
-                  className={controls.button}
-                  onFollow={() => {
-                    navigate({ ...location, view: other.id, passage: target });
-                  }}
+            <ErrorBoundary
+              fallback={(error) => (
+                <VizPage
+                  masthead={masthead}
+                  credits={<Credits translation={translation.manifest} />}
                 >
-                  <other.icon />
-                  {t(other.openLabelKey)}
-                </InAppLink>
-              ))
-            }
-          />
-        </ErrorBoundary>
-      </div>
-    );
+                  <p role="alert" className={styles.error}>
+                    {t('error.viewFailed')(t(view.titleKey), error.message)}
+                  </p>
+                </VizPage>
+              )}
+            >
+              <view.Component
+                data={data}
+                active={isActive}
+                passage={passage}
+                onNavigate={(target) => {
+                  navigate({ ...location, view: view.id, passage: target });
+                }}
+                filter={filter}
+                onFilterChange={(next) => {
+                  // A filter tweak replaces the history entry: Back returns to the previous passage.
+                  navigate({ ...location, filter: next }, { replace: true });
+                }}
+                masthead={masthead}
+                translationMenu={translationMenu}
+                shareUrl={(target) =>
+                  new URL(
+                    explorerUrl(
+                      HOME,
+                      {
+                        passage: target,
+                        filter: DEFAULT_LINK_FILTER,
+                        translation: location.translation,
+                        locale: localeId,
+                      },
+                      '',
+                      versification,
+                      // A quote carries the name of the text it is in, so its link always names it
+                      // too: whoever opens it reads the words that were quoted, not their own
+                      // translation of them.
+                      null,
+                    ),
+                    import.meta.env.SITE_URL,
+                  ).href
+                }
+                passageLinks={(target) =>
+                  VIEWS.filter((other) => other !== view).map((other) => (
+                    <InAppLink
+                      key={other.id}
+                      href={hrefOf(other, target)}
+                      className={controls.button}
+                      onFollow={() => {
+                        navigate({ ...location, view: other.id, passage: target });
+                      }}
+                    >
+                      <other.icon />
+                      {t(other.openLabelKey)}
+                    </InAppLink>
+                  ))
+                }
+              />
+            </ErrorBoundary>
+          </div>
+        );
       })}
       <Notebook
         open={notebookOpen}

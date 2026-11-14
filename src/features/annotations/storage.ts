@@ -67,11 +67,16 @@ function database(): Promise<IDBDatabase> {
       db.onversionchange = () => {
         db.close();
         connection = null;
-        publish({ ...snapshot, status: 'unavailable', error: 'Storage upgraded in another tab. Reload this page.' });
+        publish({
+          ...snapshot,
+          status: 'unavailable',
+          error: 'Storage upgraded in another tab. Reload this page.',
+        });
       };
       resolve(db);
     };
-    request.onblocked = () => reject(new Error('Another tab is blocking an annotations storage upgrade.'));
+    request.onblocked = () =>
+      reject(new Error('Another tab is blocking an annotations storage upgrade.'));
   });
   return connection;
 }
@@ -92,8 +97,10 @@ function write(
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([...stores], 'readwrite');
     transaction.oncomplete = () => resolve();
-    transaction.onabort = () => reject(transaction.error ?? new Error('Storage transaction aborted.'));
-    transaction.onerror = () => reject(transaction.error ?? new Error('Storage transaction failed.'));
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error('Storage transaction aborted.'));
+    transaction.onerror = () =>
+      reject(transaction.error ?? new Error('Storage transaction failed.'));
     try {
       change(transaction);
     } catch (error) {
@@ -208,7 +215,9 @@ export async function exportAnnotations(): Promise<string> {
 }
 
 /** Merge imports atomically; never destroy local records or replace newer timestamps. */
-export async function importAnnotations(json: string): Promise<{ notes: number; highlights: number }> {
+export async function importAnnotations(
+  json: string,
+): Promise<{ notes: number; highlights: number }> {
   const backup = parseAnnotationsBackup(json);
   await enqueue((db) => {
     const notes = mergeAnnotations(snapshot.notes, backup.annotations);

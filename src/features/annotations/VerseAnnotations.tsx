@@ -159,7 +159,8 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           aria-expanded={showColors}
           onClick={() => setShowColors(!showColors)}
         >
-          {t('annotations.highlight')}{highlight ? ` · ${t(COLOR_KEYS[highlight])}` : ''}
+          {t('annotations.highlight')}
+          {highlight ? ` · ${t(COLOR_KEYS[highlight])}` : ''}
         </button>
         <button
           type="button"
@@ -204,7 +205,9 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
       )}
       {showNotes && (
         <div className={styles.notes}>
-          {verseNotes.map((note) => <SavedNote key={note.id} note={note} />)}
+          {verseNotes.map((note) => (
+            <SavedNote key={note.id} note={note} />
+          ))}
           <textarea
             className={styles.textarea}
             aria-label={t('annotations.new')}
