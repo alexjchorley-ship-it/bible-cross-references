@@ -56,7 +56,7 @@ describe('canonical annotations and backups', () => {
     const content = serializeAnnotationsBackup([note], [highlight]);
     const restored = parseAnnotationsBackup(content);
     expect(restored.format).toBe('bible-study-annotations');
-    expect(restored.schemaVersion).toBe(1);
+    expect(restored.schemaVersion).toBe(2);
     expect(restored.annotations).toEqual([note]);
     expect(restored.highlights).toEqual([highlight]);
   });
@@ -69,7 +69,7 @@ describe('canonical annotations and backups', () => {
       string,
       unknown
     >;
-    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 2 }))).toThrow();
+    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 3 }))).toThrow();
     expect(() =>
       parseAnnotationsBackup(JSON.stringify({ ...valid, exportedAt: 'tomorrow' })),
     ).toThrow();
