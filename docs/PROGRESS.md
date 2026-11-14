@@ -14,7 +14,7 @@ GitHub Actions run [43612823802](https://github.com/alexjchorley-ship-it/bible-c
 - **Unit coverage:** statements **98.39%**, lines **98.41%**, functions **98.08%**, branches **91.53%**. All existing coverage requirements satisfied.
 - **Desktop and phone:** all **five out of five** Playwright end-to-end shards passed.
 - **Offline:** dedicated service-worker/cache tests passed.
-- **GitHub Pages:** deployment intentionally skipped. The workflow was subsequently made *non-deploying* in `main`.
+- **GitHub Pages:** deployment intentionally skipped. The workflow was subsequently made _non-deploying_ in `main`.
 
 The tested feature tree was `1783217a1ad94f0908e7cc731ca5e4d9afc0f93d` and the subsequent PR merges preserved this exact tree before the final documentation/CI safety update.
 
