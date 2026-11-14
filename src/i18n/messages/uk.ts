@@ -81,6 +81,12 @@ export const uk: LocaleMessages = {
   'annotations.blue': 'Синій',
   'annotations.pink': 'Рожевий',
 
+  'navigation.open': "Вибрати книгу й розділ Біблії",
+  'navigation.chooseBook': "Виберіть книгу",
+  'navigation.chooseChapter': "Виберіть розділ",
+  'navigation.back': "Назад до книг",
+  'navigation.close': "Закрити навігацію Біблією",
+
   'search.label': 'Перейти до місця в Біблії',
   'search.placeholder': 'Перейти до…  Івана 3:16, Пс 23',
 
