@@ -13,7 +13,7 @@ export const de: LocaleMessages = {
   'view.threads.open': 'Im Zusammenhang lesen',
   'view.switch': 'Darstellungen',
 
-  'study.tyndale': 'Tyndale Open Study Notes',
+  'study.tyndale': 'Tyndale-Studiennotizen',
   'study.loading': 'Studiennotizen werden geladen…',
   'study.offline':
     'Studiennotizen offline nicht verfügbar. Für dieses Buch einmal online verbinden.',

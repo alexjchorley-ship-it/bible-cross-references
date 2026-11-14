@@ -13,7 +13,7 @@ export const it: LocaleMessages = {
   'view.threads.open': 'Leggi nel contesto',
   'view.switch': 'Visualizzazioni',
 
-  'study.tyndale': 'Tyndale Open Study Notes',
+  'study.tyndale': 'Note di studio aperte Tyndale',
   'study.loading': 'Caricamento note di studio…',
   'study.offline': 'Note non disponibili offline. Connettiti una volta per scaricare questo libro.',
   'study.noTyndale': 'Nessuna nota Tyndale collegata a questo versetto o brano.',
