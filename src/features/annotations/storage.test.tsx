@@ -11,13 +11,14 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights';
+type StoreName = 'notes' | 'highlights' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
   const stores: Record<StoreName, Map<string, unknown>> = {
     notes: new Map(),
     highlights: new Map(),
+    sync_deletions: new Map(),
   };
   const declared = new Set<string>();
   let failRead = false;
@@ -52,7 +53,7 @@ function installIndexedDB() {
         onabort: null as ((event: Event) => void) | null,
         onerror: null as ((event: Event) => void) | null,
         objectStore(name: string) {
-          if (name !== 'notes' && name !== 'highlights') {
+          if (name !== 'notes' && name !== 'highlights' && name !== 'sync_deletions') {
             throw new Error('Unknown store');
           }
           const map = stores[name];
@@ -68,7 +69,8 @@ function installIndexedDB() {
                 throw new Error('Not an object');
               }
               const row = value as Record<string, unknown>;
-              const key = name === 'notes' ? row['id'] : row['verseId'];
+              const key =
+                name === 'notes' || name === 'sync_deletions' ? row['id'] : row['verseId'];
               if (typeof key !== 'string') {
                 throw new Error('Missing key');
               }
@@ -160,7 +162,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 1);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 2);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
@@ -297,5 +299,109 @@ describe('local-first verse annotation storage', () => {
     const store = await import('./storage.ts');
     await store.startAnnotations();
     await expect(store.exportAnnotations()).rejects.toThrow('Mock storage failure');
+  });
+});
+
+describe('cloud-ready IndexedDB migration and tombstones', () => {
+  it('exports local notes and highlights and retains both deletions', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote(note);
+    await store.setVerseHighlight('Gen.1.1', 'amber');
+    expect((await store.exportCloudRecords()).filter((row) => !row.deleted)).toHaveLength(2);
+    await store.deletePersonalNote(note.id);
+    await store.setVerseHighlight('Gen.1.1', null);
+    const records = await store.exportCloudRecords();
+    expect(records).toHaveLength(2);
+    expect(records.every((row) => row.deleted)).toBe(true);
+    expect(fake.stores.sync_deletions.size).toBe(2);
+  });
+
+  it('merges newer cloud records without destroying newer local notes', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote(note);
+    const old = {
+      kind: 'note' as const,
+      item_id: note.id,
+      verse_id: note.verseId,
+      body: 'Older remote note',
+      color: null,
+      created_at: early,
+      updated_at: early,
+      deleted: false,
+    };
+    await store.applyCloudRecords([old]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations[0]?.body).toBe(
+      note.body,
+    );
+    const fresh = { ...old, body: 'Changed on the phone', updated_at: '2026-12-01T12:00:00Z' };
+    await store.applyCloudRecords([fresh]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations[0]?.body).toBe(
+      'Changed on the phone',
+    );
+  });
+
+  it('applies remote deletion and prevents an old backup from reviving a deleted note', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote(note);
+    await store.applyCloudRecords([
+      {
+        kind: 'note',
+        item_id: note.id,
+        verse_id: note.verseId,
+        body: null,
+        color: null,
+        created_at: early,
+        updated_at: '2026-12-01T12:00:00Z',
+        deleted: true,
+      },
+    ]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toHaveLength(0);
+    const oldBackup = JSON.stringify({
+      format: 'bible-study-annotations',
+      schemaVersion: 1,
+      exportedAt: late,
+      appVersion: '1.0',
+      annotations: [note],
+      highlights: [],
+    });
+    await store.importAnnotations(oldBackup);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toHaveLength(0);
+    expect((await store.exportCloudRecords())[0]?.deleted).toBe(true);
+  });
+
+  it('leaves local data intact when cloud returns an invalid verse', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote(note);
+    await store.applyCloudRecords([
+      {
+        kind: 'note',
+        item_id: note.id,
+        verse_id: 'Gen.900.1',
+        body: 'Not a verse',
+        color: null,
+        created_at: early,
+        updated_at: '2026-12-01T12:00:00Z',
+        deleted: false,
+      },
+    ]);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations[0]?.body).toBe(
+      note.body,
+    );
+  });
+
+  it('retains tombstones for delete-all so another device cannot restore stale data', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote(note);
+    await store.setVerseHighlight('Gen.1.1', 'blue');
+    await store.deleteAllAnnotations();
+    const records = await store.exportCloudRecords();
+    expect(records).toHaveLength(2);
+    expect(records.every((row) => row.deleted)).toBe(true);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toEqual([]);
   });
 });

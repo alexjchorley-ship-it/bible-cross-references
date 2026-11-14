@@ -1,0 +1,60 @@
+name: Publish Bible Study PWA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: bible-study-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and validate Pages site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/cache@v6
+        with:
+          path: data/raw
+          key: raw-data-${{ hashFiles('data/sources.json') }}
+      - run: npm ci
+      - name: Build for the GitHub Pages project subpath
+        env:
+          BASE_PATH: /bible-cross-references/
+          SITE_ORIGIN: https://alexjchorley-ship-it.github.io
+        run: npm run build
+      - name: Verify the generated Bible data lockfile
+        run: |
+          test -f data/datasets.lock.json
+          git diff --exit-code -- data/datasets.lock.json
+      - name: Validate built datasets
+        env:
+          REQUIRE_BUILT_DATASETS: '1'
+        run: npm run test:built
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
