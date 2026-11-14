@@ -1,0 +1,28 @@
+name: Temporary formatting run for bookmark PR
+on:
+  push:
+    branches: [fix/mobile-verse-highlight-visibility]
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/features/annotations/model.test.ts src/features/annotations/Notebook.test.tsx
+      - name: Save formatted files
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add src/features/annotations/model.test.ts src/features/annotations/Notebook.test.tsx
+            git commit -m 'Format bookmark tests'
+            git push origin HEAD:fix/mobile-verse-highlight-visibility
+          fi
