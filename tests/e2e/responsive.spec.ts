@@ -112,7 +112,7 @@ test.describe('the layout holds at every width', () => {
     for (const control of [/Filters/, /Translation/]) {
       await expect(page.locator(ACTIVE).getByRole('button', { name: control })).toBeVisible();
     }
-    await expect(page.locator(ACTIVE).getByRole('searchbox')).toBeVisible();
+    await expect(page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]')).toBeVisible();
   });
 });
 
