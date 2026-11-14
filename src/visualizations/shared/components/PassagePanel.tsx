@@ -46,6 +46,8 @@ import type { LinkFilter } from '../link-filter.ts';
 import { canCopy, copyQuote, quotePassage, type PassageQuote } from '../passage-quote.ts';
 import { GENRE_COLORS, GENRE_HEX } from '../palette.ts';
 import { OriginalWordsSection } from './OriginalWordsSection.tsx';
+import { VerseAnnotations } from '../../../features/annotations/VerseAnnotations.tsx';
+import { StudySection } from '../../../features/study/StudySection.tsx';
 import { PanelSection } from './PanelSection.tsx';
 import type { VizData } from '../viz-data.ts';
 import { buildVerseShareRequest } from '../verse-share.ts';
@@ -397,6 +399,8 @@ export function PassagePanel({
               )}
             </div>
             {actionRow}
+            <VerseAnnotations verseId={toPassageOsisId(passage, versification)} />
+            <StudySection verseId={toPassageOsisId(passage, versification)} />
           </>
         ) : (
           <>
