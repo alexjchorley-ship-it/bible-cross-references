@@ -30,7 +30,6 @@ interface DeletionRecord extends CloudAnnotation {
 let tombstones: DeletionRecord[] = [];
 const recordId = (kind: CloudAnnotation['kind'], id: string): string => `${kind}:${id}`;
 
-
 export interface AnnotationSnapshot {
   readonly status: StorageStatus;
   readonly error: string | null;
@@ -222,9 +221,15 @@ export function setVerseHighlight(verseId: string, color: HighlightColor | null)
         const prior = snapshot.highlights.find((entry) => entry.verseId === verseId);
         if (prior) {
           deleted.put({
-            id, kind: 'highlight', item_id: verseId, verse_id: verseId,
-            body: null, color: null, created_at: prior.updatedAt,
-            updated_at: new Date().toISOString(), deleted: true,
+            id,
+            kind: 'highlight',
+            item_id: verseId,
+            verse_id: verseId,
+            body: null,
+            color: null,
+            created_at: prior.updatedAt,
+            updated_at: new Date().toISOString(),
+            deleted: true,
           } satisfies DeletionRecord);
         }
       } else {
@@ -254,9 +259,15 @@ export function deletePersonalNote(id: string): Promise<void> {
       const prior = snapshot.notes.find((entry) => entry.id === id);
       if (prior) {
         transaction.objectStore('sync_deletions').put({
-          id: recordId('note', id), kind: 'note', item_id: id, verse_id: prior.verseId,
-          body: null, color: null, created_at: prior.createdAt,
-          updated_at: new Date().toISOString(), deleted: true,
+          id: recordId('note', id),
+          kind: 'note',
+          item_id: id,
+          verse_id: prior.verseId,
+          body: null,
+          color: null,
+          created_at: prior.createdAt,
+          updated_at: new Date().toISOString(),
+          deleted: true,
         } satisfies DeletionRecord);
       }
     }),
@@ -308,17 +319,28 @@ export function deleteAllAnnotations(): Promise<void> {
       const now = new Date().toISOString();
       for (const note of snapshot.notes) {
         store.put({
-          id: recordId('note', note.id), kind: 'note', item_id: note.id,
-          verse_id: note.verseId, body: null, color: null,
-          created_at: note.createdAt, updated_at: now, deleted: true,
+          id: recordId('note', note.id),
+          kind: 'note',
+          item_id: note.id,
+          verse_id: note.verseId,
+          body: null,
+          color: null,
+          created_at: note.createdAt,
+          updated_at: now,
+          deleted: true,
         } satisfies DeletionRecord);
       }
       for (const highlight of snapshot.highlights) {
         store.put({
-          id: recordId('highlight', highlight.verseId), kind: 'highlight',
-          item_id: highlight.verseId, verse_id: highlight.verseId,
-          body: null, color: null, created_at: highlight.updatedAt,
-          updated_at: now, deleted: true,
+          id: recordId('highlight', highlight.verseId),
+          kind: 'highlight',
+          item_id: highlight.verseId,
+          verse_id: highlight.verseId,
+          body: null,
+          color: null,
+          created_at: highlight.updatedAt,
+          updated_at: now,
+          deleted: true,
         } satisfies DeletionRecord);
       }
       transaction.objectStore('notes').clear();
@@ -333,14 +355,23 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
   await requireDatabase();
   const rows: CloudAnnotation[] = [
     ...snapshot.notes.map((note) => ({
-      kind: 'note' as const, item_id: note.id, verse_id: note.verseId,
-      body: note.body, color: null, created_at: note.createdAt,
-      updated_at: note.updatedAt, deleted: false,
+      kind: 'note' as const,
+      item_id: note.id,
+      verse_id: note.verseId,
+      body: note.body,
+      color: null,
+      created_at: note.createdAt,
+      updated_at: note.updatedAt,
+      deleted: false,
     })),
     ...snapshot.highlights.map((highlight) => ({
-      kind: 'highlight' as const, item_id: highlight.verseId,
-      verse_id: highlight.verseId, body: null, color: highlight.color,
-      created_at: highlight.updatedAt, updated_at: highlight.updatedAt,
+      kind: 'highlight' as const,
+      item_id: highlight.verseId,
+      verse_id: highlight.verseId,
+      body: null,
+      color: highlight.color,
+      created_at: highlight.updatedAt,
+      updated_at: highlight.updatedAt,
       deleted: false,
     })),
     ...tombstones,
@@ -357,16 +388,16 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
 /** Apply newer remote updates inside one atomic IndexedDB transaction. */
 export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<void> {
   return enqueue(async (db) => {
-    const local = new Map((await exportCloudRecordsUnsafe(db)).map((row) => [
-      recordId(row.kind, row.item_id), row,
-    ]));
+    const local = new Map(
+      (await exportCloudRecordsUnsafe(db)).map((row) => [recordId(row.kind, row.item_id), row]),
+    );
     await write(db, ['notes', 'highlights', 'sync_deletions'], (transaction) => {
       const notes = transaction.objectStore('notes');
       const highlights = transaction.objectStore('highlights');
       const deletions = transaction.objectStore('sync_deletions');
       for (const row of remote) {
-        if (!isCanonicalVerseId(row.verse_id) ||
-            !Number.isFinite(Date.parse(row.updated_at))) continue;
+        if (!isCanonicalVerseId(row.verse_id) || !Number.isFinite(Date.parse(row.updated_at)))
+          continue;
         const id = recordId(row.kind, row.item_id);
         const previous = local.get(id);
         if (previous && previous.updated_at > row.updated_at) continue;
@@ -374,16 +405,20 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
           if (row.kind === 'note') notes.delete(row.item_id);
           else highlights.delete(row.item_id);
           deletions.put({ ...row, id } satisfies DeletionRecord);
-        } else if (row.kind === 'note' && typeof row.body === 'string' &&
-                   row.body.length > 0) {
+        } else if (row.kind === 'note' && typeof row.body === 'string' && row.body.length > 0) {
           notes.put({
-            id: row.item_id, verseId: row.verse_id, body: row.body,
-            createdAt: row.created_at, updatedAt: row.updated_at,
+            id: row.item_id,
+            verseId: row.verse_id,
+            body: row.body,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
           } satisfies PersonalNote);
           deletions.delete(id);
         } else if (row.kind === 'highlight' && row.color !== null) {
           highlights.put({
-            verseId: row.verse_id, color: row.color, updatedAt: row.updated_at,
+            verseId: row.verse_id,
+            color: row.color,
+            updatedAt: row.updated_at,
           } satisfies VerseHighlight);
           deletions.delete(id);
         }
@@ -400,14 +435,24 @@ async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotatio
   ]);
   return [
     ...notes.map((n) => ({
-      kind: 'note' as const, item_id: n.id, verse_id: n.verseId,
-      body: n.body, color: null, created_at: n.createdAt,
-      updated_at: n.updatedAt, deleted: false,
+      kind: 'note' as const,
+      item_id: n.id,
+      verse_id: n.verseId,
+      body: n.body,
+      color: null,
+      created_at: n.createdAt,
+      updated_at: n.updatedAt,
+      deleted: false,
     })),
     ...highlights.map((h) => ({
-      kind: 'highlight' as const, item_id: h.verseId, verse_id: h.verseId,
-      body: null, color: h.color, created_at: h.updatedAt,
-      updated_at: h.updatedAt, deleted: false,
+      kind: 'highlight' as const,
+      item_id: h.verseId,
+      verse_id: h.verseId,
+      body: null,
+      color: h.color,
+      created_at: h.updatedAt,
+      updated_at: h.updatedAt,
+      deleted: false,
     })),
     ...deletions,
   ];

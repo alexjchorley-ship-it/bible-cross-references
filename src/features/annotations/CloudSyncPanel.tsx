@@ -43,7 +43,9 @@ export function CloudSyncPanel() {
     };
     const schedule = () => {
       if (timer.current !== null) clearTimeout(timer.current);
-      timer.current = setTimeout(() => { void runSync(); }, 750);
+      timer.current = setTimeout(() => {
+        void runSync();
+      }, 750);
     };
     window.addEventListener('bible-cloud-auth', onSession);
     window.addEventListener('bible-annotations-changed', schedule);
@@ -90,8 +92,8 @@ export function CloudSyncPanel() {
     <section className={styles.section} aria-label="Cross-device synchronisation">
       <h3>Sync across devices</h3>
       <p className={styles.warning}>
-        Bible notes are saved locally first. Sign in with the same account on
-        your phone and computer to synchronise them automatically when online.
+        Bible notes are saved locally first. Sign in with the same account on your phone and
+        computer to synchronise them automatically when online.
       </p>
       {session ? (
         <div className={styles.toolbar}>
@@ -99,7 +101,9 @@ export function CloudSyncPanel() {
           <button
             type="button"
             className={styles.button}
-            onClick={() => { void runSync(); }}
+            onClick={() => {
+              void runSync();
+            }}
           >
             Sync now
           </button>
@@ -131,7 +135,9 @@ export function CloudSyncPanel() {
               required
               autoComplete="email"
               value={email}
-              onChange={(event) => { setEmail(event.target.value); }}
+              onChange={(event) => {
+                setEmail(event.target.value);
+              }}
             />
           </label>
           <label>
@@ -143,7 +149,9 @@ export function CloudSyncPanel() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={(event) => { setPassword(event.target.value); }}
+              onChange={(event) => {
+                setPassword(event.target.value);
+              }}
             />
           </label>
           <div className={styles.toolbar}>
@@ -154,7 +162,9 @@ export function CloudSyncPanel() {
               type="button"
               disabled={busy || !email.includes('@') || password.length < 6}
               className={styles.button}
-              onClick={() => { void authenticate(true); }}
+              onClick={() => {
+                void authenticate(true);
+              }}
             >
               Create account
             </button>

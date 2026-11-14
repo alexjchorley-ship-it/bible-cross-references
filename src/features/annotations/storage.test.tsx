@@ -69,7 +69,8 @@ function installIndexedDB() {
                 throw new Error('Not an object');
               }
               const row = value as Record<string, unknown>;
-              const key = name === 'notes' || name === 'sync_deletions' ? row['id'] : row['verseId'];
+              const key =
+                name === 'notes' || name === 'sync_deletions' ? row['id'] : row['verseId'];
               if (typeof key !== 'string') {
                 throw new Error('Missing key');
               }
@@ -321,9 +322,14 @@ describe('cloud-ready IndexedDB migration and tombstones', () => {
     const store = await import('./storage.ts');
     await store.upsertPersonalNote(note);
     const old = {
-      kind: 'note' as const, item_id: note.id, verse_id: note.verseId,
-      body: 'Older remote note', color: null, created_at: early,
-      updated_at: early, deleted: false,
+      kind: 'note' as const,
+      item_id: note.id,
+      verse_id: note.verseId,
+      body: 'Older remote note',
+      color: null,
+      created_at: early,
+      updated_at: early,
+      deleted: false,
     };
     await store.applyCloudRecords([old]);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations[0]?.body).toBe(
@@ -340,15 +346,26 @@ describe('cloud-ready IndexedDB migration and tombstones', () => {
     installIndexedDB();
     const store = await import('./storage.ts');
     await store.upsertPersonalNote(note);
-    await store.applyCloudRecords([{
-      kind: 'note', item_id: note.id, verse_id: note.verseId,
-      body: null, color: null, created_at: early,
-      updated_at: '2026-12-01T12:00:00Z', deleted: true,
-    }]);
+    await store.applyCloudRecords([
+      {
+        kind: 'note',
+        item_id: note.id,
+        verse_id: note.verseId,
+        body: null,
+        color: null,
+        created_at: early,
+        updated_at: '2026-12-01T12:00:00Z',
+        deleted: true,
+      },
+    ]);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toHaveLength(0);
     const oldBackup = JSON.stringify({
-      format: 'bible-study-annotations', schemaVersion: 1,
-      exportedAt: late, appVersion: '1.0', annotations: [note], highlights: [],
+      format: 'bible-study-annotations',
+      schemaVersion: 1,
+      exportedAt: late,
+      appVersion: '1.0',
+      annotations: [note],
+      highlights: [],
     });
     await store.importAnnotations(oldBackup);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toHaveLength(0);
@@ -359,11 +376,18 @@ describe('cloud-ready IndexedDB migration and tombstones', () => {
     installIndexedDB();
     const store = await import('./storage.ts');
     await store.upsertPersonalNote(note);
-    await store.applyCloudRecords([{
-      kind: 'note', item_id: note.id, verse_id: 'Gen.900.1',
-      body: 'Not a verse', color: null, created_at: early,
-      updated_at: '2026-12-01T12:00:00Z', deleted: false,
-    }]);
+    await store.applyCloudRecords([
+      {
+        kind: 'note',
+        item_id: note.id,
+        verse_id: 'Gen.900.1',
+        body: 'Not a verse',
+        color: null,
+        created_at: early,
+        updated_at: '2026-12-01T12:00:00Z',
+        deleted: false,
+      },
+    ]);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations[0]?.body).toBe(
       note.body,
     );

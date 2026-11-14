@@ -1,9 +1,5 @@
 import { cloudRequest, cloudSession } from './cloud-auth.ts';
-import {
-  applyCloudRecords,
-  exportCloudRecords,
-  type CloudAnnotation,
-} from './storage.ts';
+import { applyCloudRecords, exportCloudRecords, type CloudAnnotation } from './storage.ts';
 
 const COLUMNS = 'kind,item_id,verse_id,body,color,created_at,updated_at,deleted';
 let activeSync: Promise<void> | null = null;
@@ -11,13 +7,20 @@ let activeSync: Promise<void> | null = null;
 function isCloudAnnotation(row: unknown): row is CloudAnnotation {
   if (!row || typeof row !== 'object') return false;
   const data = row as Partial<CloudAnnotation>;
-  return (data.kind === 'note' || data.kind === 'highlight') &&
-    typeof data.item_id === 'string' && typeof data.verse_id === 'string' &&
-    typeof data.created_at === 'string' && typeof data.updated_at === 'string' &&
+  return (
+    (data.kind === 'note' || data.kind === 'highlight') &&
+    typeof data.item_id === 'string' &&
+    typeof data.verse_id === 'string' &&
+    typeof data.created_at === 'string' &&
+    typeof data.updated_at === 'string' &&
     typeof data.deleted === 'boolean' &&
     (data.body === null || typeof data.body === 'string') &&
-    (data.color === null || data.color === 'amber' || data.color === 'green' ||
-      data.color === 'blue' || data.color === 'pink');
+    (data.color === null ||
+      data.color === 'amber' ||
+      data.color === 'green' ||
+      data.color === 'blue' ||
+      data.color === 'pink')
+  );
 }
 
 async function fetchRemote(): Promise<CloudAnnotation[]> {
@@ -44,7 +47,9 @@ async function reconcile(): Promise<void> {
   const ownerKey = 'bible-study-cloud-owner';
   const storedOwner = localStorage.getItem(ownerKey);
   if (storedOwner && storedOwner !== id) {
-    throw new Error('This browser contains another cloud account. Export a backup and use a separate browser profile.');
+    throw new Error(
+      'This browser contains another cloud account. Export a backup and use a separate browser profile.',
+    );
   }
   if (!storedOwner) localStorage.setItem(ownerKey, id);
 

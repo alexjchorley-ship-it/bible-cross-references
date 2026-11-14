@@ -47,16 +47,25 @@ function saveSession(value: CloudSession | null): void {
 }
 
 function errorText(value: unknown, fallback: string): string {
-  if (value && typeof value === 'object' && 'msg' in value &&
-      typeof value.msg === 'string') return value.msg;
-  if (value && typeof value === 'object' && 'message' in value &&
-      typeof value.message === 'string') return value.message;
-  if (value && typeof value === 'object' && 'error_description' in value &&
-      typeof value.error_description === 'string') return value.error_description;
+  if (value && typeof value === 'object' && 'msg' in value && typeof value.msg === 'string')
+    return value.msg;
+  if (value && typeof value === 'object' && 'message' in value && typeof value.message === 'string')
+    return value.message;
+  if (
+    value &&
+    typeof value === 'object' &&
+    'error_description' in value &&
+    typeof value.error_description === 'string'
+  )
+    return value.error_description;
   return fallback;
 }
 
-async function request(path: string, init: RequestInit = {}, accessToken?: string): Promise<unknown> {
+async function request(
+  path: string,
+  init: RequestInit = {},
+  accessToken?: string,
+): Promise<unknown> {
   const response = await fetch(`${CLOUD_URL}${path}`, {
     ...init,
     headers: {
@@ -76,11 +85,15 @@ function parseSession(value: unknown): CloudSession | null {
   if (!value || typeof value !== 'object') return null;
   const data = value as Record<string, unknown>;
   const user = data['user'];
-  if (typeof data['access_token'] !== 'string' ||
-      typeof data['refresh_token'] !== 'string' ||
-      typeof data['expires_in'] !== 'number' ||
-      !user || typeof user !== 'object' ||
-      typeof (user as { id?: unknown }).id !== 'string') return null;
+  if (
+    typeof data['access_token'] !== 'string' ||
+    typeof data['refresh_token'] !== 'string' ||
+    typeof data['expires_in'] !== 'number' ||
+    !user ||
+    typeof user !== 'object' ||
+    typeof (user as { id?: unknown }).id !== 'string'
+  )
+    return null;
   return {
     access_token: data['access_token'],
     refresh_token: data['refresh_token'],
@@ -127,7 +140,9 @@ async function refreshedSession(): Promise<CloudSession> {
     if (!renewed) throw new Error('Your cloud session has expired. Sign in again.');
     saveSession(renewed);
     return renewed;
-  })().finally(() => { refreshPromise = null; });
+  })().finally(() => {
+    refreshPromise = null;
+  });
   return refreshPromise;
 }
 
