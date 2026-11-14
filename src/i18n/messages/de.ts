@@ -57,6 +57,12 @@ export const de: LocaleMessages = {
   'annotations.blue': 'Blau',
   'annotations.pink': 'Rosa',
 
+  'navigation.open': "Bibelbuch und Kapitel auswählen",
+  'navigation.chooseBook': "Buch auswählen",
+  'navigation.chooseChapter': "Kapitel auswählen",
+  'navigation.back': "Zurück zu den Büchern",
+  'navigation.close': "Bibelnavigation schließen",
+
   'search.label': 'Zu einer Bibelstelle springen',
   'search.placeholder': 'Springe zu…  Joh 3,16, Ps 23',
 
