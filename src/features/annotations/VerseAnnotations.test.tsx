@@ -100,4 +100,55 @@ describe('verse highlights and personal notes', () => {
     await userEvent.click(screen.getByRole('button', { name: /Highlight/ }));
     expect(screen.getByRole('button', { name: 'Amber' }).hasAttribute('disabled')).toBe(true);
   });
+
+  it('preserves the text and reports a failed new-note write', async () => {
+    vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Notes' }));
+    await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'Do not lose this');
+    await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
+    expect(screen.getByPlaceholderText('Write a note…')).toHaveProperty(
+      'value',
+      'Do not lose this',
+    );
+  });
+
+  it('shows errors for failed edits and refuses to autosave blank notes', async () => {
+    current([note]);
+    vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
+    const editor = screen.getByRole('textbox', { name: 'Notes' });
+    fireEvent.change(editor, { target: { value: 'Draft after failed edit' } });
+    fireEvent.blur(editor);
+    expect((await screen.findByText('Could not save. Copy your text and try again.'))).toBeDefined();
+    fireEvent.change(editor, { target: { value: '   ' } });
+    fireEvent.blur(editor);
+    expect(vi.mocked(storage.upsertPersonalNote)).toHaveBeenCalledTimes(1);
+  });
+
+  it('never deletes a note when the reader cancels confirmation', async () => {
+    current([note]);
+    vi.stubGlobal('confirm', vi.fn(() => false));
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
+    expect(storage.deletePersonalNote).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it('flushes an unsaved edit when its verse panel closes', async () => {
+    current([note]);
+    const view = render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
+    const editor = screen.getByRole('textbox', { name: 'Notes' });
+    fireEvent.change(editor, { target: { value: 'Keep this on navigation' } });
+    view.unmount();
+    await waitFor(() => {
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({ body: 'Keep this on navigation' }),
+      );
+    });
+  });
 });

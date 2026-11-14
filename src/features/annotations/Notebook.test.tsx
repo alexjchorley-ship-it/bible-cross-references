@@ -114,4 +114,86 @@ describe('searchable and exportable personal notebook', () => {
       true,
     );
   });
+
+  it('imports a valid backup only after showing the record counts', async () => {
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal('confirm', confirm);
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const backup = {
+      format: 'bible-study-annotations',
+      schemaVersion: 1,
+      exportedAt: now,
+      appVersion: '1.0',
+      annotations: snapshot.notes,
+      highlights: snapshot.highlights,
+    };
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) {
+      throw new Error('Missing backup input');
+    }
+    await userEvent.upload(
+      input,
+      new File([JSON.stringify(backup)], 'study-notes.json', { type: 'application/json' }),
+    );
+    await waitFor(() => {
+      expect(storage.importAnnotations).toHaveBeenCalledWith(JSON.stringify(backup));
+    });
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('2 Notes'));
+    expect(screen.getByRole('status').textContent).toContain('Saved');
+  });
+
+  it('does not import a valid backup when confirmation is declined', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => false));
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const backup = {
+      format: 'bible-study-annotations',
+      schemaVersion: 1,
+      exportedAt: now,
+      appVersion: '1.0',
+      annotations: snapshot.notes,
+      highlights: snapshot.highlights,
+    };
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) {
+      throw new Error('Missing backup input');
+    }
+    await userEvent.upload(
+      input,
+      new File([JSON.stringify(backup)], 'study-notes.json', { type: 'application/json' }),
+    );
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledOnce();
+    });
+    expect(storage.importAnnotations).not.toHaveBeenCalled();
+  });
+
+  it('reports export errors instead of claiming a backup was saved', async () => {
+    vi.mocked(storage.exportAnnotations).mockRejectedValueOnce(new Error('Quota exceeded'));
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Export backup' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Quota exceeded');
+  });
+
+  it('reports a failed clear and closes the notebook without losing its contents', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true));
+    vi.mocked(storage.deleteAllAnnotations).mockRejectedValueOnce(new Error('Locked'));
+    const onClose = vi.fn();
+    render(<Notebook open onClose={onClose} onOpenVerse={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete all annotations' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
+    await userEvent.click(screen.getByRole('button', { name: 'Close notebook' }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows a friendly empty state when no annotations exist', async () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
+    });
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    expect(screen.getByText('No notes or highlights yet.')).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Open verse' })).toBeNull();
+  });
 });
