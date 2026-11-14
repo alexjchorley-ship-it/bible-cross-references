@@ -491,9 +491,10 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
 }
 
 async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotation[]> {
-  const [notes, highlights, deletions] = await Promise.all([
+  const [notes, highlights, bookmarks, deletions] = await Promise.all([
     all<PersonalNote>(db, 'notes'),
     all<VerseHighlight>(db, 'highlights'),
+    all<ReadingBookmark>(db, 'bookmarks'),
     all<DeletionRecord>(db, 'sync_deletions'),
   ]);
   return [
