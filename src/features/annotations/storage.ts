@@ -105,7 +105,7 @@ function write(
       change(transaction);
     } catch (error) {
       transaction.abort();
-      reject(error);
+      reject(error instanceof Error ? error : new Error('Cannot complete storage operation.'));
     }
   });
 }
@@ -121,11 +121,9 @@ async function reload(): Promise<void> {
 
 /** Start lazily. A missing IndexedDB does not masquerade as successful in-memory saving. */
 export function startAnnotations(): Promise<void> {
-  if (!initialization) {
-    initialization = reload().catch((error: unknown) => {
-      publish({ ...snapshot, status: 'unavailable', error: message(error) });
-    });
-  }
+  initialization ??= reload().catch((error: unknown) => {
+    publish({ ...snapshot, status: 'unavailable', error: message(error) });
+  });
   return initialization;
 }
 
