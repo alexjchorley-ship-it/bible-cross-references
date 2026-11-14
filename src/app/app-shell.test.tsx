@@ -16,6 +16,16 @@ import { vizCoreLoader, resetTranslations } from '../visualizations/shared/viz-d
 import { ViewSwitch } from './ViewSwitch.tsx';
 import { VIEWS } from './views.ts';
 
+// This test covers the application shell, not the GPU-backed visualizations.
+// Their registry starts eager dynamic imports; mock those modules so no import can
+// continue after Vitest tears down its isolated happy-dom environment.
+vi.mock('../visualizations/arcs/ArcsExplorer.tsx', () => ({
+  ArcsExplorer: () => null,
+}));
+vi.mock('../visualizations/threads/ThreadsExplorer.tsx', () => ({
+  ThreadsExplorer: () => null,
+}));
+
 const GEN_1_1 = verseIndex('Gen', 1, 1);
 
 const CROSS_REFERENCES = {
