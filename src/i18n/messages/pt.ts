@@ -55,6 +55,12 @@ export const pt: LocaleMessages = {
   'annotations.blue': 'Azul',
   'annotations.pink': 'Rosa',
 
+  'navigation.open': "Escolher livro e capítulo da Bíblia",
+  'navigation.chooseBook': "Escolha um livro",
+  'navigation.chooseChapter': "Escolha um capítulo",
+  'navigation.back': "Voltar aos livros",
+  'navigation.close': "Fechar navegação da Bíblia",
+
   'search.label': 'Ir para uma referência bíblica',
   'search.placeholder': 'Ir para…  João 3:16, Sl 23',
 
