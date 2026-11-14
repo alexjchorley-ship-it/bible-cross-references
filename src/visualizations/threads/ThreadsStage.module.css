@@ -362,3 +362,42 @@
     font-size: 1.0625rem;
   }
 }
+
+/*
+ * On touch browsers :hover can remain active after a tap, and the selected-verse
+ * background also overrides a reader's saved colour. Keep a clear colour swatch
+ * on compact screens even while a verse is selected, linked or touch-hovered.
+ * This is deliberately a visual-only fix: the saved/synced highlight is unchanged.
+ */
+@media (max-width: 47.99rem) {
+  .verse[data-highlight='amber'] {
+    --saved-highlight: #e6b351;
+  }
+
+  .verse[data-highlight='green'] {
+    --saved-highlight: #5ca987;
+  }
+
+  .verse[data-highlight='blue'] {
+    --saved-highlight: #6ca8ed;
+  }
+
+  .verse[data-highlight='pink'] {
+    --saved-highlight: #d88bba;
+  }
+
+  .verse[data-highlight='amber'],
+  .verse[data-highlight='green'],
+  .verse[data-highlight='blue'],
+  .verse[data-highlight='pink'] {
+    background: color-mix(in srgb, var(--saved-highlight) 30%, transparent);
+    box-shadow: inset 3px 0 0 var(--saved-highlight);
+  }
+
+  .verse[data-highlight]:hover,
+  .verse[data-highlight][data-selected='true'],
+  .verse[data-highlight][data-linked='true'] {
+    background: color-mix(in srgb, var(--saved-highlight) 30%, transparent);
+    box-shadow: inset 3px 0 0 var(--saved-highlight);
+  }
+}
