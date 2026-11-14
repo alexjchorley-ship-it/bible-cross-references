@@ -39,7 +39,9 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
 
   function chooseBook(next: BookId): void {
     setBook(next);
-    scroll.current?.scrollTo({ top: 0 });
+    if (scroll.current) {
+      scroll.current.scrollTop = 0;
+    }
   }
 
   function chooseChapter(chapter: number): void {
@@ -87,7 +89,9 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
               aria-label={t('navigation.back')}
               onClick={() => {
                 setBook(null);
-                scroll.current?.scrollTo({ top: 0 });
+                if (scroll.current) {
+      scroll.current.scrollTop = 0;
+    }
               }}
             >
               <PreviousIcon />
