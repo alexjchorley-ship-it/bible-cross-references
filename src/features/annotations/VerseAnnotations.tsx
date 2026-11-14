@@ -181,7 +181,7 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
       {error && <p role="alert">{error}</p>}
       {localError && <p role="alert">{localError}</p>}
       {showColors && (
-        <div className={styles.palette} role="group" aria-label={t('annotations.highlight')}>
+        <div className={styles.palette} role="toolbar" aria-label={t('annotations.highlight')}>
           {HIGHLIGHT_COLORS.map((color) => (
             <button
               type="button"

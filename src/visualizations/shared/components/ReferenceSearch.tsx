@@ -79,7 +79,7 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
         ref={dialog}
         aria-labelledby={titleId}
         className={styles.dialog}
-        onClose={() => setOpen(false)}
+        onClose={() => { setOpen(false); }}
       >
         <header className={styles.dialogHeader}>
           {book !== null && (
@@ -104,7 +104,7 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
             type="button"
             className={styles.iconButton}
             aria-label={t('navigation.close')}
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); }}
           >
             <CloseIcon />
           </button>
@@ -121,7 +121,7 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
                         key={item.id}
                         className={styles.book}
                         type="button"
-                        onClick={() => chooseBook(item.id)}
+                        onClick={() => { chooseBook(item.id); }}
                       >
                         {books[item.id].name}
                       </button>
@@ -143,7 +143,7 @@ export function ReferenceSearch({ versification, onSelect, passage = null }: Ref
                     className={styles.chapter}
                     type="button"
                     aria-label={`${books[book].name} ${chapter}`}
-                    onClick={() => chooseChapter(chapter)}
+                    onClick={() => { chooseChapter(chapter); }}
                   >
                     {chapter}
                   </button>
