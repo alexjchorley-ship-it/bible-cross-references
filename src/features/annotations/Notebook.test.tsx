@@ -9,6 +9,7 @@ vi.mock('./storage.ts', () => ({
   exportAnnotations: vi.fn(() => Promise.resolve('{}')),
   importAnnotations: vi.fn(() => Promise.resolve({ notes: 1, highlights: 1 })),
   deleteAllAnnotations: vi.fn(() => Promise.resolve(undefined)),
+  setReadingBookmark: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';
@@ -19,6 +20,7 @@ const snapshot = {
     { id: 'a', verseId: 'Gen.1.1', body: 'First light', createdAt: now, updatedAt: now },
     { id: 'b', verseId: 'John.3.16', body: 'God so loved', createdAt: now, updatedAt: now },
   ],
+  bookmarks: [],
   highlights: [
     { verseId: 'Gen.1.1', color: 'amber' as const, updatedAt: now },
     { verseId: 'John.3.16', color: 'green' as const, updatedAt: now },
@@ -195,6 +197,7 @@ describe('searchable and exportable personal notebook', () => {
       error: null,
       notes: [],
       highlights: [],
+      bookmarks: [],
     });
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     expect(screen.getByText('No notes or highlights yet.')).toBeDefined();
