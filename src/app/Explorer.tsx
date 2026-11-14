@@ -243,11 +243,13 @@ export function Explorer({ core }: { readonly core: VizCore }) {
       <button
         type="button"
         className={styles.notebookOpen}
+        aria-label={t('annotations.notebook')}
+        title={t('annotations.notebook')}
         onClick={() => {
           setNotebookOpen(true);
         }}
       >
-        {t('annotations.notebook')}
+        {t('annotations.notes')}
       </button>
     </>
   );
