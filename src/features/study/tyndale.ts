@@ -11,7 +11,12 @@ export interface TyndaleReference {
 
 export type TyndaleNode =
   | string
-  | { readonly t: string; readonly v?: string; readonly r?: string; readonly c?: readonly TyndaleNode[] };
+  | {
+      readonly t: string;
+      readonly v?: string;
+      readonly r?: string;
+      readonly c?: readonly TyndaleNode[];
+    };
 
 export interface TyndaleStudyNote {
   readonly id: string;
@@ -49,8 +54,7 @@ function isNode(value: unknown): value is TyndaleNode {
       typeof value['t'] === 'string' &&
       (value['v'] === undefined || typeof value['v'] === 'string') &&
       (value['r'] === undefined || typeof value['r'] === 'string') &&
-      (value['c'] === undefined ||
-        (Array.isArray(value['c']) && value['c'].every(isNode))))
+      (value['c'] === undefined || (Array.isArray(value['c']) && value['c'].every(isNode))))
   );
 }
 
@@ -70,7 +74,9 @@ function isStudyNote(value: unknown): value is TyndaleStudyNote {
 
 /** Tyndale uses English-language book slugs; the app persists OSIS IDs. */
 export function tyndaleSlug(verse: VerseRef): string {
-  return getBook(verse.book).name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return getBook(verse.book)
+    .name.toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 }
 
 export function coveringReference(ref: TyndaleReference, verse: VerseRef): boolean {
@@ -85,9 +91,13 @@ export function coveringReference(ref: TyndaleReference, verse: VerseRef): boole
   );
 }
 
-export function notesForVerse(records: readonly TyndaleStudyNote[], verse: VerseRef): StudyNotesForVerse {
+export function notesForVerse(
+  records: readonly TyndaleStudyNote[],
+  verse: VerseRef,
+): StudyNotesForVerse {
   const matching = records.filter(
-    (entry) => entry.type === 'StudyNote' && entry.refs.some((ref) => coveringReference(ref, verse)),
+    (entry) =>
+      entry.type === 'StudyNote' && entry.refs.some((ref) => coveringReference(ref, verse)),
   );
   const verseSpecific = matching.filter((entry) =>
     entry.refs.some(
@@ -119,7 +129,9 @@ export async function loadTyndaleBook(slug: string): Promise<readonly TyndaleStu
     }
     const response = await fetch(`${import.meta.env.BASE_URL}data/commentary/${slug}.json`);
     if (!response.ok) {
-      throw new Error('The study notes are not available offline yet. Connect once and reopen this book.');
+      throw new Error(
+        'The study notes are not available offline yet. Connect once and reopen this book.',
+      );
     }
     const parsed: unknown = JSON.parse(await response.text());
     if (!Array.isArray(parsed)) {
