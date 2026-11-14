@@ -1,26 +1,19 @@
+import { useState } from 'react';
+import { TyndaleNotes } from './TyndaleNotes.tsx';
 import { useLocalization } from '../../i18n/use-locale.tsx';
 import { studyForVerse } from './pilot-studies.ts';
 import styles from '../annotations/annotations.module.css';
 
 export function StudySection({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
+  const [expanded, setExpanded] = useState(false);
   const study = studyForVerse(verseId);
   return (
-    <details className={styles.studyCard}>
+    <details className={styles.studyCard} onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>{t('study.title')}</summary>
+      {expanded && <TyndaleNotes verseId={verseId} />}
       {!study ? (
-        <div>
-          <p>{t('study.notCurated')}</p>
-          <p className={styles.warning}>
-            <a href="https://tyndaleopenresources.com/" target="_blank" rel="noopener noreferrer">
-              Tyndale Open Study Notes
-            </a>
-            {' · '}
-            <a href="https://www.stepbible.org/" target="_blank" rel="noopener noreferrer">
-              STEP Bible
-            </a>
-          </p>
-        </div>
+        <p className={styles.warning}>{t('study.notCurated')}</p>
       ) : (
         <>
           <p className={styles.warning}>
