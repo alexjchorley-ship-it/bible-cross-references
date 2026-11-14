@@ -497,12 +497,22 @@ describe('bookmark cloud deletion and backup safety', () => {
     const store = await import('./storage.ts');
     await store.setReadingBookmark('green', 'Gen.1.1');
     const now = '2028-01-01T00:00:00.000Z';
-    await store.applyCloudRecords([{
-      kind: 'bookmark', item_id: 'green', verse_id: 'Gen.1.1', body: null,
-      color: 'green', created_at: now, updated_at: now, deleted: true,
-    }]);
+    await store.applyCloudRecords([
+      {
+        kind: 'bookmark',
+        item_id: 'green',
+        verse_id: 'Gen.1.1',
+        body: null,
+        color: 'green',
+        created_at: now,
+        updated_at: now,
+        deleted: true,
+      },
+    ]);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).bookmarks).toEqual([]);
-    expect((await store.exportCloudRecords()).find((entry) => entry.kind === 'bookmark')?.deleted).toBe(true);
+    expect(
+      (await store.exportCloudRecords()).find((entry) => entry.kind === 'bookmark')?.deleted,
+    ).toBe(true);
   });
 
   it('imports new bookmark colours without erasing existing different colours', async () => {
@@ -510,8 +520,12 @@ describe('bookmark cloud deletion and backup safety', () => {
     const store = await import('./storage.ts');
     await store.setReadingBookmark('amber', 'Gen.1.1');
     const backup = JSON.stringify({
-      format: 'bible-study-annotations', schemaVersion: 2,
-      exportedAt: late, appVersion: '1.0', annotations: [], highlights: [],
+      format: 'bible-study-annotations',
+      schemaVersion: 2,
+      exportedAt: late,
+      appVersion: '1.0',
+      annotations: [],
+      highlights: [],
       bookmarks: [{ color: 'pink', verseId: 'John.3.16', updatedAt: late }],
     });
     await store.importAnnotations(backup);
