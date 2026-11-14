@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ACTIVE, PANEL, openPanel, waitForApp } from './helpers.ts';
+import { ACTIVE, PANEL, chooseChapter, chooseVerse, openPanel, waitForApp } from './helpers.ts';
 import { LOCALE_IDS } from '../../src/i18n/locale-id.ts';
 
 /** Opens the app in a language, with the details of a passage in view. */
@@ -38,23 +38,21 @@ test.describe('reading in Portuguese', () => {
     await expect(page.locator(PANEL).getByText('Gênesis 22:12').first()).toBeVisible();
   });
 
-  test('a reference can be typed in Portuguese, accents or not', async ({ page }) => {
+  test('the book and chapter picker uses Portuguese book names', async ({ page }) => {
     await open(page, '?lang=pt');
-    const search = page.locator(ACTIVE).getByRole('searchbox');
-    await search.fill('Gênesis 1:1');
-    await search.press('Enter');
+    await chooseVerse(page, 'Gênesis', 1, 1);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Gênesis 1:1' })).toBeVisible();
-    await search.fill('salmos 23');
-    await search.press('Enter');
+    await chooseChapter(page, 'Salmos', 23);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Salmo 23' })).toBeVisible();
   });
 
-  test('a reference it cannot read says so in Portuguese', async ({ page }) => {
+  test('the picker only offers recognised Portuguese books', async ({ page }) => {
     await open(page, '?lang=pt');
-    const search = page.locator(ACTIVE).getByRole('searchbox');
-    await search.fill('Hesitações 4:4');
-    await search.press('Enter');
-    await expect(page.locator(ACTIVE).getByRole('alert')).toContainText('Livro desconhecido');
+    await page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]').click();
+    const picker = page.locator('dialog[open]');
+    await expect(picker.getByRole('button', { name: 'Hesitações', exact: true })).toHaveCount(0);
+    await expect(picker.getByRole('button', { name: 'Gênesis', exact: true })).toBeVisible();
+    await expect(page).not.toHaveURL(/ref=/);
   });
 
   test('counts are written the way a Brazilian writes them', async ({ page }) => {
@@ -269,11 +267,10 @@ test.describe('a language with no Bible of its own', () => {
     await expect(page.locator(ACTIVE).getByRole('button', { name: /Фільтри/ })).toBeVisible();
   });
 
-  test('reads a reference typed in Ukrainian', async ({ page }) => {
+  test('chooses a chapter using Ukrainian book names', async ({ page }) => {
     await open(page, 'uk/');
-    await page.locator(ACTIVE).getByRole('searchbox').fill('Івана 3:16');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
-    await expect(page).toHaveURL(/ref=John\.3\.16/);
+    await chooseChapter(page, 'Івана', 3);
+    await expect(page).toHaveURL(/ref=John\.3(?:&|$)/);
   });
 
   test('can read a German Bible under Ukrainian menus', async ({ page }) => {
