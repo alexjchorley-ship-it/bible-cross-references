@@ -10,6 +10,7 @@ import {
   useAnnotations,
 } from './storage.ts';
 import styles from './annotations.module.css';
+import { CloudSyncPanel } from './CloudSyncPanel.tsx';
 
 type ColourFilter = HighlightColor | 'all';
 
@@ -116,6 +117,7 @@ export function Notebook({
           {t('annotations.close')}
         </button>
       </div>
+      <CloudSyncPanel />
       <p className={styles.warning}>{t('annotations.storage')}</p>
       {status === 'unavailable' && <p role="alert">{t('annotations.unavailable')}</p>}
       {storageError && <p role="alert">{storageError}</p>}
