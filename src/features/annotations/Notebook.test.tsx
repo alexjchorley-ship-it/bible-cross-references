@@ -143,7 +143,8 @@ describe('searchable and exportable personal notebook', () => {
   });
 
   it('does not import a valid backup when confirmation is declined', async () => {
-    vi.stubGlobal('confirm', vi.fn(() => false));
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal('confirm', confirm);
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     const backup = {
       format: 'bible-study-annotations',
@@ -162,7 +163,7 @@ describe('searchable and exportable personal notebook', () => {
       new File([JSON.stringify(backup)], 'study-notes.json', { type: 'application/json' }),
     );
     await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledOnce();
+      expect(confirm).toHaveBeenCalledOnce();
     });
     expect(storage.importAnnotations).not.toHaveBeenCalled();
   });
@@ -185,7 +186,7 @@ describe('searchable and exportable personal notebook', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows a friendly empty state when no annotations exist', async () => {
+  it('shows a friendly empty state when no annotations exist', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
       status: 'ready',
       error: null,

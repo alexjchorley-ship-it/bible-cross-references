@@ -45,9 +45,10 @@ describe('licensed Tyndale study panel', () => {
   });
 
   it('loads the selected book and renders direct notes and wider passage context', async () => {
-    const request = vi.fn((_url: string) =>
-      Promise.resolve(new Response(JSON.stringify([genesis, context]), { status: 200 })),
-    );
+    const request = vi.fn((url: string) => {
+      expect(url).toContain('data/commentary/genesis.json');
+      return Promise.resolve(new Response(JSON.stringify([genesis, context]), { status: 200 }));
+    });
     vi.stubGlobal('fetch', request);
     render(<TyndaleNotes verseId="Gen.1.1" />);
     expect(screen.getByRole('status').textContent).toContain('Loading study notes');
@@ -88,7 +89,7 @@ describe('licensed Tyndale study panel', () => {
     expect(screen.queryByText(/No Tyndale note is attached/)).toBeNull();
   });
 
-  it('does not fetch invalid verse references', async () => {
+  it('does not fetch invalid verse references', () => {
     const request = vi.fn();
     vi.stubGlobal('fetch', request);
     render(<TyndaleNotes verseId="unrecognised.1.1" />);
@@ -97,7 +98,14 @@ describe('licensed Tyndale study panel', () => {
   });
 
   it('shows a translated offline message when the loader fails without an Error', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject('Offline')));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => {
+        // A third-party library might reject with a string instead of an Error.
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        return Promise.reject('Offline');
+      }),
+    );
     render(<TyndaleNotes verseId="Ruth.1.1" />);
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Study notes unavailable offline',
