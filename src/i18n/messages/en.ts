@@ -64,6 +64,12 @@ export const en = {
   'annotations.blue': 'Blue',
   'annotations.pink': 'Pink',
 
+  'navigation.open': "Choose Bible book and chapter",
+  'navigation.chooseBook': "Choose a book",
+  'navigation.chooseChapter': "Choose a chapter",
+  'navigation.back': "Back to books",
+  'navigation.close': "Close Bible navigation",
+
   'search.label': 'Go to a Bible reference',
   'search.placeholder': 'Go to…  John 3:16, Ps 23',
 
