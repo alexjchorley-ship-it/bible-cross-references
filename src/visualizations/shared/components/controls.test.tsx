@@ -10,7 +10,10 @@ describe('ReferenceSearch', () => {
   function renderPicker() {
     const onSelect = vi.fn();
     render(<ReferenceSearch versification={CANONICAL_VERSIFICATION} onSelect={onSelect} />);
-    return { onSelect, trigger: screen.getByRole('button', { name: 'Choose Bible book and chapter' }) };
+    return {
+      onSelect,
+      trigger: screen.getByRole('button', { name: 'Choose Bible book and chapter' }),
+    };
   }
 
   it('opens a Bible book and then a chapter, without typing', async () => {
