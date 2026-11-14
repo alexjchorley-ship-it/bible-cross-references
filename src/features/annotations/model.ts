@@ -10,6 +10,20 @@ export interface VerseHighlight {
   readonly updatedAt: string;
 }
 
+/** One moving reading position per colour, independent of saved highlights. */
+export interface ReadingBookmark {
+  readonly color: HighlightColor;
+  readonly verseId: string;
+  readonly updatedAt: string;
+}
+
+export function isReadingBookmark(value: unknown): value is ReadingBookmark {
+  return object(value) &&
+    isHighlightColor(value['color']) &&
+    isCanonicalVerseId(value['verseId']) &&
+    isDate(value['updatedAt']);
+}
+
 export interface PersonalNote {
   readonly id: string;
   readonly verseId: string;
@@ -20,7 +34,8 @@ export interface PersonalNote {
 
 export interface AnnotationsBackup {
   readonly format: 'bible-study-annotations';
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
+  readonly bookmarks?: readonly ReadingBookmark[];
   readonly exportedAt: string;
   readonly appVersion: string;
   readonly highlights: readonly VerseHighlight[];
@@ -76,13 +91,15 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
   if (
     !object(value) ||
     value['format'] !== 'bible-study-annotations' ||
-    value['schemaVersion'] !== 1 ||
+    (value['schemaVersion'] !== 1 && value['schemaVersion'] !== 2) ||
     typeof value['appVersion'] !== 'string' ||
     !isDate(value['exportedAt']) ||
     !Array.isArray(value['annotations']) ||
     !value['annotations'].every(isPersonalNote) ||
     !Array.isArray(value['highlights']) ||
-    !value['highlights'].every(isVerseHighlight)
+    !value['highlights'].every(isVerseHighlight) ||
+    (value['schemaVersion'] === 2 &&
+      (!Array.isArray(value['bookmarks']) || !value['bookmarks'].every(isReadingBookmark)))
   ) {
     throw new Error('This file is not a supported Bible Study annotations backup.');
   }
@@ -91,13 +108,18 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
   if (ids.size !== value['annotations'].length || verses.size !== value['highlights'].length) {
     throw new Error('The backup contains duplicate note IDs or highlighted verses.');
   }
+  const bookmarks = value['schemaVersion'] === 2 ? value['bookmarks'] as ReadingBookmark[] : [];
+  if (new Set(bookmarks.map((bookmark) => bookmark.color)).size !== bookmarks.length) {
+    throw new Error('The backup contains duplicate bookmark colours.');
+  }
   return {
     format: 'bible-study-annotations',
-    schemaVersion: 1,
+    schemaVersion: value['schemaVersion'],
     exportedAt: value['exportedAt'],
     appVersion: value['appVersion'],
     annotations: value['annotations'],
     highlights: value['highlights'],
+    bookmarks,
   };
 }
 
@@ -133,11 +155,13 @@ export function mergeHighlights(
 export function serializeAnnotationsBackup(
   annotations: readonly PersonalNote[],
   highlights: readonly VerseHighlight[],
+  bookmarks: readonly ReadingBookmark[] = [],
 ): string {
   return JSON.stringify(
     {
       format: 'bible-study-annotations',
-      schemaVersion: 1,
+      schemaVersion: 2,
+      bookmarks,
       exportedAt: new Date().toISOString(),
       appVersion: '1.0',
       annotations,
