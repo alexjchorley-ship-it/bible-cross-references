@@ -10,12 +10,12 @@ import {
 } from './storage.ts';
 import styles from './annotations.module.css';
 
-const COLOR_KEYS: Readonly<Record<HighlightColor, MessageKey>> = {
+const COLOR_KEYS = {
   amber: 'annotations.amber',
   green: 'annotations.green',
   blue: 'annotations.blue',
   pink: 'annotations.pink',
-};
+} as const satisfies Readonly<Record<HighlightColor, MessageKey>>;
 
 function SavedNote({ note }: { readonly note: PersonalNote }) {
   const { t } = useLocalization();
