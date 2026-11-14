@@ -13,7 +13,7 @@ let network: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.resetModules();
   localStorage.clear();
-  network = vi.fn(async () => Response.json(response));
+  network = vi.fn(() => Promise.resolve(Response.json(response)));
   vi.stubGlobal('fetch', network);
 });
 afterEach(() => {
@@ -72,6 +72,7 @@ describe('Supabase browser authentication', () => {
     await auth.signInCloud('reader@example.com', 'mypassword');
     network.mockResolvedValueOnce(Response.json([{ item_id: '1' }]));
     await auth.cloudRequest('/rest/v1/bible_annotations');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     expect(network).toHaveBeenLastCalledWith(
       expect.stringContaining('/rest/v1/bible_annotations'),
       expect.objectContaining({
