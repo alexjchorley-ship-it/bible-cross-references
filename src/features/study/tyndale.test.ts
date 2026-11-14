@@ -78,7 +78,12 @@ describe('licensed commentary verse lookup', () => {
       }
       return Promise.resolve(
         new Response(
-          JSON.stringify([direct, introduction, { ...direct, type: 'BookIntro' }, { nonsense: true }]),
+          JSON.stringify([
+            direct,
+            introduction,
+            { ...direct, type: 'BookIntro' },
+            { nonsense: true },
+          ]),
           { status: 200 },
         ),
       );
@@ -102,7 +107,9 @@ describe('licensed commentary verse lookup', () => {
     const request = vi.fn(() => Promise.resolve(new Response('Not found', { status: 404 })));
     vi.stubGlobal('fetch', request);
     await expect(loadTyndaleBook('zephaniah')).rejects.toThrow('not available offline');
-    request.mockImplementation(() => Promise.resolve(new Response(JSON.stringify([direct]), { status: 200 })));
+    request.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify([direct]), { status: 200 })),
+    );
     expect(await loadTyndaleBook('zephaniah')).toEqual([direct]);
     expect(request).toHaveBeenCalledTimes(2);
   });
