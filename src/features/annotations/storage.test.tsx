@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
 import { parseAnnotationsBackup, type PersonalNote } from './model.ts';
 
 const early = '2026-01-01T12:00:00.000Z';
@@ -251,6 +250,7 @@ describe('local-first verse annotation storage', () => {
   it('refreshes React subscriptions after a durable IndexedDB transaction', async () => {
     installIndexedDB();
     const storage = await import('./storage.ts');
+    const { render, screen } = await import('@testing-library/react/pure');
     function LiveState() {
       const state = storage.useAnnotations();
       return (
