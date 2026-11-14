@@ -1,12 +1,12 @@
 # AMP 2015 translation — rights and implementation gate
 
-**Status:** External passage linking added in feature PR #2. Full in-app/offline AMP text **NOT permitted or implemented yet**; written licence or an expressly licensed API integration is required.
+**Status:** **Deferred by reader request (2026-11-14)**. BSB remains the default and only currently prioritized English Bible text. No AMP link or in-app AMP was shipped in the study-and-notes feature PR. Full AMP integration, if ever revisited, still requires documented rights.
 
 ## Reader requirement
 
 The reader prefers the **Amplified Bible, 2015 edition (AMP)** with its bracketed amplifications. The translation picker should eventually offer AMP as a normal in-app text, retaining those additions, rather than displaying only a link. That remains a separately blocked delivery ticket, not a released feature.
 
-## Interim behaviour: available now in feature branch
+## Previous proof of concept: removed from active feature branch
 
 `src/translations/external-translations.ts` includes a `bible.com` **external-link** option for AMP, aligned to the selected passage. Tested sample: John 3:16 https://www.bible.com/bible/1588/JHN.3.16.AMP ; chapter example: https://www.bible.com/bible/1588/GEN.1.AMP . No AMP Scripture text, PDFs, screenshots, datasets, or secrets are copied into this repository. The user must follow the link to YouVersion to read AMP.
 

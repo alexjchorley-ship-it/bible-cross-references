@@ -15,7 +15,7 @@ import type { Versification } from '../core/bible/versification.ts';
  * own marks, so the site is named in plain words, never by its logo.
  */
 export interface ExternalTranslation {
-  readonly id: 'esv' | 'nasb1995' | 'nlt' | 'amp';
+  readonly id: 'esv' | 'nasb1995' | 'nlt';
   readonly name: string;
   /** What the link shows, written as the publisher writes it: `NASB 1995`, not `NASB95`. */
   readonly abbreviation: string;
@@ -186,19 +186,6 @@ export const EXTERNAL_TRANSLATIONS: readonly ExternalTranslation[] = [
     bibleCom: { id: 100, code: 'NASB1995' },
     // It prints every one of them, in brackets.
     omits: new Set(),
-    spans: new Map(MODERN_SPANS),
-  },
-  {
-    // AMP (2015) is copyright-protected: external link only; do not fetch or store text.
-    // Confirmed URL: https://www.bible.com/bible/1588/JHN.3.16.AMP
-    id: 'amp',
-    name: 'Amplified Bible (2015)',
-    abbreviation: 'AMP',
-    language: 'en',
-    bibleCom: { id: 1588, code: 'AMP' },
-    // Omitted verse numbering needs separate AMP review; linking its chapter is safer
-    // than making unsupported claims about the AMP's handling of these variants.
-    omits: CRITICAL_TEXT_OMISSIONS,
     spans: new Map(MODERN_SPANS),
   },
   {
