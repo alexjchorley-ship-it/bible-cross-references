@@ -366,7 +366,6 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
       const deletions = transaction.objectStore('sync_deletions');
       for (const row of remote) {
         if (!isCanonicalVerseId(row.verse_id) ||
-            (row.kind !== 'note' && row.kind !== 'highlight') ||
             !Number.isFinite(Date.parse(row.updated_at))) continue;
         const id = recordId(row.kind, row.item_id);
         const previous = local.get(id);
