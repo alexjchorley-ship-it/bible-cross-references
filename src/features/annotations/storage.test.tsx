@@ -11,13 +11,14 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights';
+type StoreName = 'notes' | 'highlights' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
   const stores: Record<StoreName, Map<string, unknown>> = {
     notes: new Map(),
     highlights: new Map(),
+    sync_deletions: new Map(),
   };
   const declared = new Set<string>();
   let failRead = false;
@@ -52,7 +53,7 @@ function installIndexedDB() {
         onabort: null as ((event: Event) => void) | null,
         onerror: null as ((event: Event) => void) | null,
         objectStore(name: string) {
-          if (name !== 'notes' && name !== 'highlights') {
+          if (name !== 'notes' && name !== 'highlights' && name !== 'sync_deletions') {
             throw new Error('Unknown store');
           }
           const map = stores[name];
@@ -68,7 +69,7 @@ function installIndexedDB() {
                 throw new Error('Not an object');
               }
               const row = value as Record<string, unknown>;
-              const key = name === 'notes' ? row['id'] : row['verseId'];
+              const key = name === 'notes' || name === 'sync_deletions' ? row['id'] : row['verseId'];
               if (typeof key !== 'string') {
                 throw new Error('Missing key');
               }
@@ -160,7 +161,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 1);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 2);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
