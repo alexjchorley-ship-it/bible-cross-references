@@ -1,4 +1,4 @@
-import { cloudRequest } from './cloud-auth.ts';
+import { cloudRequest, cloudSession } from './cloud-auth.ts';
 import {
   applyCloudRecords,
   exportCloudRecords,
@@ -34,6 +34,16 @@ async function fetchRemote(): Promise<CloudAnnotation[]> {
 }
 
 async function reconcile(): Promise<void> {
+  // Local IndexedDB is not partitioned by account: never mix two users' data.
+  const id = cloudSession()?.user.id;
+  if (!id) throw new Error('Sign in to synchronise annotations.');
+  const ownerKey = 'bible-study-cloud-owner';
+  const storedOwner = localStorage.getItem(ownerKey);
+  if (storedOwner && storedOwner !== id) {
+    throw new Error('This browser contains another cloud account. Export a backup and use a separate browser profile.');
+  }
+  if (!storedOwner) localStorage.setItem(ownerKey, id);
+
   // First ingest newer remote changes, then push local records and tombstones.
   // The SQL RPC only accepts changes newer than what is already in the database.
   await applyCloudRecords(await fetchRemote());
