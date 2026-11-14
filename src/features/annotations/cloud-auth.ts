@@ -63,7 +63,6 @@ async function request(path: string, init: RequestInit = {}, accessToken?: strin
       apikey: CLOUD_PUBLISHABLE_KEY,
       'Content-Type': 'application/json',
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...init.headers,
     },
   });
   const result: unknown = await response.json().catch(() => null);
@@ -120,7 +119,6 @@ async function refreshedSession(): Promise<CloudSession> {
   if (session.expires_at > Date.now() + 60000) return session;
   refreshPromise ??= (async () => {
     const current = session;
-    if (!current) throw new Error('You are signed out.');
     const response = await request('/auth/v1/token?grant_type=refresh_token', {
       method: 'POST',
       body: JSON.stringify({ refresh_token: current.refresh_token }),
