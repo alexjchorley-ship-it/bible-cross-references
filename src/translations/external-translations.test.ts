@@ -23,6 +23,7 @@ function translation(id: ExternalTranslation['id']): ExternalTranslation {
 const ESV = translation('esv');
 const NASB_1995 = translation('nasb1995');
 const NLT = translation('nlt');
+const AMP = translation('amp');
 
 /** The sixteen verses the earliest manuscripts do not have, spelled out so the test pins them. */
 const MANUSCRIPT_OMISSIONS = [
@@ -67,14 +68,15 @@ function verseNamed(osisId: string): { readonly passage: Passage; readonly ref: 
 }
 
 describe('the translations linked to on bible.com', () => {
-  it('are the ESV, the NASB 1995 and the NLT, in that order, beside an English text', () => {
+  it('include the AMP as a licensed external reader link beside an English text', () => {
     expect(externalTranslationsFor('en').map((each) => each.abbreviation)).toEqual([
       'ESV',
       'NASB 1995',
+      'AMP',
       'NLT',
     ]);
     // A region does not change the language.
-    expect(externalTranslationsFor('en-GB')).toHaveLength(3);
+    expect(externalTranslationsFor('en-GB')).toHaveLength(4);
   });
 
   it('are not offered beside a text in another language, which they are not in', () => {
@@ -95,11 +97,13 @@ describe('externalPassageUrl', () => {
       'https://www.bible.com/bible/100/JHN.3.16.NASB1995',
     );
     expect(url(NLT, verse('John', 3, 16))).toBe('https://www.bible.com/bible/116/JHN.3.16.NLT');
+    expect(url(AMP, verse('John', 3, 16))).toBe('https://www.bible.com/bible/1588/JHN.3.16.AMP');
   });
 
   it('opens a chapter whole', () => {
     expect(url(ESV, chapter('Ps', 23))).toBe('https://www.bible.com/bible/59/PSA.23.ESV');
     expect(url(NLT, chapter('Gen', 1))).toBe('https://www.bible.com/bible/116/GEN.1.NLT');
+    expect(url(AMP, chapter('Gen', 1))).toBe('https://www.bible.com/bible/1588/GEN.1.AMP');
   });
 
   /**

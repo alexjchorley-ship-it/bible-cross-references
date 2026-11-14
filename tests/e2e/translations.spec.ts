@@ -143,7 +143,7 @@ test.describe('other translations, on bible.com', () => {
     expect(requested).toEqual([]);
   });
 
-  test('a verse opens in the ESV, the NASB 1995 and the NLT, in a new tab, with nothing loaded first', async ({
+  test('a verse opens in the ESV, NASB, AMP and NLT, in a new tab, with nothing loaded first', async ({
     page,
   }) => {
     await openPassage(page, 'John.3.16');
@@ -151,10 +151,11 @@ test.describe('other translations, on bible.com', () => {
       .locator(PANEL)
       .getByRole('group', { name: 'Read on bible.com' })
       .getByRole('link');
-    await expect(links).toHaveText(['ESV', 'NASB 1995', 'NLT']);
+    await expect(links).toHaveText(['ESV', 'NASB 1995', 'AMP', 'NLT']);
     const addresses = [
       'https://www.bible.com/bible/59/JHN.3.16.ESV',
       'https://www.bible.com/bible/100/JHN.3.16.NASB1995',
+      'https://www.bible.com/bible/1588/JHN.3.16.AMP',
       'https://www.bible.com/bible/116/JHN.3.16.NLT',
     ];
     for (const [index, address] of addresses.entries()) {
