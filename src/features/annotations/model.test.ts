@@ -117,8 +117,14 @@ describe('canonical annotations and backups', () => {
     const amber = { color: 'amber' as const, verseId: 'John.3.16', updatedAt: LATE };
     const content = serializeAnnotationsBackup([note], [highlight], [green, amber]);
     expect(parseAnnotationsBackup(content).bookmarks).toEqual([green, amber]);
-    const v1 = JSON.stringify({ format: 'bible-study-annotations', schemaVersion: 1,
-      exportedAt: LATE, appVersion: '1.0', annotations: [note], highlights: [highlight] });
+    const v1 = JSON.stringify({
+      format: 'bible-study-annotations',
+      schemaVersion: 1,
+      exportedAt: LATE,
+      appVersion: '1.0',
+      annotations: [note],
+      highlights: [highlight],
+    });
     expect(parseAnnotationsBackup(v1).bookmarks).toEqual([]);
     const duplicate = JSON.parse(content) as Record<string, unknown>;
     duplicate['bookmarks'] = [green, { ...green, verseId: 'John.3.16' }];

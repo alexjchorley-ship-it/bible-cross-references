@@ -227,7 +227,11 @@ describe('searchable and exportable personal notebook', () => {
   it('shows unset bookmarks as disabled and preserves all highlight entries', () => {
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     const section = screen.getByRole('region', { name: 'Reading bookmarks' });
-    expect(within(section).getByRole('button', { name: /Green: Not set/ }).hasAttribute('disabled')).toBe(true);
+    expect(
+      within(section)
+        .getByRole('button', { name: /Green: Not set/ })
+        .hasAttribute('disabled'),
+    ).toBe(true);
     expect(screen.getByText('God so loved')).toBeDefined();
   });
 
@@ -236,14 +240,22 @@ describe('searchable and exportable personal notebook', () => {
     vi.stubGlobal('confirm', confirm);
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     const backup = {
-      format: 'bible-study-annotations', schemaVersion: 2,
-      exportedAt: now, appVersion: '1.0',
-      annotations: snapshot.notes, highlights: snapshot.highlights,
+      format: 'bible-study-annotations',
+      schemaVersion: 2,
+      exportedAt: now,
+      appVersion: '1.0',
+      annotations: snapshot.notes,
+      highlights: snapshot.highlights,
       bookmarks: [{ color: 'pink', verseId: 'Gen.1.1', updatedAt: now }],
     };
     const input = document.querySelector<HTMLInputElement>('input[type="file"]');
     if (!input) throw new Error('Missing backup input');
-    await userEvent.upload(input, new File([JSON.stringify(backup)], 'backup.json', {type:'application/json'}));
-    await waitFor(() => { expect(confirm).toHaveBeenCalledWith(expect.stringContaining('1 bookmarks')); });
+    await userEvent.upload(
+      input,
+      new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' }),
+    );
+    await waitFor(() => {
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('1 bookmarks'));
+    });
   });
 });
