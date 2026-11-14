@@ -47,16 +47,16 @@ Existing Bible apps commonly separate Scripture reading, linguistic tools, cross
 
 ### 1.3 Primary user journeys
 
-| ID | Reader journey | Required result |
-|---|---|---|
-| J1 | Open a chapter in Threads; select Genesis 1:1; tap **Study** | A readable summary appears with citations and linked interpretations, without losing the passage. |
-| J2 | Tap a verse; apply amber/green/blue/pink highlight; close/reopen | The verse remains highlighted, including after offline reload or switching translation. |
-| J3 | Add a note to a verse; reopen and edit it | Text persists, preserves line breaks, and remains tied to the canonical verse reference. |
-| J4 | Open **My Notebook**; search/filter; select an entry | It opens the correct passage and annotation, with an obvious way to return. |
-| J5 | Open a verse with no individual study note | Show the nearest clearly labelled passage/chapter context where available, or “No sourced study note available”; never manufacture one. |
-| J6 | Review an interpretation; open an author/source | Exact source metadata and permitted excerpt/original source link are accessible. |
-| J7 | Export notes; import them on another browser/device | Versioned backup restores annotations without needing an account, with preview and conflict-safe handling. |
-| J8 | Use the app in airplane mode after install | Scripture, cross-references, notes, highlights and downloaded studies continue to function. |
+| ID  | Reader journey                                                   | Required result                                                                                                                         |
+| --- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| J1  | Open a chapter in Threads; select Genesis 1:1; tap **Study**     | A readable summary appears with citations and linked interpretations, without losing the passage.                                       |
+| J2  | Tap a verse; apply amber/green/blue/pink highlight; close/reopen | The verse remains highlighted, including after offline reload or switching translation.                                                 |
+| J3  | Add a note to a verse; reopen and edit it                        | Text persists, preserves line breaks, and remains tied to the canonical verse reference.                                                |
+| J4  | Open **My Notebook**; search/filter; select an entry             | It opens the correct passage and annotation, with an obvious way to return.                                                             |
+| J5  | Open a verse with no individual study note                       | Show the nearest clearly labelled passage/chapter context where available, or “No sourced study note available”; never manufacture one. |
+| J6  | Review an interpretation; open an author/source                  | Exact source metadata and permitted excerpt/original source link are accessible.                                                        |
+| J7  | Export notes; import them on another browser/device              | Versioned backup restores annotations without needing an account, with preview and conflict-safe handling.                              |
+| J8  | Use the app in airplane mode after install                       | Scripture, cross-references, notes, highlights and downloaded studies continue to function.                                             |
 
 ### 1.4 Experience principles
 
@@ -106,16 +106,16 @@ npm run test:e2e
 
 ## 3. Scope and release boundaries
 
-| Area | MVP / P0 | Polished release / P1 | Later / P2 |
-|---|---|---|---|
-| Existing features | Preserve all upstream features | Compatibility polish | New visualisation modes |
-| Highlights | Four named colours, single-verse highlighting, remove | Passage/multi-verse operations, colour legend | Text-range highlights inside verses |
-| Personal notes | Multiple notes per verse, create/edit/delete, autosave, timestamps | Notebook search/filter/sort, optional tags | Attachments, collaborative notes |
-| Persistence | IndexedDB, schema migrations, no sign-in | Backup export/import, restore preview, reset controls | Account sync/optional encryption |
-| Theological content | Imported licensed notes, accurate verse/passage matching, provenance | Curated interpretation comparisons for a pilot set, source library, quality reviews | Wide-scale multi-perspective editorial expansion |
-| Reading UX | Study and annotation actions in Threads/details; mobile and desktop | Reader polish and easier navigation | Dedicated reading mode if needed |
-| Original-language | Preserve current dictionary/occurrence feature | Link linguistic discussion to existing lexicon | Full morphology/transliteration redesign |
-| AI | None | None required | Optional citation-checked Q&A behind explicit consent |
+| Area                | MVP / P0                                                             | Polished release / P1                                                               | Later / P2                                            |
+| ------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Existing features   | Preserve all upstream features                                       | Compatibility polish                                                                | New visualisation modes                               |
+| Highlights          | Four named colours, single-verse highlighting, remove                | Passage/multi-verse operations, colour legend                                       | Text-range highlights inside verses                   |
+| Personal notes      | Multiple notes per verse, create/edit/delete, autosave, timestamps   | Notebook search/filter/sort, optional tags                                          | Attachments, collaborative notes                      |
+| Persistence         | IndexedDB, schema migrations, no sign-in                             | Backup export/import, restore preview, reset controls                               | Account sync/optional encryption                      |
+| Theological content | Imported licensed notes, accurate verse/passage matching, provenance | Curated interpretation comparisons for a pilot set, source library, quality reviews | Wide-scale multi-perspective editorial expansion      |
+| Reading UX          | Study and annotation actions in Threads/details; mobile and desktop  | Reader polish and easier navigation                                                 | Dedicated reading mode if needed                      |
+| Original-language   | Preserve current dictionary/occurrence feature                       | Link linguistic discussion to existing lexicon                                      | Full morphology/transliteration redesign              |
+| AI                  | None                                                                 | None required                                                                       | Optional citation-checked Q&A behind explicit consent |
 
 **Important coverage distinction:** The first release **MUST** provide a Study action on every verse, but it **MUST NOT** promise a unique scholarly analysis or multiple scholarly interpretations for all 31,102 verses. It shows directly matched material when available, inherited broader passage notes clearly labelled as such, and a transparent absence state otherwise.
 
@@ -142,7 +142,7 @@ npm run test:e2e
 
 ### 4.2 Study tabs and content order
 
-Proposed tabs: **Overview | Interpretations | Hebrew/Greek | Sources**. The Overview includes the most direct existing source-backed explanation. The Interpretations tab is *only populated when substantive documented disagreement is available*. Hebrew/Greek should deep-link to existing word data; avoid reimplementing its lexicon. Sources always remains available. An empty panel needs a useful “No sourced study note for this verse yet” and links to wider context/word study.
+Proposed tabs: **Overview | Interpretations | Hebrew/Greek | Sources**. The Overview includes the most direct existing source-backed explanation. The Interpretations tab is _only populated when substantive documented disagreement is available_. Hebrew/Greek should deep-link to existing word data; avoid reimplementing its lexicon. Sources always remains available. An empty panel needs a useful “No sourced study note for this verse yet” and links to wider context/word study.
 
 **Example coverage logic for Genesis 1:1:** if a study source covers Gen 1:1, label it “Direct note”; if it covers Gen 1:1–3, label it “Covers vv. 1–3”; if it describes Genesis 1 generally, label it “Chapter context”. Do not output a custom generated “Genesis 1:1 interpretation by X” unless X actually wrote the attributable point being shown.
 
@@ -150,7 +150,7 @@ Proposed tabs: **Overview | Interpretations | Hebrew/Greek | Sources**. The Over
 
 - Only ingest datasets with verified redistribution terms or explicit written permission. Public website visibility is **not** content redistribution permission.
 - Store each commentary record's source ID, source version, copyright/licence, location pointer, original reference, date retrieved, content hash, transformation log and attribution string.
-- Keep *verbatim source content* separate from *editorial/AI synthesis*. Use tags such as `original_excerpt`, `licensed_adaptation`, `editorial_summary`, `linked_only`.
+- Keep _verbatim source content_ separate from _editorial/AI synthesis_. Use tags such as `original_excerpt`, `licensed_adaptation`, `editorial_summary`, `linked_only`.
 - Make source material browseable without the app inventing theological claims; no unsupported “most scholars believe” or numeric confidence score.
 - Clearly identify a Christian study note as Christian, and label Orthodox, Catholic, Protestant, Jewish and critical-academic positions only when the attributed writer/organisation genuinely holds them. Do not fabricate balance or make a source representative of a tradition without evidence.
 - Do not assert a word's etymology determines its meaning in context. For original-language claims, list lemma, grammatical role if available, usage and textual context; flag disputed analysis.
@@ -159,14 +159,14 @@ Proposed tabs: **Overview | Interpretations | Hebrew/Greek | Sources**. The Over
 
 ### 4.4 Content packages to evaluate
 
-| Source | Role | Current evidence | Required action |
-|---|---|---|---|
-| **Tyndale Open Study Notes** | Primary accessible modern study notes; book introductions, themes and contextual material | Publisher offers download and CC BY-SA 4.0 | Download; inventory actual file structure; validate licence notice inside archive; inspect coverage and reference notation; build deterministic importer; assess ShareAlike obligations. |
-| **Tyndale Open Bible Dictionary** | Definitions for people, places, concepts | Publisher download, CC BY-SA 4.0 | Optional P1 contextual links after matching IDs and licence review. |
-| **STEPBible data** | Existing lemma/morphology backbone | Upstream uses tagged Hebrew/Greek and lexicons under CC BY 4.0 | Reuse existing modules; no new duplicate scrape; preserve credit. |
-| **OpenBible.info cross-references** | Existing cross-reference index | Upstream uses CC BY 4.0 | Preserve and attribute; avoid treating ranked links as doctrinal truth. |
-| **Historical public-domain commentaries** | Additional named author perspectives | Can be useful, but edition/country-specific rights vary | Per-edition, jurisdiction and transcription audit *before* import; do not treat all digitised versions as automatically free. |
-| **Current copyrighted scholarly books** | Depth and modern breadth | Typically require permission | Link to original publications, use very short permitted quotes if lawful and reviewed; do not mirror books. |
+| Source                                    | Role                                                                                      | Current evidence                                               | Required action                                                                                                                                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tyndale Open Study Notes**              | Primary accessible modern study notes; book introductions, themes and contextual material | Publisher offers download and CC BY-SA 4.0                     | Download; inventory actual file structure; validate licence notice inside archive; inspect coverage and reference notation; build deterministic importer; assess ShareAlike obligations. |
+| **Tyndale Open Bible Dictionary**         | Definitions for people, places, concepts                                                  | Publisher download, CC BY-SA 4.0                               | Optional P1 contextual links after matching IDs and licence review.                                                                                                                      |
+| **STEPBible data**                        | Existing lemma/morphology backbone                                                        | Upstream uses tagged Hebrew/Greek and lexicons under CC BY 4.0 | Reuse existing modules; no new duplicate scrape; preserve credit.                                                                                                                        |
+| **OpenBible.info cross-references**       | Existing cross-reference index                                                            | Upstream uses CC BY 4.0                                        | Preserve and attribute; avoid treating ranked links as doctrinal truth.                                                                                                                  |
+| **Historical public-domain commentaries** | Additional named author perspectives                                                      | Can be useful, but edition/country-specific rights vary        | Per-edition, jurisdiction and transcription audit _before_ import; do not treat all digitised versions as automatically free.                                                            |
+| **Current copyrighted scholarly books**   | Depth and modern breadth                                                                  | Typically require permission                                   | Link to original publications, use very short permitted quotes if lawful and reviewed; do not mirror books.                                                                              |
 
 **Legal architecture rule:** Do **not** assume that the MIT code licence also applies to imported study notes. Track licences per dataset, preserve mandatory notices, keep raw licensed resources separated from app code, and review whether adaptations must be distributed under CC BY-SA 4.0. Make the complete source/attribution page visible in-app and as a file in the repo. Avoid restricting access to licence-required attribution or derivative materials. Legal review is an explicit release gate, not a footnote.
 
@@ -188,7 +188,7 @@ Create independent `scripts/commentary/` commands following upstream's reproduci
 
 ### 4.6 Pilot editorial set for differing interpretations
 
-Before scaling to the whole Bible, manually curate **10–15 representative passages** to test the data model and UI, including Genesis 1:1, Genesis 3:1–15, Isaiah 53, Psalm 22, John 1:1, Romans 9, James 2:14–26, 1 Corinthians 11, Revelation 20 and a relatively uncontroversial narrative verse. Include different genres and both Testaments. For each: minimum two *genuinely distinct, documented* readings **where they exist**, sources with page/link locators, explicit treatment of uncertainty, editorial date and reviewer status. Do not force multiple views for passages with no meaningful dispute.
+Before scaling to the whole Bible, manually curate **10–15 representative passages** to test the data model and UI, including Genesis 1:1, Genesis 3:1–15, Isaiah 53, Psalm 22, John 1:1, Romans 9, James 2:14–26, 1 Corinthians 11, Revelation 20 and a relatively uncontroversial narrative verse. Include different genres and both Testaments. For each: minimum two _genuinely distinct, documented_ readings **where they exist**, sources with page/link locators, explicit treatment of uncertainty, editorial date and reviewer status. Do not force multiple views for passages with no meaningful dispute.
 
 **Genesis 1:1 editorial test:** distinguish (a) independent first act, (b) summary/heading and (c) dependent temporal clause only when supported by accurately checked primary commentary/linguistic sources. “Bara always means creation from nothing” must fail review as overstated. Author attribution must be traceable to the specific position, not inferred from a source title.
 
@@ -285,7 +285,7 @@ docs/
 
 ### 7.1 Stable Bible verse identity
 
-The upstream canonical reference model is authoritative; reuse its existing parser/IDs. Example *illustrative* external representation: `Gen.1.1`. Do not invent an incompatible numbering system. Maintain mapping between any commentary source's reference syntax and upstream canonical identifiers. Store note/highlight references independently of selected translation and selected UI language.
+The upstream canonical reference model is authoritative; reuse its existing parser/IDs. Example _illustrative_ external representation: `Gen.1.1`. Do not invent an incompatible numbering system. Maintain mapping between any commentary source's reference syntax and upstream canonical identifiers. Store note/highlight references independently of selected translation and selected UI language.
 
 ### 7.2 Suggested TypeScript contracts (adapt to upstream conventions)
 
@@ -363,18 +363,18 @@ type Interpretation = {
 
 ## 8. Quality attributes and acceptance targets
 
-| Category | Release gate / objective |
-|---|---|
-| Data reliability | 100% of imported entries have valid canonical references and source IDs; zero silently discarded/unmapped records in production output; exceptions reported. |
-| Notes durability | Create → refresh → offline → reopen preserves text/colours; schema migration tests pass; backup round-trip matches content. |
-| Provenance | Every published commentary/synthesis item has auditable attribution and correct `contentKind`; zero fabricated author quotations. |
-| Non-regression | Original Arcs, Threads, word lookup, search, URL contracts, translation changes, install/offline workflows still pass upstream tests. |
-| Accessibility | New workflows keyboard/screen-reader usable; no reliance on highlight colour alone; tests include RTL word displays and mobile keyboard. |
-| Performance | No significant regression against baseline on representative mobile; document initial-load/network/bundle deltas rather than inventing fixed benchmarks before audit. |
-| Offline | Previously visited chapter and downloaded commentary usable offline; notes always editable offline; missing content produces a clear unavailable message. |
-| Security | No script injection via imported content; no user notes in analytics/logging/network; no public annotation backups; restrictive content trust boundaries. |
-| Portability | Works at deployment root or configured `BASE_PATH`; no hard-coded upstream URLs except credits/links. |
-| Browsers | Chromium desktop and Android-sized phone in automation; manually check Firefox and Safari / iOS PWA if available. |
+| Category         | Release gate / objective                                                                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data reliability | 100% of imported entries have valid canonical references and source IDs; zero silently discarded/unmapped records in production output; exceptions reported.          |
+| Notes durability | Create → refresh → offline → reopen preserves text/colours; schema migration tests pass; backup round-trip matches content.                                           |
+| Provenance       | Every published commentary/synthesis item has auditable attribution and correct `contentKind`; zero fabricated author quotations.                                     |
+| Non-regression   | Original Arcs, Threads, word lookup, search, URL contracts, translation changes, install/offline workflows still pass upstream tests.                                 |
+| Accessibility    | New workflows keyboard/screen-reader usable; no reliance on highlight colour alone; tests include RTL word displays and mobile keyboard.                              |
+| Performance      | No significant regression against baseline on representative mobile; document initial-load/network/bundle deltas rather than inventing fixed benchmarks before audit. |
+| Offline          | Previously visited chapter and downloaded commentary usable offline; notes always editable offline; missing content produces a clear unavailable message.             |
+| Security         | No script injection via imported content; no user notes in analytics/logging/network; no public annotation backups; restrictive content trust boundaries.             |
+| Portability      | Works at deployment root or configured `BASE_PATH`; no hard-coded upstream URLs except credits/links.                                                                 |
+| Browsers         | Chromium desktop and Android-sized phone in automation; manually check Firefox and Safari / iOS PWA if available.                                                     |
 
 **Testing layers:** pure unit tests for matching/normalisation, annotation repository and backup validation; React component tests for selection/dialogs; Playwright desktop/mobile/offline for J1–J8; manual/automated accessibility; visual regression against fork baseline; source-provenance/content audit fixtures; service-worker update and rollback checks. Respect upstream's test naming and coverage conventions.
 
@@ -458,35 +458,35 @@ Account sync; optional E2EE; AI Q&A with source grounding; additional licensed d
 
 Update status in place in the fork. Ticket IDs must be retained so progress is traceable across agents.
 
-| Ticket | Priority | Phase | Dependency | Definition of done (summary) |
-|---|---|---:|---|---|
-| F-001 Fork & pin upstream | P0 | 0 | — | User-owned fork, upstream remote and immutable commit SHA recorded. |
-| F-002 Baseline build & tests | P0 | 0 | F-001 | `npm ci`, data, build/check/e2e results recorded. |
-| F-003 Architecture/UX audit | P0 | 0 | F-002 | Real code path and mobile gestures mapped; screenshots. |
-| F-004 Data and licence ledger | P0 | 0 | F-001 | Source/licence/redistribution matrix, unresolved risks flagged. |
-| X-001 Canonical verse adapter | P0 | 1 | F-003 | Shared ID across views/translations; exhaustive reference tests. |
-| X-002 Verse action UI | P0 | 1 | X-001 | Study/Note/Highlight reachable; gestures/deep links preserved. |
-| X-003 Local data storage & migrations | P0 | 1 | F-003 | IndexedDB repository, versioned schema and failure states. |
-| A-001 Highlight model & controls | P0 | 2 | X-001, X-003 | Four colours/remove; persistence and accessible states. |
-| A-002 Highlight verse rendering | P0 | 2 | A-001, X-002 | Survives translation changes and reload; no gesture regression. |
-| A-003 Note CRUD & autosave | P0 | 2 | X-003, X-002 | Multiple notes, timestamps, error states, safe delete. |
-| A-004 Verse annotation markers | P0 | 2 | A-002, A-003 | Marker matches saved state and opens proper verse/note. |
-| N-001 My Notebook view | P1 | 3 | A-003, A-002 | Browse/find/filter/sort and jump back to Scripture. |
-| N-002 JSON backup/export/import | P1 | 3 | X-003, N-001 | Schema validation, merge preview, idempotency, roundtrip. |
-| C-001 Source archive audit | P0 | 4 | F-004 | Actual source contents, licence and coverage verified. |
-| C-002 Commentary schema/import | P0 | 4 | C-001, X-001 | Deterministic parser, references, report, validation. |
-| C-003 Study content resolver | P0 | 4 | C-002 | Direct/context/empty matching ordered and labelled. |
-| C-004 Study panel and sources | P0 | 4 | C-003, X-002 | Accurate explanation/excerpts, provenance and links. |
-| C-005 Source/attribution UI | P0 | 4 | C-002 | License and attribution accessible for every item. |
-| T-001 Editorial content policy | P0 | 5 | F-004 | Source policy, distinction labels, review checklist. |
-| T-002 Interpretations schema/pilot | P1 | 5 | T-001, C-004 | 10–15 reviewed pilot passages; differing claims evidenced. |
-| T-003 Original-language links | P1 | 5 | C-004 | Integrates with upstream word panels, no redundant importer. |
-| Q-001 Browser/mobile/offline E2E | P0 | 6 | A-004, C-004 | J1–J8 tests with data persistence/service-worker cases. |
-| Q-002 Accessibility/visual review | P0 | 6 | Q-001 | WCAG AA audit and visual changes approved. |
-| Q-003 Localisation/UX polish | P1 | 6 | C-004 | All added UI strings compliant with upstream locale gate. |
-| R-001 Release legal/privacy gate | P0 | 7 | F-004, C-005, T-001 | Written source inventory, notices, no unlawful copied text. |
-| R-002 Deploy/backup/rollback drill | P0 | 7 | Q-001, Q-002, R-001 | Production release smoke test, backup restore, rollback. |
-| R-003 Product-owner UAT | P0 | 7 | R-002 | User approves example Genesis 1:1 and personal note workflows. |
+| Ticket                                | Priority | Phase | Dependency          | Definition of done (summary)                                        |
+| ------------------------------------- | -------- | ----: | ------------------- | ------------------------------------------------------------------- |
+| F-001 Fork & pin upstream             | P0       |     0 | —                   | User-owned fork, upstream remote and immutable commit SHA recorded. |
+| F-002 Baseline build & tests          | P0       |     0 | F-001               | `npm ci`, data, build/check/e2e results recorded.                   |
+| F-003 Architecture/UX audit           | P0       |     0 | F-002               | Real code path and mobile gestures mapped; screenshots.             |
+| F-004 Data and licence ledger         | P0       |     0 | F-001               | Source/licence/redistribution matrix, unresolved risks flagged.     |
+| X-001 Canonical verse adapter         | P0       |     1 | F-003               | Shared ID across views/translations; exhaustive reference tests.    |
+| X-002 Verse action UI                 | P0       |     1 | X-001               | Study/Note/Highlight reachable; gestures/deep links preserved.      |
+| X-003 Local data storage & migrations | P0       |     1 | F-003               | IndexedDB repository, versioned schema and failure states.          |
+| A-001 Highlight model & controls      | P0       |     2 | X-001, X-003        | Four colours/remove; persistence and accessible states.             |
+| A-002 Highlight verse rendering       | P0       |     2 | A-001, X-002        | Survives translation changes and reload; no gesture regression.     |
+| A-003 Note CRUD & autosave            | P0       |     2 | X-003, X-002        | Multiple notes, timestamps, error states, safe delete.              |
+| A-004 Verse annotation markers        | P0       |     2 | A-002, A-003        | Marker matches saved state and opens proper verse/note.             |
+| N-001 My Notebook view                | P1       |     3 | A-003, A-002        | Browse/find/filter/sort and jump back to Scripture.                 |
+| N-002 JSON backup/export/import       | P1       |     3 | X-003, N-001        | Schema validation, merge preview, idempotency, roundtrip.           |
+| C-001 Source archive audit            | P0       |     4 | F-004               | Actual source contents, licence and coverage verified.              |
+| C-002 Commentary schema/import        | P0       |     4 | C-001, X-001        | Deterministic parser, references, report, validation.               |
+| C-003 Study content resolver          | P0       |     4 | C-002               | Direct/context/empty matching ordered and labelled.                 |
+| C-004 Study panel and sources         | P0       |     4 | C-003, X-002        | Accurate explanation/excerpts, provenance and links.                |
+| C-005 Source/attribution UI           | P0       |     4 | C-002               | License and attribution accessible for every item.                  |
+| T-001 Editorial content policy        | P0       |     5 | F-004               | Source policy, distinction labels, review checklist.                |
+| T-002 Interpretations schema/pilot    | P1       |     5 | T-001, C-004        | 10–15 reviewed pilot passages; differing claims evidenced.          |
+| T-003 Original-language links         | P1       |     5 | C-004               | Integrates with upstream word panels, no redundant importer.        |
+| Q-001 Browser/mobile/offline E2E      | P0       |     6 | A-004, C-004        | J1–J8 tests with data persistence/service-worker cases.             |
+| Q-002 Accessibility/visual review     | P0       |     6 | Q-001               | WCAG AA audit and visual changes approved.                          |
+| Q-003 Localisation/UX polish          | P1       |     6 | C-004               | All added UI strings compliant with upstream locale gate.           |
+| R-001 Release legal/privacy gate      | P0       |     7 | F-004, C-005, T-001 | Written source inventory, notices, no unlawful copied text.         |
+| R-002 Deploy/backup/rollback drill    | P0       |     7 | Q-001, Q-002, R-001 | Production release smoke test, backup restore, rollback.            |
+| R-003 Product-owner UAT               | P0       |     7 | R-002               | User approves example Genesis 1:1 and personal note workflows.      |
 
 **Definition of Done applies to all tickets:** acceptance assertions demonstrated, unit/integration/e2e tests as relevant, upstream regression checks pass, source/credit updated if data affected, screenshots for visible change, no data-loss regression, and short ticket-level implementation notes. The P1 notebook+backup features should be promoted to release blockers if the owner considers personal data portability essential for public release.
 
@@ -494,28 +494,28 @@ Update status in place in the fork. Ticket IDs must be retained so progress is t
 
 ## 12. Test matrix — failure cases that must not be overlooked
 
-| ID | Scenario | Expected behaviour |
-|---|---|---|
-| QA-01 | Highlight Gen 1:1, change BSB → KJV → BSB | Same canonical verse remains highlighted. |
-| QA-02 | Create two notes on John 3:16, reload offline | Both notes and timestamps remain; no duplicate creation. |
-| QA-03 | Write note, rapidly navigate/close/reopen | Pending edits flushed or explicit unsaved failure shown. |
-| QA-04 | Private/incognito/restricted browser storage | App explains temporary storage; never pretends permanence. |
-| QA-05 | Delete note then undo/cancel | User action precisely determines deletion. |
-| QA-06 | Import identical export twice | No duplicate records; deterministic conflict logic. |
-| QA-07 | Import tampered backup with invalid verse/HTML/scripts | Rejected or safely treated as text, with no code execution. |
-| QA-08 | Selected verse lacks direct commentary | Proper broader-context label or honest absent state. |
-| QA-09 | Commentary source spans book/chapter/verse boundaries | Correct matches and provenance; no cross-verse misattachment. |
-| QA-10 | Study source unlicensed or missing attribution | Excluded from publishable bundle; flagged in report. |
-| QA-11 | Source file changes upstream unnoticed | Hash/pin validation fails build until consciously updated. |
-| QA-12 | Airplane mode with downloaded study and local notes | Both remain available, with no failed-save toast. |
-| QA-13 | Service worker updates app | Notes remain intact; old assets replaced safely. |
-| QA-14 | Browser Back, share link, URL with `?ref=...` | Previous URL and selected verse preserved; no breaking legacy links. |
-| QA-15 | Android touchscreen select verse + edit with keyboard open | No accidental sheet dismiss/scroll loss; controls reachable. |
-| QA-16 | Screen reader, keyboard and non-colour vision | Verse marker, highlight state, source tabs and save status clear. |
-| QA-17 | User shares verse | Never exposes their private note/highlight text in shared card/link. |
-| QA-18 | Hebrew/Greek content inside commentary | Correct direction, text isolation, readable line wrapping. |
-| QA-19 | Export/apply at a different deployment `BASE_PATH` | Links and assets resolve without upstream host dependency. |
-| QA-20 | Arcs dense rendering and pinch/hold after new toolbar | Original interactions and performance remain acceptable. |
+| ID    | Scenario                                                   | Expected behaviour                                                   |
+| ----- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| QA-01 | Highlight Gen 1:1, change BSB → KJV → BSB                  | Same canonical verse remains highlighted.                            |
+| QA-02 | Create two notes on John 3:16, reload offline              | Both notes and timestamps remain; no duplicate creation.             |
+| QA-03 | Write note, rapidly navigate/close/reopen                  | Pending edits flushed or explicit unsaved failure shown.             |
+| QA-04 | Private/incognito/restricted browser storage               | App explains temporary storage; never pretends permanence.           |
+| QA-05 | Delete note then undo/cancel                               | User action precisely determines deletion.                           |
+| QA-06 | Import identical export twice                              | No duplicate records; deterministic conflict logic.                  |
+| QA-07 | Import tampered backup with invalid verse/HTML/scripts     | Rejected or safely treated as text, with no code execution.          |
+| QA-08 | Selected verse lacks direct commentary                     | Proper broader-context label or honest absent state.                 |
+| QA-09 | Commentary source spans book/chapter/verse boundaries      | Correct matches and provenance; no cross-verse misattachment.        |
+| QA-10 | Study source unlicensed or missing attribution             | Excluded from publishable bundle; flagged in report.                 |
+| QA-11 | Source file changes upstream unnoticed                     | Hash/pin validation fails build until consciously updated.           |
+| QA-12 | Airplane mode with downloaded study and local notes        | Both remain available, with no failed-save toast.                    |
+| QA-13 | Service worker updates app                                 | Notes remain intact; old assets replaced safely.                     |
+| QA-14 | Browser Back, share link, URL with `?ref=...`              | Previous URL and selected verse preserved; no breaking legacy links. |
+| QA-15 | Android touchscreen select verse + edit with keyboard open | No accidental sheet dismiss/scroll loss; controls reachable.         |
+| QA-16 | Screen reader, keyboard and non-colour vision              | Verse marker, highlight state, source tabs and save status clear.    |
+| QA-17 | User shares verse                                          | Never exposes their private note/highlight text in shared card/link. |
+| QA-18 | Hebrew/Greek content inside commentary                     | Correct direction, text isolation, readable line wrapping.           |
+| QA-19 | Export/apply at a different deployment `BASE_PATH`         | Links and assets resolve without upstream host dependency.           |
+| QA-20 | Arcs dense rendering and pinch/hold after new toolbar      | Original interactions and performance remain acceptable.             |
 
 ---
 
@@ -544,17 +544,17 @@ Use a two-step workflow for authored comparison pages: **draft → source check 
 
 ## 14. Live progress ledger (initial state)
 
-| Phase | Status | Exit gate |
-|---|---|---|
-| 0 Fork & baseline | NOT STARTED | Baseline reproducible and documented |
+| Phase                     | Status      | Exit gate                                           |
+| ------------------------- | ----------- | --------------------------------------------------- |
+| 0 Fork & baseline         | NOT STARTED | Baseline reproducible and documented                |
 | 1 Architecture foundation | NOT STARTED | Panels and data types hooked up without regressions |
-| 2 Highlights & notes | NOT STARTED | Durable local personal annotations |
-| 3 Notebook & backup | NOT STARTED | Searchable notebook and safe data portability |
-| 4 Study note ingestion | NOT STARTED | Sourced notes on real verses with provenance |
-| 5 Interpretation pilot | NOT STARTED | Reviewed differences and word-study links |
-| 6 UX, accessibility & QA | NOT STARTED | Automated and manual acceptance gates |
-| 7 Legal review & release | NOT STARTED | Approved launch; safe recovery/rollback |
-| 8 Enhancements | DEFERRED | Requires separate approval |
+| 2 Highlights & notes      | NOT STARTED | Durable local personal annotations                  |
+| 3 Notebook & backup       | NOT STARTED | Searchable notebook and safe data portability       |
+| 4 Study note ingestion    | NOT STARTED | Sourced notes on real verses with provenance        |
+| 5 Interpretation pilot    | NOT STARTED | Reviewed differences and word-study links           |
+| 6 UX, accessibility & QA  | NOT STARTED | Automated and manual acceptance gates               |
+| 7 Legal review & release  | NOT STARTED | Approved launch; safe recovery/rollback             |
+| 8 Enhancements            | DEFERRED    | Requires separate approval                          |
 
 **Agent status update template** (append entries to `docs/PROGRESS.md`, not to a personal note):
 
@@ -573,20 +573,20 @@ Next recommended ticket:
 
 ## 15. Risks, unresolved choices and decision log
 
-| Risk/choice | Current decision | Trigger / mitigation |
-|---|---|---|
-| Commentary not actually per verse | Study is *accessible* per verse; inherited notes/absence honest | Phase 4 coverage audit and labels. |
-| Tyndale licence & ShareAlike interaction | Treat data as separately licensed; don't claim MIT applies | Phase 0/4 legal inventory, release review. |
-| Editorial effort for 31,102 verses | Do not auto-write or force 31,102 handcrafted analyses | Pilot 10–15, expand only with verified sources. |
-| Data lost to browser cleanup | IndexedDB + backup; local-only warning | Autosave and roundtrip backup QA. |
-| Notes across devices | No automatic sync in MVP | Later opt-in cloud design after privacy ADR. |
-| Scope creep into AI | No AI dependency in first release | Separate post-MVP authorisation and risk review. |
-| Invasive UI changes break Arcs | Extend current selected-verse panels, not rebuild | Browser gesture tests and baseline snapshots. |
-| Canonical versification mismatch | Reuse upstream scheme and explicit source maps | Data validation and exceptions ledger. |
-| Localisation expense | Keep existing locales stable; no unreviewed untranslated launches | Review upstream i18n gate in Phase 0. |
-| UK/other territorial Bible-text rights | Preserve upstream notices and check each new text | No unlicensed translation ingestion. |
-| Third-party source availability | Pin/download authorised archives; deterministic build | Fail closed and document replacement. |
-| Fork becomes hard to merge | Isolate features; retain upstream remote | Periodic reviewed upstream rebases/merges, never blind merge. |
+| Risk/choice                              | Current decision                                                  | Trigger / mitigation                                          |
+| ---------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| Commentary not actually per verse        | Study is _accessible_ per verse; inherited notes/absence honest   | Phase 4 coverage audit and labels.                            |
+| Tyndale licence & ShareAlike interaction | Treat data as separately licensed; don't claim MIT applies        | Phase 0/4 legal inventory, release review.                    |
+| Editorial effort for 31,102 verses       | Do not auto-write or force 31,102 handcrafted analyses            | Pilot 10–15, expand only with verified sources.               |
+| Data lost to browser cleanup             | IndexedDB + backup; local-only warning                            | Autosave and roundtrip backup QA.                             |
+| Notes across devices                     | No automatic sync in MVP                                          | Later opt-in cloud design after privacy ADR.                  |
+| Scope creep into AI                      | No AI dependency in first release                                 | Separate post-MVP authorisation and risk review.              |
+| Invasive UI changes break Arcs           | Extend current selected-verse panels, not rebuild                 | Browser gesture tests and baseline snapshots.                 |
+| Canonical versification mismatch         | Reuse upstream scheme and explicit source maps                    | Data validation and exceptions ledger.                        |
+| Localisation expense                     | Keep existing locales stable; no unreviewed untranslated launches | Review upstream i18n gate in Phase 0.                         |
+| UK/other territorial Bible-text rights   | Preserve upstream notices and check each new text                 | No unlicensed translation ingestion.                          |
+| Third-party source availability          | Pin/download authorised archives; deterministic build             | Fail closed and document replacement.                         |
+| Fork becomes hard to merge               | Isolate features; retain upstream remote                          | Periodic reviewed upstream rebases/merges, never blind merge. |
 
 **Owner decisions currently locked by this brief:** fork existing app; preserve Arcs/Threads, original words and cross-references; add source-backed theological study plus highlights/notes; mobile-first; source transparency; no accounts or AI as blockers.
 
