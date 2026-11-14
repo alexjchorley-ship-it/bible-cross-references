@@ -8,6 +8,8 @@ import {
   serializeAnnotationsBackup,
   type HighlightColor,
   type PersonalNote,
+  type ReadingBookmark,
+  isHighlightColor,
   type VerseHighlight,
 } from './model.ts';
 
@@ -15,7 +17,7 @@ type StorageStatus = 'loading' | 'ready' | 'unavailable';
 
 /** A cloud record is a note, highlight, or retained deletion tombstone. */
 export interface CloudAnnotation {
-  readonly kind: 'note' | 'highlight';
+  readonly kind: 'note' | 'highlight' | 'bookmark';
   readonly item_id: string;
   readonly verse_id: string;
   readonly body: string | null;
@@ -35,6 +37,7 @@ export interface AnnotationSnapshot {
   readonly error: string | null;
   readonly notes: readonly PersonalNote[];
   readonly highlights: readonly VerseHighlight[];
+  readonly bookmarks: readonly ReadingBookmark[];
 }
 
 let snapshot: AnnotationSnapshot = {
@@ -42,6 +45,7 @@ let snapshot: AnnotationSnapshot = {
   error: null,
   notes: [],
   highlights: [],
+  bookmarks: [],
 };
 const listeners = new Set<() => void>();
 let connection: Promise<IDBDatabase> | null = null;
@@ -68,7 +72,7 @@ function database(): Promise<IDBDatabase> {
       reject(new Error('IndexedDB is unavailable. Notes cannot be saved in this browser.'));
       return;
     }
-    const request = indexedDB.open('bible-study-annotations', 2);
+    const request = indexedDB.open('bible-study-annotations', 3);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('notes')) {
@@ -76,6 +80,9 @@ function database(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains('highlights')) {
         db.createObjectStore('highlights', { keyPath: 'verseId' });
+      }
+      if (!db.objectStoreNames.contains('bookmarks')) {
+        db.createObjectStore('bookmarks', { keyPath: 'color' });
       }
       if (!db.objectStoreNames.contains('sync_deletions')) {
         db.createObjectStore('sync_deletions', { keyPath: 'id' });
@@ -143,13 +150,14 @@ function write(
 
 async function reload(): Promise<void> {
   const db = await database();
-  const [notes, highlights, deletions] = await Promise.all([
+  const [notes, highlights, bookmarks, deletions] = await Promise.all([
     all<PersonalNote>(db, 'notes'),
     all<VerseHighlight>(db, 'highlights'),
+    all<ReadingBookmark>(db, 'bookmarks'),
     all<DeletionRecord>(db, 'sync_deletions'),
   ]);
   tombstones = deletions;
-  publish({ status: 'ready', error: null, notes, highlights });
+  publish({ status: 'ready', error: null, notes, highlights, bookmarks });
 }
 
 /** Start lazily. A missing IndexedDB does not masquerade as successful in-memory saving. */
@@ -277,7 +285,7 @@ export function deletePersonalNote(id: string): Promise<void> {
 export async function exportAnnotations(): Promise<string> {
   await pending;
   await requireDatabase();
-  return serializeAnnotationsBackup(snapshot.notes, snapshot.highlights);
+  return serializeAnnotationsBackup(snapshot.notes, snapshot.highlights, snapshot.bookmarks);
 }
 
 /** Merge imports atomically; never destroy local records or replace newer timestamps. */
@@ -287,6 +295,16 @@ export async function importAnnotations(
   const backup = parseAnnotationsBackup(json);
   await enqueue((db) => {
     const deleted = new Map(tombstones.map((entry) => [entry.id, entry.updated_at]));
+    const bookmarks = [...snapshot.bookmarks];
+    for (const bookmark of backup.bookmarks ?? []) {
+      const current = bookmarks.find((entry) => entry.color === bookmark.color);
+      if ((!current || bookmark.updatedAt > current.updatedAt) &&
+          (!deleted.get(recordId('bookmark', bookmark.color)) ||
+            bookmark.updatedAt > (deleted.get(recordId('bookmark', bookmark.color)) ?? ''))) {
+        if (current) bookmarks.splice(bookmarks.indexOf(current), 1);
+        bookmarks.push(bookmark);
+      }
+    }
     const notes = mergeAnnotations(snapshot.notes, backup.annotations).filter((note) => {
       const removedAt = deleted.get(recordId('note', note.id));
       return !removedAt || note.updatedAt > removedAt;
@@ -295,10 +313,14 @@ export async function importAnnotations(
       const removedAt = deleted.get(recordId('highlight', item.verseId));
       return !removedAt || item.updatedAt > removedAt;
     });
-    return write(db, ['notes', 'highlights', 'sync_deletions'], (transaction) => {
+    return write(db, ['notes', 'highlights', 'bookmarks', 'sync_deletions'], (transaction) => {
       const noteStore = transaction.objectStore('notes');
       const highlightStore = transaction.objectStore('highlights');
       const removalStore = transaction.objectStore('sync_deletions');
+      for (const bookmark of bookmarks) {
+        transaction.objectStore('bookmarks').put(bookmark);
+        removalStore.delete(recordId('bookmark', bookmark.color));
+      }
       for (const note of notes) {
         noteStore.put(note);
         removalStore.delete(recordId('note', note.id));
@@ -312,9 +334,32 @@ export async function importAnnotations(
   return { notes: backup.annotations.length, highlights: backup.highlights.length };
 }
 
+/** Move only this colour's reading position; other colours remain untouched. */
+export function setReadingBookmark(color: ReadingBookmark['color'], verseId: string | null): Promise<void> {
+  if (!isHighlightColor(color) || (verseId !== null && !isCanonicalVerseId(verseId))) {
+    return Promise.reject(new Error('Invalid bookmark colour or verse.'));
+  }
+  return enqueue((db) => write(db, ['bookmarks', 'sync_deletions'], (transaction) => {
+    const store = transaction.objectStore('bookmarks');
+    const deleted = transaction.objectStore('sync_deletions');
+    const key = recordId('bookmark', color);
+    const prior = snapshot.bookmarks.find((entry) => entry.color === color);
+    const updatedAt = new Date().toISOString();
+    if (verseId === null) {
+      store.delete(color);
+      if (prior) deleted.put({ id: key, kind: 'bookmark', item_id: color,
+        verse_id: prior.verseId, body: null, color, created_at: prior.updatedAt,
+        updated_at: updatedAt, deleted: true } satisfies DeletionRecord);
+    } else {
+      store.put({ color, verseId, updatedAt } satisfies ReadingBookmark);
+      deleted.delete(key);
+    }
+  }));
+}
+
 export function deleteAllAnnotations(): Promise<void> {
   return enqueue((db) =>
-    write(db, ['notes', 'highlights', 'sync_deletions'], (transaction) => {
+    write(db, ['notes', 'highlights', 'bookmarks', 'sync_deletions'], (transaction) => {
       const store = transaction.objectStore('sync_deletions');
       const now = new Date().toISOString();
       for (const note of snapshot.notes) {
@@ -343,6 +388,13 @@ export function deleteAllAnnotations(): Promise<void> {
           deleted: true,
         } satisfies DeletionRecord);
       }
+      for (const bookmark of snapshot.bookmarks) {
+        store.put({ id: recordId('bookmark', bookmark.color), kind: 'bookmark',
+          item_id: bookmark.color, verse_id: bookmark.verseId, body: null,
+          color: bookmark.color, created_at: bookmark.updatedAt,
+          updated_at: now, deleted: true } satisfies DeletionRecord);
+      }
+      transaction.objectStore('bookmarks').clear();
       transaction.objectStore('notes').clear();
       transaction.objectStore('highlights').clear();
     }),
@@ -374,6 +426,11 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
       updated_at: highlight.updatedAt,
       deleted: false,
     })),
+    ...snapshot.bookmarks.map((bookmark) => ({
+      kind: 'bookmark' as const, item_id: bookmark.color, verse_id: bookmark.verseId,
+      body: null, color: bookmark.color, created_at: bookmark.updatedAt,
+      updated_at: bookmark.updatedAt, deleted: false,
+    })),
     ...tombstones,
   ];
   const latest = new Map<string, CloudAnnotation>();
@@ -391,9 +448,10 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
     const local = new Map(
       (await exportCloudRecordsUnsafe(db)).map((row) => [recordId(row.kind, row.item_id), row]),
     );
-    await write(db, ['notes', 'highlights', 'sync_deletions'], (transaction) => {
+    await write(db, ['notes', 'highlights', 'bookmarks', 'sync_deletions'], (transaction) => {
       const notes = transaction.objectStore('notes');
       const highlights = transaction.objectStore('highlights');
+      const bookmarks = transaction.objectStore('bookmarks');
       const deletions = transaction.objectStore('sync_deletions');
       for (const row of remote) {
         if (!isCanonicalVerseId(row.verse_id) || !Number.isFinite(Date.parse(row.updated_at)))
@@ -403,7 +461,8 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
         if (previous && previous.updated_at > row.updated_at) continue;
         if (row.deleted) {
           if (row.kind === 'note') notes.delete(row.item_id);
-          else highlights.delete(row.item_id);
+          else if (row.kind === 'highlight') highlights.delete(row.item_id);
+          else bookmarks.delete(row.item_id);
           deletions.put({ ...row, id } satisfies DeletionRecord);
         } else if (row.kind === 'note' && typeof row.body === 'string' && row.body.length > 0) {
           notes.put({
@@ -413,6 +472,10 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
             createdAt: row.created_at,
             updatedAt: row.updated_at,
           } satisfies PersonalNote);
+          deletions.delete(id);
+        } else if (row.kind === 'bookmark' && isHighlightColor(row.color) && row.item_id === row.color) {
+          bookmarks.put({ color: row.color, verseId: row.verse_id,
+            updatedAt: row.updated_at } satisfies ReadingBookmark);
           deletions.delete(id);
         } else if (row.kind === 'highlight' && row.color !== null) {
           highlights.put({
@@ -453,6 +516,10 @@ async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotatio
       created_at: h.updatedAt,
       updated_at: h.updatedAt,
       deleted: false,
+    })),
+    ...bookmarks.map((b) => ({kind: 'bookmark' as const, item_id: b.color,
+      verse_id: b.verseId, body: null, color: b.color,
+      created_at: b.updatedAt, updated_at: b.updatedAt, deleted: false,
     })),
     ...deletions,
   ];
