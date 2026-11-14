@@ -59,7 +59,7 @@ describe('verse highlights and personal notes', () => {
         expect.objectContaining({ body: 'Love of God', verseId: 'John.3.16' }),
       );
     });
-    expect(screen.getByPlaceholderText('Write a note…').value).toBe('');
+    expect(screen.getByPlaceholderText('Write a note…')).toHaveProperty('value', '');
   });
 
   it('shows existing notes and saves edits when the editor loses focus', async () => {

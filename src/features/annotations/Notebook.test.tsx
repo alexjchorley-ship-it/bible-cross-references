@@ -89,7 +89,7 @@ describe('searchable and exportable personal notebook', () => {
   it('rejects backups without required schema data before import', async () => {
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
     const file = new File(['{}'], 'broken.json', { type: 'application/json' });
-    const input = document.querySelector('input[type="file"]');
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
     if (!input) throw new Error('File upload missing.');
     await userEvent.upload(input, file);
     await waitFor(() => {
