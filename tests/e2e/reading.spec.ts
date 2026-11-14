@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ACTIVE, PANEL, collectErrors, openPassage, openShare, waitForApp } from './helpers.ts';
+import { ACTIVE, PANEL, collectErrors, chooseChapter, chooseVerse, openPassage, openShare, waitForApp } from './helpers.ts';
 
 test.describe('reading the Bible', () => {
   test('the arcs are drawn, and say how much is shown', async ({ page }) => {
@@ -12,11 +12,10 @@ test.describe('reading the Bible', () => {
     expect(errors).toEqual([]);
   });
 
-  test('a verse can be found by typing its reference', async ({ page }) => {
+  test('a verse can be reached through the book and chapter picker', async ({ page }) => {
     await page.goto('./');
     await waitForApp(page);
-    await page.locator(ACTIVE).getByRole('searchbox').fill('Ps 23:1');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
+    await chooseVerse(page, 'Psalms', 23, 1);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Psalm 23:1' })).toBeVisible();
     await expect(page).toHaveURL(/ref=Ps\.23\.1/);
   });
@@ -24,18 +23,17 @@ test.describe('reading the Bible', () => {
   test('a whole chapter can be opened, and lists its verses', async ({ page }) => {
     await page.goto('./');
     await waitForApp(page);
-    await page.locator(ACTIVE).getByRole('searchbox').fill('Psalm 23');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
+    await chooseChapter(page, 'Psalms', 23);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Psalm 23' })).toBeVisible();
     await expect(page.locator(PANEL).getByRole('button', { name: /Verses/ })).toBeVisible();
   });
 
-  test('a reference that is not a reference says so, and changes nothing', async ({ page }) => {
+  test('the picker only offers valid books, and cancelling changes nothing', async ({ page }) => {
     await page.goto('./');
     await waitForApp(page);
-    await page.locator(ACTIVE).getByRole('searchbox').fill('Hesitations 4:4');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
-    await expect(page.locator(ACTIVE).getByRole('alert')).toBeVisible();
+    await page.locator(ACTIVE).locator('button[aria-haspopup="dialog"]').click();
+    await expect(page.locator('dialog[open]').getByRole('button', { name: 'Hesitations' })).toHaveCount(0);
+    await page.locator('dialog[open]').getByRole('button', { name: 'Close Bible navigation' }).click();
     await expect(page).not.toHaveURL(/ref=/);
   });
 
@@ -72,8 +70,7 @@ test.describe('reading the Bible', () => {
 
   test('Back returns to the passage before it', async ({ page }) => {
     await openPassage(page, 'John.3.16');
-    await page.locator(ACTIVE).getByRole('searchbox').fill('Ps 23:1');
-    await page.locator(ACTIVE).getByRole('searchbox').press('Enter');
+    await chooseVerse(page, 'Psalms', 23, 1);
     await expect(page.locator(PANEL).getByRole('heading', { name: 'Psalm 23:1' })).toBeVisible();
     await page.goBack();
     await expect(page.locator(PANEL).getByRole('heading', { name: 'John 3:16' })).toBeVisible();
