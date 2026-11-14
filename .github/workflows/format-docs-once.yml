@@ -1,0 +1,33 @@
+name: Format inherited project documentation once
+
+on:
+  push:
+    branches: [feat/verse-notes-and-study]
+
+permissions:
+  contents: write
+
+jobs:
+  format_docs:
+    if: github.repository == 'alexjchorley-ship-it/bible-cross-references' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: feat/verse-notes-and-study
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write AGENTS.md docs/BASELINE_AUDIT.md docs/DATA_SOURCES.md docs/DEVELOPMENT_SPEC.md
+      - name: Save formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add AGENTS.md docs/BASELINE_AUDIT.md docs/DATA_SOURCES.md docs/DEVELOPMENT_SPEC.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(docs): normalize inherited specification with Prettier'
+            git push origin HEAD:feat/verse-notes-and-study
+          fi
