@@ -62,7 +62,43 @@ begin
     if (entry->>'kind') not in ('note', 'highlight')
        or length(entry->>'item_id') not between 1 and 100
        or length(entry->>'verse_id') not between 1 and 80
-       or (entry->>'verse_id') !~ '^[A-Za-z0-9]+\\.[0-9]+\\.[0-9]+$'
+       or (entry->>'verse_id') !~ '^[A-Za-z0-9]+[.][0-9]+[.][0-9]+
+       or (entry->>'color' is not null and
+           entry->>'color' not in ('amber','green','blue','pink'))
+       or length(coalesce(entry->>'body', '')) > 20000
+    then
+      raise exception 'Invalid annotation';
+    end if;
+
+    insert into public.bible_annotations
+      (user_id, kind, item_id, verse_id, body, color, created_at, updated_at, deleted)
+    values
+      (owner,
+       entry->>'kind',
+       entry->>'item_id',
+       entry->>'verse_id',
+       entry->>'body',
+       entry->>'color',
+       (entry->>'created_at')::timestamptz,
+       (entry->>'updated_at')::timestamptz,
+       coalesce((entry->>'deleted')::boolean, false))
+    on conflict (user_id, kind, item_id) do update set
+      verse_id = excluded.verse_id,
+      body = excluded.body,
+      color = excluded.color,
+      created_at = excluded.created_at,
+      updated_at = excluded.updated_at,
+      deleted = excluded.deleted
+    where public.bible_annotations.updated_at < excluded.updated_at;
+    changed := changed + 1;
+  end loop;
+  return changed;
+end;
+$$;
+
+revoke all on function public.merge_bible_annotations(jsonb) from public, anon;
+grant execute on function public.merge_bible_annotations(jsonb) to authenticated;
+
        or (entry->>'color' is not null and
            entry->>'color' not in ('amber','green','blue','pink'))
        or length(coalesce(entry->>'body', '')) > 20000
