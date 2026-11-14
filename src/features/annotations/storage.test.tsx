@@ -11,13 +11,14 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights' | 'sync_deletions';
+type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
   const stores: Record<StoreName, Map<string, unknown>> = {
     notes: new Map(),
     highlights: new Map(),
+    bookmarks: new Map(),
     sync_deletions: new Map(),
   };
   const declared = new Set<string>();
@@ -53,7 +54,7 @@ function installIndexedDB() {
         onabort: null as ((event: Event) => void) | null,
         onerror: null as ((event: Event) => void) | null,
         objectStore(name: string) {
-          if (name !== 'notes' && name !== 'highlights' && name !== 'sync_deletions') {
+          if (name !== 'notes' && name !== 'highlights' && name !== 'bookmarks' && name !== 'sync_deletions') {
             throw new Error('Unknown store');
           }
           const map = stores[name];
@@ -70,7 +71,7 @@ function installIndexedDB() {
               }
               const row = value as Record<string, unknown>;
               const key =
-                name === 'notes' || name === 'sync_deletions' ? row['id'] : row['verseId'];
+                name === 'notes' || name === 'sync_deletions' ? row['id'] : name === 'bookmarks' ? row['color'] : row['verseId'];
               if (typeof key !== 'string') {
                 throw new Error('Missing key');
               }
@@ -162,7 +163,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 2);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 3);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
@@ -403,5 +404,49 @@ describe('cloud-ready IndexedDB migration and tombstones', () => {
     expect(records).toHaveLength(2);
     expect(records.every((row) => row.deleted)).toBe(true);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).annotations).toEqual([]);
+  });
+});
+
+describe('one-per-colour reading bookmarks', () => {
+  it('moves only the selected colour and retains other reading positions', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('green', 'Gen.1.1');
+    await store.setReadingBookmark('amber', 'John.3.16');
+    await store.setReadingBookmark('green', 'Exod.3.14');
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.bookmarks).toHaveLength(2);
+    expect(backup.bookmarks?.find((b) => b.color === 'green')?.verseId).toBe('Exod.3.14');
+    expect(backup.bookmarks?.find((b) => b.color === 'amber')?.verseId).toBe('John.3.16');
+    expect(fake.stores.bookmarks.size).toBe(2);
+    await store.setReadingBookmark('green', null);
+    expect(fake.stores.bookmarks.size).toBe(1);
+    expect((await store.exportCloudRecords()).find((r) => r.kind === 'bookmark' && r.item_id === 'green')?.deleted).toBe(true);
+  });
+
+  it('uses a cloud bookmark to replace only its own colour when it is newer', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('amber', 'Gen.1.1');
+    await store.setReadingBookmark('green', 'John.3.16');
+    await store.applyCloudRecords([{
+      kind: 'bookmark', item_id: 'green', verse_id: 'Rev.22.21',
+      body: null, color: 'green', created_at: late,
+      updated_at: '2027-01-01T00:00:00.000Z', deleted: false,
+    }]);
+    const bookmarks = parseAnnotationsBackup(await store.exportAnnotations()).bookmarks;
+    expect(bookmarks?.find((r) => r.color === 'green')?.verseId).toBe('Rev.22.21');
+    expect(bookmarks?.find((r) => r.color === 'amber')?.verseId).toBe('Gen.1.1');
+  });
+
+  it('imports older v1 backups without deleting modern bookmarks', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setReadingBookmark('green', 'John.3.16');
+    await store.importAnnotations(JSON.stringify({
+      format: 'bible-study-annotations', schemaVersion: 1,
+      exportedAt: late, appVersion: '1.0', annotations: [], highlights: [],
+    }));
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).bookmarks?.[0]?.verseId).toBe('John.3.16');
   });
 });
