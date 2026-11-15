@@ -172,6 +172,22 @@
   background: rgb(216 139 186 / 0.18);
 }
 
+.verse[data-highlight='purple'] {
+  background: rgb(171 145 232 / 0.18);
+}
+
+.verse[data-highlight='teal'] {
+  background: rgb(85 191 185 / 0.18);
+}
+
+.verse[data-highlight='red'] {
+  background: rgb(232 132 132 / 0.18);
+}
+
+.verse[data-highlight='yellow'] {
+  background: rgb(230 214 90 / 0.18);
+}
+
 .noteMark {
   color: var(--color-accent);
   font-family: sans-serif;
@@ -386,10 +402,23 @@
     --saved-highlight: #d88bba;
   }
 
-  .verse[data-highlight='amber'],
-  .verse[data-highlight='green'],
-  .verse[data-highlight='blue'],
-  .verse[data-highlight='pink'] {
+  .verse[data-highlight='purple'] {
+    --saved-highlight: #ab91e8;
+  }
+
+  .verse[data-highlight='teal'] {
+    --saved-highlight: #55bfb9;
+  }
+
+  .verse[data-highlight='red'] {
+    --saved-highlight: #e88484;
+  }
+
+  .verse[data-highlight='yellow'] {
+    --saved-highlight: #e6d65a;
+  }
+
+  .verse[data-highlight] {
     background: color-mix(in srgb, var(--saved-highlight) 30%, transparent);
     box-shadow: inset 3px 0 0 var(--saved-highlight);
   }
