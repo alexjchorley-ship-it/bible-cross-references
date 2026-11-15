@@ -65,6 +65,23 @@
   border-inline-start-color: #d88bba;
 }
 
+
+.swatch[data-color='purple'] {
+  border-inline-start-color: #ab91e8;
+}
+
+.swatch[data-color='teal'] {
+  border-inline-start-color: #55bfb9;
+}
+
+.swatch[data-color='red'] {
+  border-inline-start-color: #e88484;
+}
+
+.swatch[data-color='yellow'] {
+  border-inline-start-color: #e6d65a;
+}
+
 .swatch[aria-pressed='true'] {
   outline: 2px solid currentColor;
   outline-offset: 2px;
@@ -277,6 +294,23 @@
   --dot-colour: #d88bba;
 }
 
+
+.colorDot[data-color='purple'] {
+  --dot-colour: #ab91e8;
+}
+
+.colorDot[data-color='teal'] {
+  --dot-colour: #55bfb9;
+}
+
+.colorDot[data-color='red'] {
+  --dot-colour: #e88484;
+}
+
+.colorDot[data-color='yellow'] {
+  --dot-colour: #e6d65a;
+}
+
 .colorDot[aria-pressed='true'] {
   outline: 2px solid var(--color-text);
   outline-offset: 2px;
@@ -454,4 +488,96 @@
   .notebookFilters {
     grid-template-columns: 1fr;
   }
+}
+
+/* Keep four familiar one-tap colours; the chevron opens the meaning of every
+ * colour and four more choices without relying on hover on touch devices. */
+.colourPicker {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+
+.colourExpand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.colourExpand[aria-expanded='true'] {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.colourExpand:focus-visible,
+.colourLegendOption:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.colourLegend {
+  display: grid;
+  gap: 2px;
+  max-inline-size: 25rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.035);
+}
+
+.colourLegendOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: 2.8rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.colourLegendOption:hover,
+.colourLegendOption[aria-pressed='true'] {
+  background: rgb(255 255 255 / 0.07);
+}
+
+.colourLegendOption[aria-pressed='true'] {
+  border-color: var(--color-border);
+}
+
+.colourLegendOption:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.colourLegendOption .colorDot {
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+  border: 0;
+  pointer-events: none;
+}
+
+.colourLegendTitle {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.colourLegendCheck {
+  font-weight: 700;
 }
