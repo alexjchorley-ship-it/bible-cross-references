@@ -27,11 +27,11 @@ Importing v1/v2 backups remains supported, so earlier exports are still useful.
 An example naming scheme (fully editable) is:
 
 | Colour | Highlight meaning | Bookmark meaning |
-|---|---|---|
-| Amber | Miracles | Bible study |
-| Green | Prayer | Personal reading |
-| Blue | Promises | Topical study |
-| Pink | Love | Reflection |
+| ------ | ----------------- | ---------------- |
+| Amber  | Miracles          | Bible study      |
+| Green  | Prayer            | Personal reading |
+| Blue   | Promises          | Topical study    |
+| Pink   | Love              | Reflection       |
 
 You can rename any of these under **My Notebook → Customise colours**. The colour itself is still the visual selector; its editable meaning is shown to assistive technology and as a tooltip.
 
