@@ -22,7 +22,10 @@ describe('source-backed theological study', () => {
 
   it('shows an honest gap instead of inventing a theologian for another verse', async () => {
     render(<StudySection verseId="John.3.16" />);
-    await userEvent.click(screen.getByText('Theological study'));
+    const toggle = screen.getByRole('button', { name: /Theological study/ });
+    if (toggle.getAttribute('aria-expanded') === 'false') {
+      await userEvent.click(toggle);
+    }
     expect(screen.getByText(/No reviewed comparison of theological interpretations/)).toBeDefined();
     expect(screen.getByText(/No reviewed comparison/)).toBeDefined();
   });
