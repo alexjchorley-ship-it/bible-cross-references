@@ -1,7 +1,11 @@
 import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import { CANONICAL_VERSIFICATION } from '../../core/bible/versification.ts';
 
-export const HIGHLIGHT_COLORS = ['amber', 'green', 'blue', 'pink'] as const;
+/** The first four colours stay visible for one-tap use; the rest live in the expanded legend. */
+export const HIGHLIGHT_COLORS = [
+  'amber', 'green', 'blue', 'pink', 'purple', 'teal', 'red', 'yellow',
+] as const;
+export const QUICK_HIGHLIGHT_COLORS: readonly HighlightColor[] = HIGHLIGHT_COLORS.slice(0, 4);
 export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number];
 
 export type ColorPurpose = 'highlight' | 'bookmark';
@@ -14,12 +18,25 @@ export interface ColorLabel {
 export const DEFAULT_COLOR_LABELS: Readonly<
   Record<ColorPurpose, Readonly<Record<HighlightColor, string>>>
 > = {
-  highlight: { amber: 'Miracles', green: 'Prayer', blue: 'Promises', pink: 'Love' },
+  highlight: {
+    amber: 'Miracles',
+    green: 'Prayer',
+    blue: 'Promises',
+    pink: 'Love',
+    purple: 'Prophecy',
+    teal: 'Wisdom',
+    red: 'Warnings',
+    yellow: 'Key verses',
+  },
   bookmark: {
     amber: 'Bible study',
     green: 'Personal reading',
     blue: 'Topical study',
     pink: 'Reflection',
+    purple: 'Study group',
+    teal: 'Devotional',
+    red: 'Questions',
+    yellow: 'Reading plan',
   },
 };
 
@@ -38,7 +55,7 @@ export function isColorLabel(value: unknown): value is ColorLabel {
   return (
     object(value) &&
     typeof value['id'] === 'string' &&
-    /^(highlight|bookmark):(amber|green|blue|pink)$/.test(value['id']) &&
+    /^(highlight|bookmark):(amber|green|blue|pink|purple|teal|red|yellow)$/.test(value['id']) &&
     typeof value['name'] === 'string' &&
     value['name'].trim().length > 0 &&
     value['name'].length <= 60 &&
