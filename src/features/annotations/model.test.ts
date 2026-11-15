@@ -41,7 +41,7 @@ describe('canonical annotations and backups', () => {
     expect(isCanonicalVerseId('Invalid.1.1')).toBe(false);
     expect(isCanonicalVerseId(42)).toBe(false);
     expect(isHighlightColor('blue')).toBe(true);
-    expect(isHighlightColor('red')).toBe(false);
+    expect(isHighlightColor('orange')).toBe(false);
   });
 
   it('rejects missing, malformed or empty records before any write', () => {
