@@ -265,11 +265,14 @@ describe('searchable and exportable personal notebook', () => {
 
 describe('notebook enhancements', () => {
   it('filters notes by category and changes their colour meanings', async () => {
+    const first = snapshot.notes[0];
+    const second = snapshot.notes[1];
+    if (!first || !second) throw new Error('Missing test notes');
     vi.mocked(storage.useAnnotations).mockReturnValue({
       ...snapshot,
       notes: [
-        { ...snapshot.notes[0]!, category: 'Prayer', title: 'Morning prayer' },
-        { ...snapshot.notes[1]!, category: 'Sermon' },
+        { ...first, category: 'Prayer', title: 'Morning prayer' },
+        { ...second, category: 'Sermon' },
       ],
     });
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
@@ -286,9 +289,11 @@ describe('notebook enhancements', () => {
       'Miracles of Jesus',
     );
     const section = screen.getByRole('region', { name: 'Colour meanings' });
-    await userEvent.click(within(section).getAllByRole('button', { name: 'Save' })[0]!);
-    await waitFor(() =>
-      expect(storage.setColorLabel).toHaveBeenCalledWith('highlight:amber', 'Miracles of Jesus'),
-    );
+    const save = within(section).getAllByRole('button', { name: 'Save' })[0];
+    if (!save) throw new Error('Missing colour-label save button');
+    await userEvent.click(save);
+    await waitFor(() => {
+      expect(storage.setColorLabel).toHaveBeenCalledWith('highlight:amber', 'Miracles of Jesus');
+    });
   });
 });
