@@ -306,7 +306,7 @@ describe('notebook note editing and colour settings', () => {
     await userEvent.click(edit);
     const title = screen.getByRole('textbox', { name: 'Edit note title' });
     const text = screen.getByRole('textbox', { name: 'Edit note text' });
-    const category = screen.getByRole('textbox', { name: 'Category' });
+    const category = screen.getByLabelText('Category');
     await userEvent.type(title, 'Creation');
     await userEvent.clear(text);
     await userEvent.type(text, 'Let there be light');
