@@ -8,7 +8,6 @@ import {
   HIGHLIGHT_COLORS,
   QUICK_HIGHLIGHT_COLORS,
   isColorLabel,
-  isHighlightColor,
   colorLabel,
   mergeAnnotations,
   mergeHighlights,
