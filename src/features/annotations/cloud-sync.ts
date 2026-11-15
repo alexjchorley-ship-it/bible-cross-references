@@ -1,5 +1,6 @@
 import { cloudRequest, cloudSession } from './cloud-auth.ts';
 import { applyCloudRecords, exportCloudRecords, type CloudAnnotation } from './storage.ts';
+import { isHighlightColor } from './model.ts';
 
 const COLUMNS = 'kind,item_id,verse_id,body,color,category,title,created_at,updated_at,deleted';
 let activeSync: Promise<void> | null = null;
@@ -20,11 +21,7 @@ function isCloudAnnotation(row: unknown): row is CloudAnnotation {
     (data.category === undefined || data.category === null || typeof data.category === 'string') &&
     (data.title === undefined || data.title === null || typeof data.title === 'string') &&
     (data.body === null || typeof data.body === 'string') &&
-    (data.color === null ||
-      data.color === 'amber' ||
-      data.color === 'green' ||
-      data.color === 'blue' ||
-      data.color === 'pink')
+    (data.color === null || isHighlightColor(data.color))
   );
 }
 
