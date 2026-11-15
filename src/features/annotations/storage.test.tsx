@@ -609,9 +609,13 @@ describe('safe colour meaning updates across devices', () => {
     const storage = await import('./storage.ts');
     await storage.setColorLabel('highlight:amber', 'Original');
     const backup = JSON.stringify({
-      format: 'bible-study-annotations', schemaVersion: 3,
-      exportedAt: late, appVersion: '1.0',
-      annotations: [], highlights: [], bookmarks: [],
+      format: 'bible-study-annotations',
+      schemaVersion: 3,
+      exportedAt: late,
+      appVersion: '1.0',
+      annotations: [],
+      highlights: [],
+      bookmarks: [],
       labels: [
         { id: 'highlight:amber', name: 'Miracles', updatedAt: '2030-01-01T00:00:00Z' },
         { id: 'bookmark:amber', name: 'Study group', updatedAt: '2030-01-01T00:00:00Z' },
@@ -648,15 +652,31 @@ describe('safe colour meaning updates across devices', () => {
     const storage = await import('./storage.ts');
     await storage.setColorLabel('highlight:green', 'Pray about it');
     const latest = '2030-01-01T00:00:00Z';
-    await storage.applyCloudRecords([{
-      kind: 'label', item_id: 'highlight:green', verse_id: 'Gen.1.1',
-      color: null, body: null, created_at: latest, updated_at: latest, deleted: true,
-    }]);
+    await storage.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'highlight:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: null,
+        created_at: latest,
+        updated_at: latest,
+        deleted: true,
+      },
+    ]);
     expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
-    await storage.applyCloudRecords([{
-      kind: 'label', item_id: 'highlight:green', verse_id: 'Gen.1.1',
-      color: null, body: 'Old meaning', created_at: early, updated_at: early, deleted: false,
-    }]);
+    await storage.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'highlight:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: 'Old meaning',
+        created_at: early,
+        updated_at: early,
+        deleted: false,
+      },
+    ]);
     expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
   });
 
@@ -664,10 +684,26 @@ describe('safe colour meaning updates across devices', () => {
     const fake = installIndexedDB();
     const storage = await import('./storage.ts');
     await storage.applyCloudRecords([
-      { kind: 'label', item_id: 'wrong:green', verse_id: 'Gen.1.1',
-        color: null, body: 'Something', created_at: late, updated_at: late, deleted: false },
-      { kind: 'label', item_id: 'bookmark:green', verse_id: 'Gen.1.1',
-        color: null, body: '', created_at: late, updated_at: late, deleted: false },
+      {
+        kind: 'label',
+        item_id: 'wrong:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: 'Something',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
+      {
+        kind: 'label',
+        item_id: 'bookmark:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: '',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
     ]);
     expect(fake.stores.labels.size).toBe(0);
   });
