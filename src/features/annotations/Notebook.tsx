@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import { CANONICAL_VERSIFICATION } from '../../core/bible/versification.ts';
 import { useLocalization } from '../../i18n/use-locale.tsx';
@@ -93,6 +93,7 @@ function NotebookNote({
   readonly categories: readonly string[];
   readonly onError: (error: string) => void;
 }) {
+  const categoryOptionsId = useId();
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(note.body);
   const [title, setTitle] = useState(note.title ?? '');
@@ -162,13 +163,13 @@ function NotebookNote({
               className={styles.categoryInput}
               maxLength={80}
               value={category}
-              list="notebook-note-categories"
+              list={categoryOptionsId}
               onChange={(event) => {
                 setCategory(event.target.value);
               }}
             />
           </label>
-          <datalist id="notebook-note-categories">
+          <datalist id={categoryOptionsId}>
             {categories.map((name) => (
               <option key={name} value={name} />
             ))}
