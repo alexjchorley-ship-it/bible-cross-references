@@ -1,22 +1,23 @@
-import { useState } from 'react';
 import { TyndaleNotes } from './TyndaleNotes.tsx';
 import { useLocalization } from '../../i18n/use-locale.tsx';
 import { studyForVerse } from './pilot-studies.ts';
 import styles from '../annotations/annotations.module.css';
+import { PanelSection } from '../../visualizations/shared/components/PanelSection.tsx';
+import { ReadingIcon } from '../../shared/ui/icons.tsx';
 
 export function StudySection({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
-  const [expanded, setExpanded] = useState(false);
   const study = studyForVerse(verseId);
   return (
-    <details
-      className={styles.studyCard}
-      onToggle={(event) => {
-        setExpanded(event.currentTarget.open);
-      }}
+    <PanelSection
+      id="theological-notes"
+      icon={ReadingIcon}
+      title={t('study.title')}
+      description="Commentary and interpretation"
+      defaultOpen={false}
     >
-      <summary>{t('study.title')}</summary>
-      {expanded && <TyndaleNotes verseId={verseId} />}
+      <div className={styles.studyContents}>
+        <TyndaleNotes verseId={verseId} />
       {!study ? (
         <p className={styles.warning}>{t('study.notCurated')}</p>
       ) : (
@@ -63,6 +64,7 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
           </ol>
         </>
       )}
-    </details>
+      </div>
+    </PanelSection>
   );
 }
