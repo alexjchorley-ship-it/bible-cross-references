@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import type { MessageKey } from '../../i18n/messages/types.ts';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useLocalization } from '../../i18n/use-locale.tsx';
-import { HIGHLIGHT_COLORS, type HighlightColor, type PersonalNote } from './model.ts';
+import {
+  HIGHLIGHT_COLORS,
+  SUGGESTED_NOTE_CATEGORIES,
+  colorLabel,
+  type ColorPurpose,
+  type HighlightColor,
+  type PersonalNote,
+  type ColorLabel,
+} from './model.ts';
 import {
   deletePersonalNote,
   setVerseHighlight,
@@ -11,34 +18,65 @@ import {
 } from './storage.ts';
 import styles from './annotations.module.css';
 
-const COLOR_KEYS = {
-  amber: 'annotations.amber',
-  green: 'annotations.green',
-  blue: 'annotations.blue',
-  pink: 'annotations.pink',
-} as const satisfies Readonly<Record<HighlightColor, MessageKey>>;
+function ColourDots({
+  purpose,
+  labels,
+  selected,
+  disabled,
+  onSelect,
+}: {
+  readonly purpose: ColorPurpose;
+  readonly labels: readonly ColorLabel[];
+  readonly selected: readonly HighlightColor[];
+  readonly disabled: boolean;
+  readonly onSelect: (color: HighlightColor) => void;
+}) {
+  return (
+    <div className={styles.dotPalette} role="group" aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}>
+      {HIGHLIGHT_COLORS.map((color) => (
+        <button
+          key={color}
+          type="button"
+          className={styles.colorDot}
+          data-color={color}
+          aria-label={`${color.charAt(0).toUpperCase() + color.slice(1)} · ${colorLabel(labels, purpose, color)}`}
+          title={colorLabel(labels, purpose, color)}
+          aria-pressed={selected.includes(color)}
+          disabled={disabled}
+          onClick={() => { onSelect(color); }}
+        />
+      ))}
+    </div>
+  );
+}
 
-function SavedNote({ note }: { readonly note: PersonalNote }) {
+function SavedNote({ note, categories }: {
+  readonly note: PersonalNote;
+  readonly categories: readonly string[];
+}) {
   const { t } = useLocalization();
   const [draft, setDraft] = useState(note.body);
+  const [category, setCategory] = useState(note.category ?? '');
+  const [title, setTitle] = useState(note.title ?? '');
   const [state, setState] = useState<'saved' | 'saving' | 'error'>('saved');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const unsaved = useRef<string | null>(null);
+  const unsaved = useRef<{body: string; category: string; title: string} | null>(null);
   const mounted = useRef(true);
+  const categoryListId = useId();
 
-  async function persist(text: string): Promise<void> {
+  async function persist(value: {body: string; category: string; title: string}): Promise<void> {
     try {
-      await upsertPersonalNote({ ...note, body: text, updatedAt: new Date().toISOString() });
-      if (unsaved.current === text) {
-        unsaved.current = null;
-      }
-      if (mounted.current && unsaved.current === null) {
-        setState('saved');
-      }
+      await upsertPersonalNote({
+        ...note,
+        body: value.body,
+        category: value.category.trim(),
+        title: value.title.trim(),
+        updatedAt: new Date().toISOString(),
+      });
+      if (unsaved.current === value) unsaved.current = null;
+      if (mounted.current && unsaved.current === null) setState('saved');
     } catch {
-      if (mounted.current) {
-        setState('error');
-      }
+      if (mounted.current) setState('error');
     }
   }
 
@@ -46,69 +84,67 @@ function SavedNote({ note }: { readonly note: PersonalNote }) {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      if (timer.current !== null) {
-        clearTimeout(timer.current);
-      }
-      if (unsaved.current !== null) {
-        void persist(unsaved.current);
-      }
+      if (timer.current !== null) clearTimeout(timer.current);
+      if (unsaved.current?.body.trim()) void persist(unsaved.current);
     };
-    // A note owns its text until it unmounts; a late IndexedDB write must not reset the editor.
+    // A note owns its editor until unmount. Never wipe a draft during a cloud refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note.id]);
 
-  function edit(text: string): void {
-    setDraft(text);
-    unsaved.current = text;
-    setState('saving');
-    if (timer.current !== null) {
-      clearTimeout(timer.current);
-    }
-    if (text.trim() === '') {
-      setState('error');
-      return;
-    }
-    timer.current = setTimeout(() => {
-      void persist(text);
-    }, 500);
+  function edit(body: string, nextCategory: string, nextTitle: string): void {
+    setDraft(body);
+    setCategory(nextCategory);
+    setTitle(nextTitle);
+    const value = {body, category: nextCategory, title: nextTitle};
+    unsaved.current = value;
+    setState(body.trim() ? 'saving' : 'error');
+    if (timer.current !== null) clearTimeout(timer.current);
+    if (!body.trim()) return;
+    timer.current = setTimeout(() => { void persist(value); }, 500);
   }
 
   return (
-    <div className={styles.note}>
+    <div className={styles.savedNote}>
+      <input
+        className={styles.noteTitle}
+        aria-label="Note title"
+        placeholder="Untitled note"
+        maxLength={120}
+        value={title}
+        onChange={(event) => { edit(draft, category, event.target.value); }}
+      />
       <textarea
         aria-label={t('annotations.notes')}
         className={styles.textarea}
         value={draft}
         rows={Math.max(3, draft.split('\n').length)}
-        onChange={(event) => {
-          edit(event.target.value);
-        }}
+        onChange={(event) => { edit(event.target.value, category, title); }}
         onBlur={() => {
-          if (timer.current !== null) {
-            clearTimeout(timer.current);
-          }
-          if (unsaved.current !== null && unsaved.current.trim() !== '') {
-            void persist(unsaved.current);
-          }
+          if (timer.current !== null) clearTimeout(timer.current);
+          if (unsaved.current?.body.trim()) void persist(unsaved.current);
         }}
       />
+      <label className={styles.fieldLabel}>
+        Category
+        <input
+          className={styles.categoryInput}
+          list={categoryListId}
+          maxLength={80}
+          value={category}
+          placeholder="Choose or type a category"
+          onChange={(event) => { edit(draft, event.target.value, title); }}
+        />
+        <datalist id={categoryListId}>
+          {categories.map((name) => <option key={name} value={name} />)}
+        </datalist>
+      </label>
       <div className={styles.noteFooter}>
         <span role="status">
-          {state === 'saved'
-            ? t('annotations.saved')
-            : state === 'saving'
-              ? t('annotations.saving')
-              : t('annotations.error')}
+          {state === 'saved' ? t('annotations.saved') : state === 'saving' ? t('annotations.saving') : t('annotations.error')}
         </span>
-        <button
-          type="button"
-          className={styles.smallButton}
-          onClick={() => {
-            if (window.confirm(t('annotations.delete') + '?')) {
-              void deletePersonalNote(note.id);
-            }
-          }}
-        >
+        <button type="button" className={styles.smallButton} onClick={() => {
+          if (window.confirm(t('annotations.delete') + '?')) void deletePersonalNote(note.id);
+        }}>
           {t('annotations.delete')}
         </button>
       </div>
@@ -116,38 +152,36 @@ function SavedNote({ note }: { readonly note: PersonalNote }) {
   );
 }
 
-/** The same verse actions appear under the original details in Arcs and Threads. */
+/** Inline note composer and always-visible YouVersion-inspired colour swatches. */
 export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
-  const { status, error, highlights, notes, bookmarks } = useAnnotations();
-  const [showColors, setShowColors] = useState(false);
-  const [showBookmarks, setShowBookmarks] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
+  const { status, error, highlights, notes, bookmarks, labels = [] } = useAnnotations();
   const [newText, setNewText] = useState('');
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState('');
   const [busy, setBusy] = useState(false);
+  const [allNotes, setAllNotes] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const categoryListId = useId();
   const highlight = highlights.find((entry) => entry.verseId === verseId)?.color ?? null;
-  const verseBookmarks = bookmarks.filter((bookmark) => bookmark.verseId === verseId);
-  const verseNotes = notes
-    .filter((note) => note.verseId === verseId)
-    .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const verseBookmarks = bookmarks.filter((bookmark) => bookmark.verseId === verseId).map((entry) => entry.color);
+  const verseNotes = notes.filter((note) => note.verseId === verseId).toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const categories = [...new Set([...SUGGESTED_NOTE_CATEGORIES, ...notes.map((note) => note.category ?? '').filter(Boolean)])].toSorted();
+  const displayedNotes = allNotes ? verseNotes : verseNotes.slice(0, 1);
 
   async function createNote(): Promise<void> {
-    if (newText.trim() === '' || busy) {
-      return;
-    }
+    if (!newText.trim() || busy) return;
     setBusy(true);
     setLocalError(null);
     const now = new Date().toISOString();
     try {
       await upsertPersonalNote({
-        id: crypto.randomUUID(),
-        verseId,
-        body: newText,
-        createdAt: now,
-        updatedAt: now,
+        id: crypto.randomUUID(), verseId,
+        body: newText.trim(), category: newCategory.trim(), title: newTitle.trim(),
+        createdAt: now, updatedAt: now,
       });
       setNewText('');
+      setNewTitle('');
     } catch {
       setLocalError(t('annotations.error'));
     } finally {
@@ -156,133 +190,78 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
   }
 
   return (
-    <section className={styles.section} aria-label={t('annotations.notes')}>
-      <div className={styles.toolbar}>
-        <button
-          type="button"
-          className={styles.button}
-          aria-expanded={showColors}
-          onClick={() => {
-            setShowColors(!showColors);
-          }}
-        >
-          {t('annotations.highlight')}
-          {highlight ? ` · ${t(COLOR_KEYS[highlight])}` : ''}
-        </button>
-        <button
-          type="button"
-          className={styles.button}
-          aria-expanded={showBookmarks}
-          onClick={() => {
-            setShowBookmarks(!showBookmarks);
-          }}
-        >
-          🔖 Bookmark{verseBookmarks.length > 0 ? ` (${verseBookmarks.length})` : ''}
-        </button>
-        <button
-          type="button"
-          className={styles.button}
-          aria-expanded={showNotes}
-          onClick={() => {
-            setShowNotes(!showNotes);
-          }}
-        >
-          {t('annotations.notes')} {verseNotes.length > 0 ? `(${String(verseNotes.length)})` : ''}
-        </button>
-      </div>
+    <section className={styles.annotationComposer} aria-label={t('annotations.notes')}>
       {status === 'unavailable' && <p role="alert">{t('annotations.unavailable')}</p>}
       {error && <p role="alert">{error}</p>}
       {localError && <p role="alert">{localError}</p>}
-      {showColors && (
-        <div className={styles.palette} role="toolbar" aria-label={t('annotations.highlight')}>
-          {HIGHLIGHT_COLORS.map((color) => (
-            <button
-              type="button"
-              key={color}
-              disabled={status !== 'ready'}
-              className={styles.swatch}
-              data-color={color}
-              aria-pressed={highlight === color}
-              onClick={() => {
-                void setVerseHighlight(verseId, color);
-              }}
-            >
-              {t(COLOR_KEYS[color])}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={styles.smallButton}
-            disabled={!highlight || status !== 'ready'}
-            onClick={() => {
-              void setVerseHighlight(verseId, null);
-            }}
-          >
-            {t('annotations.remove')}
-          </button>
-        </div>
-      )}
-      {showBookmarks && (
-        <div className={styles.palette} role="group" aria-label="Reading bookmark colours">
-          {HIGHLIGHT_COLORS.map((color) => {
-            const current = bookmarks.find((bookmark) => bookmark.color === color);
-            const active = current?.verseId === verseId;
-            return (
-              <button
-                key={color}
-                type="button"
-                className={styles.swatch}
-                data-color={color}
-                aria-pressed={active}
-                disabled={status !== 'ready'}
-                title={
-                  current
-                    ? `Current ${color} bookmark: ${current.verseId}`
-                    : `New ${color} bookmark`
-                }
-                onClick={() => {
-                  void setReadingBookmark(color, active ? null : verseId);
-                }}
-              >
-                {t(COLOR_KEYS[color])}
-                {active ? ' ✓' : ''}
-              </button>
-            );
-          })}
-          <p className={styles.warning}>
-            One position per colour. Moving a colour replaces its previous bookmark, without
-            changing highlights.
-          </p>
-        </div>
-      )}
-      {showNotes && (
-        <div className={styles.notes}>
-          {verseNotes.map((note) => (
-            <SavedNote key={note.id} note={note} />
-          ))}
-          <textarea
-            className={styles.textarea}
-            aria-label={t('annotations.new')}
-            placeholder={t('annotations.new')}
-            value={newText}
-            rows={3}
-            onChange={(event) => {
-              setNewText(event.target.value);
-            }}
-          />
-          <button
-            type="button"
-            className={styles.button}
-            disabled={newText.trim() === '' || busy || status !== 'ready'}
-            onClick={() => {
-              void createNote();
-            }}
-          >
+      <div className={styles.annotationColourRow}>
+        <span className={styles.annotationLabel}>{t('annotations.highlight')}</span>
+        <ColourDots
+          purpose="highlight" labels={labels}
+          selected={highlight ? [highlight] : []}
+          disabled={status !== 'ready'}
+          onSelect={(color) => { void setVerseHighlight(verseId, highlight === color ? null : color); }}
+        />
+        {highlight && <button className={styles.clearDot} type="button" onClick={() => { void setVerseHighlight(verseId, null); }} aria-label={t('annotations.remove')}>×</button>}
+      </div>
+      <div className={styles.annotationColourRow}>
+        <span className={styles.annotationLabel}>Bookmark</span>
+        <ColourDots
+          purpose="bookmark" labels={labels}
+          selected={verseBookmarks}
+          disabled={status !== 'ready'}
+          onSelect={(color) => { void setReadingBookmark(color, verseBookmarks.includes(color) ? null : verseId); }}
+        />
+      </div>
+      <div className={styles.inlineComposer}>
+        <h3 className={styles.composerHeading}>{t('annotations.notes')} {verseNotes.length > 0 && <span>({verseNotes.length})</span>}</h3>
+        <input
+          aria-label="New note title"
+          className={styles.noteTitle}
+          placeholder="Title (optional)"
+          maxLength={120}
+          value={newTitle}
+          onChange={(event) => { setNewTitle(event.target.value); }}
+        />
+        <textarea
+          className={styles.textarea}
+          aria-label={t('annotations.new')}
+          placeholder={t('annotations.new')}
+          value={newText}
+          rows={3}
+          onChange={(event) => { setNewText(event.target.value); }}
+        />
+        <div className={styles.composerFooter}>
+          <label className={styles.fieldLabel}>
+            Category
+            <input
+              className={styles.categoryInput}
+              list={categoryListId}
+              maxLength={80}
+              placeholder="Choose or type…"
+              value={newCategory}
+              onChange={(event) => { setNewCategory(event.target.value); }}
+            />
+            <datalist id={categoryListId}>
+              {categories.map((name) => <option key={name} value={name} />)}
+            </datalist>
+          </label>
+          <button type="button" className={styles.button} disabled={!newText.trim() || busy || status !== 'ready'} onClick={() => { void createNote(); }}>
             {busy ? t('annotations.saving') : t('annotations.add')}
           </button>
-          <p className={styles.warning}>{t('annotations.storage')}</p>
         </div>
-      )}
+        {verseNotes.length > 0 && (
+          <div className={styles.savedNotesArea}>
+            <h4>Saved notes</h4>
+            {displayedNotes.map((note) => <SavedNote key={note.id} note={note} categories={categories} />)}
+            {verseNotes.length > 1 && (
+              <button type="button" className={styles.smallButton} aria-expanded={allNotes} onClick={() => { setAllNotes(!allNotes); }}>
+                {allNotes ? 'Show latest note only' : `Show all ${verseNotes.length} notes`}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
