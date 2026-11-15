@@ -85,7 +85,7 @@ describe('verse highlights and personal notes', () => {
     expect(storage.deletePersonalNote).toHaveBeenCalledWith('read-1');
   });
 
-  it('never claims a save is possible if device storage is unavailable', async () => {
+  it('never claims a save is possible if device storage is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
       notes: [],
       highlights: [],
@@ -178,10 +178,10 @@ describe('always-visible annotation composer', () => {
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'It was good');
     await userEvent.type(screen.getByPlaceholderText('Choose or type…'), 'Questions');
     await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
-    await waitFor(() =>
+    await waitFor(() => {
       expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Creation', category: 'Questions', verseId: 'Gen.1.1' }),
-      ),
-    );
+      );
+    });
   });
 });
