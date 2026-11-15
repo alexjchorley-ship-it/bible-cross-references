@@ -279,18 +279,21 @@ describe('inline verse annotation quality-of-life controls', () => {
   });
 });
 
-
 describe('touch-friendly expanded colour legend', () => {
   it('keeps four quick highlights visible and reveals eight labelled colours from an arrow', async () => {
     current();
     render(<VerseAnnotations verseId="Gen.1.1" />);
     const quick = screen.getByRole('group', { name: 'Highlight colours' });
     expect(within(quick).getAllByRole('button')).toHaveLength(5);
-    expect(screen.queryByRole('group', { name: 'Highlight colour meanings and more colours' })).toBeNull();
+    expect(
+      screen.queryByRole('group', { name: 'Highlight colour meanings and more colours' }),
+    ).toBeNull();
     const arrow = within(quick).getByRole('button', { name: 'Show highlight colour meanings' });
     expect(arrow.getAttribute('aria-expanded')).toBe('false');
     await userEvent.click(arrow);
-    const legend = screen.getByRole('group', { name: 'Highlight colour meanings and more colours' });
+    const legend = screen.getByRole('group', {
+      name: 'Highlight colour meanings and more colours',
+    });
     expect(within(legend).getAllByRole('button')).toHaveLength(8);
     expect(within(legend).getByRole('button', { name: /Purple · Prophecy/ })).toBeDefined();
     expect(within(legend).getByRole('button', { name: /Teal · Wisdom/ })).toBeDefined();
@@ -299,7 +302,9 @@ describe('touch-friendly expanded colour legend', () => {
     await userEvent.click(within(legend).getByRole('button', { name: /Purple · Prophecy/ }));
     expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', 'purple');
     await userEvent.click(screen.getByRole('button', { name: 'Hide highlight colour meanings' }));
-    expect(screen.queryByRole('group', { name: 'Highlight colour meanings and more colours' })).toBeNull();
+    expect(
+      screen.queryByRole('group', { name: 'Highlight colour meanings and more colours' }),
+    ).toBeNull();
   });
 
   it('shows bookmark purposes without hover and moves a new-colour bookmark independently', async () => {
@@ -315,7 +320,11 @@ describe('touch-friendly expanded colour legend', () => {
 
   it('displays user-defined meanings in the expanded list', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      notes: [], highlights: [], bookmarks: [], status: 'ready', error: null,
+      notes: [],
+      highlights: [],
+      bookmarks: [],
+      status: 'ready',
+      error: null,
       labels: [{ id: 'highlight:purple', name: 'Something to investigate', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="Gen.1.1" />);
@@ -327,7 +336,8 @@ describe('touch-friendly expanded colour legend', () => {
     current([], [{ verseId: 'Gen.1.1', color: 'purple', updatedAt: now }]);
     render(<VerseAnnotations verseId="Gen.1.1" />);
     await userEvent.click(screen.getByRole('button', { name: 'Show highlight colour meanings' }));
-    const selected = screen.getByRole('group', { name: 'Highlight colour meanings and more colours' })
+    const selected = screen
+      .getByRole('group', { name: 'Highlight colour meanings and more colours' })
       .querySelector<HTMLButtonElement>('button[aria-pressed="true"]');
     expect(selected?.getAttribute('aria-label')).toContain('Purple');
   });

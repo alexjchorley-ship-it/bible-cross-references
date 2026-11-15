@@ -3,7 +3,14 @@ import { CANONICAL_VERSIFICATION } from '../../core/bible/versification.ts';
 
 /** The first four colours stay visible for one-tap use; the rest live in the expanded legend. */
 export const HIGHLIGHT_COLORS = [
-  'amber', 'green', 'blue', 'pink', 'purple', 'teal', 'red', 'yellow',
+  'amber',
+  'green',
+  'blue',
+  'pink',
+  'purple',
+  'teal',
+  'red',
+  'yellow',
 ] as const;
 export const QUICK_HIGHLIGHT_COLORS: readonly HighlightColor[] = HIGHLIGHT_COLORS.slice(0, 4);
 export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number];

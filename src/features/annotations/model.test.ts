@@ -170,11 +170,13 @@ describe('expanded colour options', () => {
       expect(isHighlightColor(color)).toBe(true);
       expect(colorLabel([], 'highlight', color).length).toBeGreaterThan(0);
       expect(colorLabel([], 'bookmark', color).length).toBeGreaterThan(0);
-      expect(isColorLabel({
-        id: `highlight:${color}`,
-        name: 'Custom meaning',
-        updatedAt: LATE,
-      })).toBe(true);
+      expect(
+        isColorLabel({
+          id: `highlight:${color}`,
+          name: 'Custom meaning',
+          updatedAt: LATE,
+        }),
+      ).toBe(true);
     }
   });
 

@@ -40,7 +40,11 @@ function ColourDots({
 
   return (
     <div className={styles.colourPicker}>
-      <div className={styles.dotPalette} role="group" aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}>
+      <div
+        className={styles.dotPalette}
+        role="group"
+        aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}
+      >
         {QUICK_HIGHLIGHT_COLORS.map((color) => (
           <button
             key={color}
@@ -51,7 +55,9 @@ function ColourDots({
             title={colorLabel(labels, purpose, color)}
             aria-pressed={selected.includes(color)}
             disabled={disabled}
-            onClick={() => { onSelect(color); }}
+            onClick={() => {
+              onSelect(color);
+            }}
           />
         ))}
         <button
@@ -60,13 +66,20 @@ function ColourDots({
           aria-label={`${expanded ? 'Hide' : 'Show'} ${title.toLowerCase()} colour meanings`}
           aria-expanded={expanded}
           aria-controls={legendId}
-          onClick={() => { setExpanded(!expanded); }}
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
         >
           <span aria-hidden="true">{expanded ? '⌃' : '⌄'}</span>
         </button>
       </div>
       {expanded && (
-        <div id={legendId} className={styles.colourLegend} role="group" aria-label={`${title} colour meanings and more colours`}>
+        <div
+          id={legendId}
+          className={styles.colourLegend}
+          role="group"
+          aria-label={`${title} colour meanings and more colours`}
+        >
           {HIGHLIGHT_COLORS.map((color) => (
             <button
               key={color}
@@ -75,11 +88,17 @@ function ColourDots({
               aria-label={name(color)}
               aria-pressed={selected.includes(color)}
               disabled={disabled}
-              onClick={() => { onSelect(color); }}
+              onClick={() => {
+                onSelect(color);
+              }}
             >
               <span className={styles.colorDot} data-color={color} aria-hidden="true" />
               <span className={styles.colourLegendTitle}>{colorLabel(labels, purpose, color)}</span>
-              {selected.includes(color) && <span className={styles.colourLegendCheck} aria-hidden="true">✓</span>}
+              {selected.includes(color) && (
+                <span className={styles.colourLegendCheck} aria-hidden="true">
+                  ✓
+                </span>
+              )}
             </button>
           ))}
         </div>
