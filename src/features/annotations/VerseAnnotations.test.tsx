@@ -196,7 +196,10 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('moves one coloured bookmark and removes it by tapping again on its verse', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      status: 'ready', error: null, notes: [], highlights: [],
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
       bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="Gen.1.1" />);
@@ -209,7 +212,11 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('uses the saved meaning of a colour on the always visible dots', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      status: 'ready', error: null, notes: [], highlights: [], bookmarks: [],
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
+      bookmarks: [],
       labels: [{ id: 'highlight:amber', name: 'Miracles of Jesus', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="Gen.1.1" />);
@@ -256,10 +263,18 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('disables the inline composer and colour choices when storage is blocked', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-      notes: [], highlights: [], bookmarks: [], status: 'unavailable', error: 'Database blocked',
+      notes: [],
+      highlights: [],
+      bookmarks: [],
+      status: 'unavailable',
+      error: 'Database blocked',
     });
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    expect(screen.getByRole('button', { name: 'Save new note' }).hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('button', { name: /Green · Prayer/ }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Save new note' }).hasAttribute('disabled')).toBe(
+      true,
+    );
+    expect(screen.getByRole('button', { name: /Green · Prayer/ }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 });
