@@ -11,7 +11,7 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'sync_deletions';
+type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'labels' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
@@ -19,6 +19,7 @@ function installIndexedDB() {
     notes: new Map(),
     highlights: new Map(),
     bookmarks: new Map(),
+    labels: new Map(),
     sync_deletions: new Map(),
   };
   const declared = new Set<string>();
@@ -57,7 +58,7 @@ function installIndexedDB() {
           if (
             name !== 'notes' &&
             name !== 'highlights' &&
-            name !== 'bookmarks' &&
+            name !== 'bookmarks' && name !== 'labels' &&
             name !== 'sync_deletions'
           ) {
             throw new Error('Unknown store');
@@ -172,7 +173,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 3);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 4);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
@@ -540,5 +541,52 @@ describe('bookmark cloud deletion and backup safety', () => {
     const store = await import('./storage.ts');
     await expect(store.setReadingBookmark('amber', 'Gen.0.999')).rejects.toThrow('Invalid');
     expect(fake.stores.bookmarks.size).toBe(0);
+  });
+});
+
+
+describe('colour label and note metadata persistence', () => {
+  it('keeps a name for each colour purpose independent and cloud-exportable', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setColorLabel('highlight:green', 'Pray about this');
+    await store.setColorLabel('bookmark:green', 'My Bible study');
+    const cloud = await store.exportCloudRecords();
+    expect(cloud.filter((item) => item.kind === 'label')).toHaveLength(2);
+    expect(fake.stores.labels.size).toBe(2);
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.labels?.map((item) => item.name)).toEqual(['Pray about this', 'My Bible study']);
+  });
+
+  it('stores custom categories and titles in backups and in cloud records', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote({ ...note, category: 'Prayer', title: 'My question' });
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.annotations[0]?.category).toBe('Prayer');
+    expect(backup.annotations[0]?.title).toBe('My question');
+    const remote = (await store.exportCloudRecords()).find((item) => item.kind === 'note');
+    expect(remote?.category).toBe('Prayer');
+    expect(remote?.title).toBe('My question');
+  });
+
+  it('applies categories and edited colour labels received from another device', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.applyCloudRecords([
+      {
+        kind: 'label', item_id: 'highlight:blue', verse_id: 'Gen.1.1',
+        body: 'God\'s promises', color: null,
+        created_at: late, updated_at: late, deleted: false,
+      },
+      {
+        kind: 'note', item_id: 'remote-note', verse_id: 'John.3.16',
+        body: 'God loves the world', color: null, category: 'Sermon',
+        title: 'Sunday message', created_at: late, updated_at: late, deleted: false,
+      },
+    ]);
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.labels?.[0]?.name).toBe("God's promises");
+    expect(backup.annotations[0]?.category).toBe('Sermon');
   });
 });
