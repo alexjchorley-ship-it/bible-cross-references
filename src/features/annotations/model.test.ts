@@ -5,6 +5,11 @@ import {
   isPersonalNote,
   isVerseHighlight,
   isReadingBookmark,
+  HIGHLIGHT_COLORS,
+  QUICK_HIGHLIGHT_COLORS,
+  isColorLabel,
+  isHighlightColor,
+  colorLabel,
   mergeAnnotations,
   mergeHighlights,
   parseAnnotationsBackup,
@@ -155,5 +160,34 @@ describe('note categories and separate colour meanings', () => {
       highlights: [highlight],
     });
     expect(parseAnnotationsBackup(old).labels).toEqual([]);
+  });
+});
+
+describe('expanded colour options', () => {
+  it('offers four immediate colours and eight total across both purposes', () => {
+    expect(QUICK_HIGHLIGHT_COLORS).toEqual(['amber', 'green', 'blue', 'pink']);
+    expect(HIGHLIGHT_COLORS).toHaveLength(8);
+    for (const color of HIGHLIGHT_COLORS) {
+      expect(isHighlightColor(color)).toBe(true);
+      expect(colorLabel([], 'highlight', color).length).toBeGreaterThan(0);
+      expect(colorLabel([], 'bookmark', color).length).toBeGreaterThan(0);
+      expect(isColorLabel({
+        id: `highlight:${color}`,
+        name: 'Custom meaning',
+        updatedAt: LATE,
+      })).toBe(true);
+    }
+  });
+
+  it('round-trips a newer-colour highlight and bookmark in a full backup', () => {
+    const nextHighlight = { ...highlight, color: 'purple' as const };
+    const nextBookmark = { color: 'teal' as const, verseId: 'John.3.16', updatedAt: LATE };
+    const nextLabel = { id: 'bookmark:teal', name: 'My devotional', updatedAt: LATE };
+    const restored = parseAnnotationsBackup(
+      serializeAnnotationsBackup([note], [nextHighlight], [nextBookmark], [nextLabel]),
+    );
+    expect(restored.highlights[0]?.color).toBe('purple');
+    expect(restored.bookmarks?.[0]?.color).toBe('teal');
+    expect(restored.labels?.[0]?.name).toBe('My devotional');
   });
 });
