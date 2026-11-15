@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useLocalization } from '../../i18n/use-locale.tsx';
 import {
   HIGHLIGHT_COLORS,
+  QUICK_HIGHLIGHT_COLORS,
   SUGGESTED_NOTE_CATEGORIES,
   colorLabel,
   type ColorPurpose,
@@ -31,27 +32,58 @@ function ColourDots({
   readonly disabled: boolean;
   readonly onSelect: (color: HighlightColor) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const legendId = useId();
+  const title = purpose === 'highlight' ? 'Highlight' : 'Bookmark';
+  const name = (color: HighlightColor): string =>
+    `${color.charAt(0).toUpperCase() + color.slice(1)} · ${colorLabel(labels, purpose, color)}`;
+
   return (
-    <div
-      className={styles.dotPalette}
-      role="group"
-      aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}
-    >
-      {HIGHLIGHT_COLORS.map((color) => (
+    <div className={styles.colourPicker}>
+      <div className={styles.dotPalette} role="group" aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}>
+        {QUICK_HIGHLIGHT_COLORS.map((color) => (
+          <button
+            key={color}
+            type="button"
+            className={styles.colorDot}
+            data-color={color}
+            aria-label={name(color)}
+            title={colorLabel(labels, purpose, color)}
+            aria-pressed={selected.includes(color)}
+            disabled={disabled}
+            onClick={() => { onSelect(color); }}
+          />
+        ))}
         <button
-          key={color}
           type="button"
-          className={styles.colorDot}
-          data-color={color}
-          aria-label={`${color.charAt(0).toUpperCase() + color.slice(1)} · ${colorLabel(labels, purpose, color)}`}
-          title={colorLabel(labels, purpose, color)}
-          aria-pressed={selected.includes(color)}
-          disabled={disabled}
-          onClick={() => {
-            onSelect(color);
-          }}
-        />
-      ))}
+          className={styles.colourExpand}
+          aria-label={`${expanded ? 'Hide' : 'Show'} ${title.toLowerCase()} colour meanings`}
+          aria-expanded={expanded}
+          aria-controls={legendId}
+          onClick={() => { setExpanded(!expanded); }}
+        >
+          <span aria-hidden="true">{expanded ? '⌃' : '⌄'}</span>
+        </button>
+      </div>
+      {expanded && (
+        <div id={legendId} className={styles.colourLegend} role="group" aria-label={`${title} colour meanings and more colours`}>
+          {HIGHLIGHT_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              className={styles.colourLegendOption}
+              aria-label={name(color)}
+              aria-pressed={selected.includes(color)}
+              disabled={disabled}
+              onClick={() => { onSelect(color); }}
+            >
+              <span className={styles.colorDot} data-color={color} aria-hidden="true" />
+              <span className={styles.colourLegendTitle}>{colorLabel(labels, purpose, color)}</span>
+              {selected.includes(color) && <span className={styles.colourLegendCheck} aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
