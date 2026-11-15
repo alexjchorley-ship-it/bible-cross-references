@@ -10,6 +10,9 @@ vi.mock('./storage.ts', () => ({
   importAnnotations: vi.fn(() => Promise.resolve({ notes: 1, highlights: 1 })),
   deleteAllAnnotations: vi.fn(() => Promise.resolve(undefined)),
   setReadingBookmark: vi.fn(() => Promise.resolve(undefined)),
+  setColorLabel: vi.fn(() => Promise.resolve(undefined)),
+  upsertPersonalNote: vi.fn(() => Promise.resolve(undefined)),
+  deletePersonalNote: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 const now = '2026-11-14T12:00:00.000Z';
@@ -215,7 +218,7 @@ describe('searchable and exportable personal notebook', () => {
     const onClose = vi.fn();
     render(<Notebook open onClose={onClose} onOpenVerse={onOpenVerse} />);
     const section = screen.getByRole('region', { name: 'Reading bookmarks' });
-    const amber = within(section).getByRole('button', { name: /Amber: John 3 16/ });
+    const amber = within(section).getByRole('button', { name: /Bible study: John 3 16/ });
     await userEvent.click(amber);
     expect(onOpenVerse).toHaveBeenCalledWith('John.3.16');
     expect(onClose).toHaveBeenCalled();
@@ -229,7 +232,7 @@ describe('searchable and exportable personal notebook', () => {
     const section = screen.getByRole('region', { name: 'Reading bookmarks' });
     expect(
       within(section)
-        .getByRole('button', { name: /Green: Not set/ })
+        .getByRole('button', { name: /Personal reading: Not set/ })
         .hasAttribute('disabled'),
     ).toBe(true);
     expect(screen.getByText('God so loved')).toBeDefined();
@@ -257,5 +260,164 @@ describe('searchable and exportable personal notebook', () => {
     await waitFor(() => {
       expect(confirm).toHaveBeenCalledWith(expect.stringContaining('1 bookmarks'));
     });
+  });
+});
+
+describe('notebook enhancements', () => {
+  it('filters notes by category and changes their colour meanings', async () => {
+    const first = snapshot.notes[0];
+    const second = snapshot.notes[1];
+    if (!first || !second) throw new Error('Missing test notes');
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      ...snapshot,
+      notes: [
+        { ...first, category: 'Prayer', title: 'Morning prayer' },
+        { ...second, category: 'Sermon' },
+      ],
+    });
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Filter note category' }),
+      'Prayer',
+    );
+    expect(screen.getByText('Morning prayer')).toBeDefined();
+    expect(screen.queryByText('God so loved')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Customise colours' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'amber highlight meaning' }));
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'amber highlight meaning' }),
+      'Miracles of Jesus',
+    );
+    const section = screen.getByRole('region', { name: 'Colour meanings' });
+    const save = within(section).getAllByRole('button', { name: 'Save' })[0];
+    if (!save) throw new Error('Missing colour-label save button');
+    await userEvent.click(save);
+    await waitFor(() => {
+      expect(storage.setColorLabel).toHaveBeenCalledWith('highlight:amber', 'Miracles of Jesus');
+    });
+  });
+});
+
+describe('notebook note editing and colour settings', () => {
+  it('edits a saved title, body and category then saves them to IndexedDB', async () => {
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const edit = screen.getAllByRole('button', { name: 'Edit note' })[0];
+    if (!edit) throw new Error('Missing edit control');
+    await userEvent.click(edit);
+    const title = screen.getByRole('textbox', { name: 'Edit note title' });
+    const text = screen.getByRole('textbox', { name: 'Edit note text' });
+    const category = screen.getByLabelText('Category');
+    await userEvent.clear(title);
+    await userEvent.type(title, 'Creation');
+    await userEvent.clear(text);
+    await userEvent.type(text, 'Let there be light');
+    await userEvent.clear(category);
+    await userEvent.type(category, 'Reflection');
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => {
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'a',
+          title: 'Creation',
+          body: 'Let there be light',
+          category: 'Reflection',
+        }),
+      );
+    });
+  });
+
+  it('cancels a draft without calling save', async () => {
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const edit = screen.getAllByRole('button', { name: 'Edit note' })[0];
+    if (!edit) throw new Error('Missing edit control');
+    await userEvent.click(edit);
+    await userEvent.type(screen.getByRole('textbox', { name: 'Edit note title' }), 'Draft');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(storage.upsertPersonalNote).not.toHaveBeenCalled();
+    expect(screen.queryByRole('textbox', { name: 'Edit note text' })).toBeNull();
+  });
+
+  it('asks before removing a particular note', async () => {
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal('confirm', confirm);
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const edit = screen.getAllByRole('button', { name: 'Edit note' })[0];
+    if (!edit) throw new Error('Missing edit control');
+    await userEvent.click(edit);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
+    expect(confirm).toHaveBeenCalledWith('Delete this note?');
+    expect(storage.deletePersonalNote).toHaveBeenCalledWith('a');
+  });
+
+  it('reports note-edit failures without silently losing the displayed draft', async () => {
+    vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Offline'));
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const edit = screen.getAllByRole('button', { name: 'Edit note' })[0];
+    if (!edit) throw new Error('Missing edit control');
+    await userEvent.click(edit);
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Edit note text' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Edit note text' }), 'Still here');
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not update note');
+    expect(screen.getByRole('textbox', { name: 'Edit note text' })).toHaveProperty(
+      'value',
+      'Still here',
+    );
+  });
+
+  it('reports deletion failures while preserving the notebook', async () => {
+    vi.mocked(storage.deletePersonalNote).mockRejectedValueOnce(new Error('Unavailable'));
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true),
+    );
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    const edit = screen.getAllByRole('button', { name: 'Edit note' })[0];
+    if (!edit) throw new Error('Missing edit control');
+    await userEvent.click(edit);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not delete note');
+  });
+
+  it('reports colour-label save errors and can close the settings', async () => {
+    vi.mocked(storage.setColorLabel).mockRejectedValueOnce(new Error('Offline'));
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Customise colours' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'green bookmark meaning' }));
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'green bookmark meaning' }),
+      'Saturday group',
+    );
+    const region = screen.getByRole('region', { name: 'Colour meanings' });
+    const saves = within(region).getAllByRole('button', { name: 'Save' });
+    const save = saves.find((button) => !button.hasAttribute('disabled'));
+    if (!save) throw new Error('Missing active save control');
+    await userEvent.click(save);
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not save label');
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('textbox', { name: 'green bookmark meaning' })).toBeNull();
+  });
+
+  it('switches between recent and biblical order while retaining categories', async () => {
+    const first = snapshot.notes[0];
+    const second = snapshot.notes[1];
+    if (!first || !second) throw new Error('Missing notes');
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      ...snapshot,
+      notes: [
+        { ...first, updatedAt: '2026-11-14T00:00:00Z', category: 'Prayer' },
+        { ...second, updatedAt: '2026-11-15T00:00:00Z', category: 'Sermon' },
+      ],
+    });
+    render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
+    expect(screen.getByText('First light')).toBeDefined();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort notes' }), 'bible');
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort notes' }), 'recent');
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Filter note category' }),
+      'Sermon',
+    );
+    expect(screen.queryByText('First light')).toBeNull();
+    expect(screen.getByText('God so loved')).toBeDefined();
   });
 });

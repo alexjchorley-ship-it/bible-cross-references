@@ -7,19 +7,20 @@ test.describe('Bible Study reader additions', () => {
   }) => {
     await openPassage(page, 'Gen.1.1');
     const panel = page.locator(PANEL);
-    await panel.getByRole('button', { name: 'Highlight' }).click();
-    await panel.getByRole('button', { name: 'Amber' }).click();
-    await expect(panel.getByRole('button', { name: /Highlight · Amber/ })).toBeVisible();
-    await panel.getByRole('button', { name: 'Notes', exact: true }).click();
+    const amber = panel
+      .getByRole('group', { name: 'Highlight colours' })
+      .getByRole('button', { name: /Amber · Miracles/ });
+    await expect(amber).toBeVisible();
+    await amber.click();
+    await expect(amber).toHaveAttribute('aria-pressed', 'true');
     await panel.getByPlaceholder('Write a note…').fill('My private Genesis 1:1 note');
     await panel.getByRole('button', { name: 'Save new note' }).click();
-    await expect(panel.getByRole('button', { name: 'Notes (1)' })).toBeVisible();
+    await expect(panel.getByRole('heading', { name: 'Notes (1)' })).toBeVisible();
 
     await page.reload();
     await waitForApp(page);
     await openPanel(page);
-    await expect(panel.getByRole('button', { name: /Highlight · Amber/ })).toBeVisible();
-    await panel.getByRole('button', { name: 'Notes (1)' }).click();
+    await expect(amber).toHaveAttribute('aria-pressed', 'true');
     await expect(panel.getByRole('textbox', { name: 'Notes' })).toHaveValue(
       'My private Genesis 1:1 note',
     );

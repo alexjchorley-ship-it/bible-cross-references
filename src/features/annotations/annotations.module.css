@@ -215,3 +215,243 @@
     padding: var(--space-3);
   }
 }
+
+/* Inline verse annotation tools: quiet and compact, with one-tap colour actions. */
+.annotationComposer {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.018);
+}
+
+.annotationColourRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.annotationLabel {
+  min-inline-size: 5.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dotPalette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.colorDot {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  align-items: center;
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--dot-colour);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.colorDot[data-color='amber'] {
+  --dot-colour: #e6b351;
+}
+.colorDot[data-color='green'] {
+  --dot-colour: #5ca987;
+}
+.colorDot[data-color='blue'] {
+  --dot-colour: #6ca8ed;
+}
+.colorDot[data-color='pink'] {
+  --dot-colour: #d88bba;
+}
+
+.colorDot[aria-pressed='true'] {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+.colorDot[aria-pressed='true']::after {
+  content: '✓';
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #181818;
+}
+.colorDot:focus-visible {
+  outline: 3px solid var(--color-text);
+  outline-offset: 3px;
+}
+.colorDot:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.clearDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font: inherit;
+}
+.inlineComposer,
+.savedNotesArea,
+.savedNote {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--space-2);
+}
+.composerHeading {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.composerHeading span {
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+.composerFooter {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+.fieldLabel {
+  display: grid;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.noteTitle,
+.categoryInput {
+  inline-size: 100%;
+  box-sizing: border-box;
+  min-block-size: 2.25rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #1b1b1b;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.noteTitle::placeholder,
+.categoryInput::placeholder {
+  color: var(--color-text-muted);
+}
+.composerFooter .fieldLabel {
+  flex: 1 1 10rem;
+}
+.savedNotesArea {
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--color-border);
+}
+.savedNotesArea h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.savedNote {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.04);
+}
+.bookmarkGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+.labelEditorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-2);
+}
+.labelEditor {
+  display: flex;
+  align-items: end;
+  gap: var(--space-2);
+}
+.labelEditor .fieldLabel {
+  flex: 1;
+}
+.labelEditor .colorDot {
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  margin-block-end: 0.35rem;
+}
+.notebookSectionHeading {
+  margin: var(--space-2) 0 0;
+  font-size: 1rem;
+}
+.notebookFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.7fr);
+  gap: var(--space-2);
+  align-items: center;
+}
+.notebookFilters .search {
+  grid-column: 1 / -1;
+  min-block-size: 2.5rem;
+}
+.notebookNote {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.035);
+}
+.notebookNote h4 {
+  margin: 0;
+  font-family: var(--font-serif);
+}
+.notebookNote p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.categoryChip {
+  justify-self: start;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.studyContents {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  min-inline-size: 0;
+}
+.notebookDialog {
+  inline-size: min(52rem, calc(100vw - 2rem));
+}
+@media (max-width: 47.99rem) {
+  .annotationLabel {
+    min-inline-size: 4.5rem;
+  }
+  .colorDot {
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+  }
+  .notebookFilters {
+    grid-template-columns: 1fr;
+  }
+}

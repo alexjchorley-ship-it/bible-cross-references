@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PersonalNote, VerseHighlight } from './model.ts';
 import * as storage from './storage.ts';
@@ -41,9 +41,8 @@ describe('verse highlights and personal notes', () => {
   it('offers four highlight choices and removal through the same verse ID', async () => {
     current([], [{ verseId: 'Gen.1.1', color: 'amber', updatedAt: now }]);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Highlight/ }));
-    expect(screen.getByRole('toolbar', { name: 'Highlight' })).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: 'Green' }));
+    expect(screen.getByRole('group', { name: 'Highlight colours' })).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: /Green · Prayer/ }));
     expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', 'green');
     await userEvent.click(screen.getByRole('button', { name: 'Remove highlight' }));
     expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', null);
@@ -51,7 +50,6 @@ describe('verse highlights and personal notes', () => {
 
   it('saves a new personal note only if text is present', async () => {
     render(<VerseAnnotations verseId="John.3.16" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Notes' }));
     const save = screen.getByRole('button', { name: 'Save new note' });
     expect(save.hasAttribute('disabled')).toBe(true);
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'Love of God');
@@ -67,7 +65,6 @@ describe('verse highlights and personal notes', () => {
   it('shows existing notes and saves edits when the editor loses focus', async () => {
     current([note]);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Edited Hebrew note' } });
     fireEvent.blur(editor);
@@ -83,13 +80,12 @@ describe('verse highlights and personal notes', () => {
     const confirm = vi.fn(() => true);
     vi.stubGlobal('confirm', confirm);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
     expect(confirm).toHaveBeenCalled();
     expect(storage.deletePersonalNote).toHaveBeenCalledWith('read-1');
   });
 
-  it('never claims a save is possible if device storage is unavailable', async () => {
+  it('never claims a save is possible if device storage is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
       notes: [],
       highlights: [],
@@ -100,14 +96,14 @@ describe('verse highlights and personal notes', () => {
     render(<VerseAnnotations verseId="Gen.1.1" />);
     expect(screen.getByText('Device storage is unavailable; notes cannot be saved.')).toBeDefined();
     expect(screen.getByText('Permission denied.')).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: /Highlight/ }));
-    expect(screen.getByRole('button', { name: 'Amber' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /Amber · Miracles/ }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 
   it('preserves the text and reports a failed new-note write', async () => {
     vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Notes' }));
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'Do not lose this');
     await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
     expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
@@ -121,7 +117,6 @@ describe('verse highlights and personal notes', () => {
     current([note]);
     vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Draft after failed edit' } });
     fireEvent.blur(editor);
@@ -138,7 +133,6 @@ describe('verse highlights and personal notes', () => {
       vi.fn(() => false),
     );
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
     expect(storage.deletePersonalNote).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
@@ -147,7 +141,6 @@ describe('verse highlights and personal notes', () => {
   it('flushes an unsaved edit when its verse panel closes', async () => {
     current([note]);
     const view = render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Keep this on navigation' } });
     view.unmount();
@@ -169,11 +162,119 @@ describe('colour-coded reading positions', () => {
       bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="John.3.16" />);
-    await userEvent.click(screen.getByRole('button', { name: /Bookmark/ }));
     const group = screen.getByRole('group', { name: 'Reading bookmark colours' });
     expect(group).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: 'Green' }));
+    await userEvent.click(screen.getByRole('button', { name: /Green · Personal reading/ }));
     expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', 'John.3.16');
     expect(storage.setVerseHighlight).not.toHaveBeenCalled();
+  });
+});
+
+describe('always-visible annotation composer', () => {
+  it('allows categorised note creation without expanding any menus', async () => {
+    current();
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'New note title' }), 'Creation');
+    await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'It was good');
+    await userEvent.type(screen.getByPlaceholderText('Choose or type…'), 'Questions');
+    await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
+    await waitFor(() => {
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Creation', category: 'Questions', verseId: 'Gen.1.1' }),
+      );
+    });
+  });
+});
+
+describe('inline verse annotation quality-of-life controls', () => {
+  it('removes a highlight when its selected colour dot is tapped again', async () => {
+    current([], [{ verseId: 'Gen.1.1', color: 'amber', updatedAt: now }]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: /Amber · Miracles/ }));
+    expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', null);
+  });
+
+  it('moves one coloured bookmark and removes it by tapping again on its verse', async () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
+      bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    const group = screen.getByRole('group', { name: 'Reading bookmark colours' });
+    const green = within(group).getByRole('button', { name: /Green · Personal reading/ });
+    expect(green.getAttribute('aria-pressed')).toBe('true');
+    await userEvent.click(green);
+    expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', null);
+  });
+
+  it('uses the saved meaning of a colour on the always visible dots', () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready',
+      error: null,
+      notes: [],
+      highlights: [],
+      bookmarks: [],
+      labels: [{ id: 'highlight:amber', name: 'Miracles of Jesus', updatedAt: now }],
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: /Amber · Miracles of Jesus/ })).toBeDefined();
+  });
+
+  it('shows one of several saved notes at first and expands the full collection', async () => {
+    current([
+      note,
+      { ...note, id: 'read-2', body: 'Second note', createdAt: '2026-11-15T12:00:00Z' },
+    ]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: 'Show all 2 notes' })).toBeDefined();
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Show all 2 notes' }));
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(2);
+    await userEvent.click(screen.getByRole('button', { name: 'Show latest note only' }));
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(1);
+  });
+
+  it('edits the saved title and category without changing the verse', async () => {
+    current([note]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'Note title' }), 'Creation note');
+    await userEvent.type(screen.getByPlaceholderText('Choose or type a category'), 'Sermon');
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Notes' }));
+    await waitFor(() => {
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'read-1', title: 'Creation note', category: 'Sermon' }),
+      );
+    });
+  });
+
+  it('keeps a failed note draft ready for another attempt', async () => {
+    vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Offline'));
+    current([note]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    const editor = screen.getByRole('textbox', { name: 'Notes' });
+    fireEvent.change(editor, { target: { value: 'Do not lose this' } });
+    fireEvent.blur(editor);
+    expect(await screen.findByText('Could not save. Copy your text and try again.')).toBeDefined();
+    expect(editor).toHaveProperty('value', 'Do not lose this');
+  });
+
+  it('disables the inline composer and colour choices when storage is blocked', () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      notes: [],
+      highlights: [],
+      bookmarks: [],
+      status: 'unavailable',
+      error: 'Database blocked',
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: 'Save new note' }).hasAttribute('disabled')).toBe(
+      true,
+    );
+    expect(screen.getByRole('button', { name: /Green · Prayer/ }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 });

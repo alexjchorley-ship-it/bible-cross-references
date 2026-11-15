@@ -57,7 +57,7 @@ describe('canonical annotations and backups', () => {
     const content = serializeAnnotationsBackup([note], [highlight]);
     const restored = parseAnnotationsBackup(content);
     expect(restored.format).toBe('bible-study-annotations');
-    expect(restored.schemaVersion).toBe(2);
+    expect(restored.schemaVersion).toBe(3);
     expect(restored.annotations).toEqual([note]);
     expect(restored.highlights).toEqual([highlight]);
   });
@@ -70,7 +70,7 @@ describe('canonical annotations and backups', () => {
       string,
       unknown
     >;
-    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 3 }))).toThrow();
+    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 4 }))).toThrow();
     expect(() =>
       parseAnnotationsBackup(JSON.stringify({ ...valid, exportedAt: 'tomorrow' })),
     ).toThrow();
@@ -131,5 +131,29 @@ describe('canonical annotations and backups', () => {
     expect(() => parseAnnotationsBackup(JSON.stringify(duplicate))).toThrow('duplicate bookmark');
     duplicate['bookmarks'] = [{ ...green, verseId: 'Gen.999.1' }];
     expect(() => parseAnnotationsBackup(JSON.stringify(duplicate))).toThrow('backup');
+  });
+});
+
+describe('note categories and separate colour meanings', () => {
+  it('supports named colours and keeps old backups valid', () => {
+    const noteWithCategory = { ...note, category: 'Prayer', title: 'A reflection' };
+    const labels = [
+      { id: 'highlight:amber', name: 'Miracles', updatedAt: LATE },
+      { id: 'bookmark:amber', name: 'Sunday study', updatedAt: LATE },
+    ];
+    const data = serializeAnnotationsBackup([noteWithCategory], [highlight], [], labels);
+    const restored = parseAnnotationsBackup(data);
+    expect(restored.annotations[0]?.category).toBe('Prayer');
+    expect(restored.labels).toEqual(labels);
+    const old = JSON.stringify({
+      format: 'bible-study-annotations',
+      schemaVersion: 2,
+      exportedAt: LATE,
+      appVersion: '1.0',
+      bookmarks: [],
+      annotations: [note],
+      highlights: [highlight],
+    });
+    expect(parseAnnotationsBackup(old).labels).toEqual([]);
   });
 });

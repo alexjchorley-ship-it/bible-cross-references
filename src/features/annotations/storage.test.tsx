@@ -11,7 +11,7 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'sync_deletions';
+type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'labels' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
@@ -19,6 +19,7 @@ function installIndexedDB() {
     notes: new Map(),
     highlights: new Map(),
     bookmarks: new Map(),
+    labels: new Map(),
     sync_deletions: new Map(),
   };
   const declared = new Set<string>();
@@ -58,6 +59,7 @@ function installIndexedDB() {
             name !== 'notes' &&
             name !== 'highlights' &&
             name !== 'bookmarks' &&
+            name !== 'labels' &&
             name !== 'sync_deletions'
           ) {
             throw new Error('Unknown store');
@@ -76,7 +78,7 @@ function installIndexedDB() {
               }
               const row = value as Record<string, unknown>;
               const key =
-                name === 'notes' || name === 'sync_deletions'
+                name === 'notes' || name === 'sync_deletions' || name === 'labels'
                   ? row['id']
                   : name === 'bookmarks'
                     ? row['color']
@@ -172,7 +174,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 3);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 4);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
@@ -540,5 +542,169 @@ describe('bookmark cloud deletion and backup safety', () => {
     const store = await import('./storage.ts');
     await expect(store.setReadingBookmark('amber', 'Gen.0.999')).rejects.toThrow('Invalid');
     expect(fake.stores.bookmarks.size).toBe(0);
+  });
+});
+
+describe('colour label and note metadata persistence', () => {
+  it('keeps a name for each colour purpose independent and cloud-exportable', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.setColorLabel('highlight:green', 'Pray about this');
+    await store.setColorLabel('bookmark:green', 'My Bible study');
+    const cloud = await store.exportCloudRecords();
+    expect(cloud.filter((item) => item.kind === 'label')).toHaveLength(2);
+    expect(fake.stores.labels.size).toBe(2);
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.labels?.map((item) => item.name)).toEqual(['Pray about this', 'My Bible study']);
+  });
+
+  it('stores custom categories and titles in backups and in cloud records', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.upsertPersonalNote({ ...note, category: 'Prayer', title: 'My question' });
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.annotations[0]?.category).toBe('Prayer');
+    expect(backup.annotations[0]?.title).toBe('My question');
+    const remote = (await store.exportCloudRecords()).find((item) => item.kind === 'note');
+    expect(remote?.category).toBe('Prayer');
+    expect(remote?.title).toBe('My question');
+  });
+
+  it('applies categories and edited colour labels received from another device', async () => {
+    installIndexedDB();
+    const store = await import('./storage.ts');
+    await store.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'highlight:blue',
+        verse_id: 'Gen.1.1',
+        body: "God's promises",
+        color: null,
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
+      {
+        kind: 'note',
+        item_id: 'remote-note',
+        verse_id: 'John.3.16',
+        body: 'God loves the world',
+        color: null,
+        category: 'Sermon',
+        title: 'Sunday message',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
+    ]);
+    const backup = parseAnnotationsBackup(await store.exportAnnotations());
+    expect(backup.labels?.[0]?.name).toBe("God's promises");
+    expect(backup.annotations[0]?.category).toBe('Sermon');
+  });
+});
+
+describe('safe colour meaning updates across devices', () => {
+  it('imports independently named colours from another full JSON backup', async () => {
+    installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:amber', 'Original');
+    const backup = JSON.stringify({
+      format: 'bible-study-annotations',
+      schemaVersion: 3,
+      exportedAt: late,
+      appVersion: '1.0',
+      annotations: [],
+      highlights: [],
+      bookmarks: [],
+      labels: [
+        { id: 'highlight:amber', name: 'Miracles', updatedAt: '2030-01-01T00:00:00Z' },
+        { id: 'bookmark:amber', name: 'Study group', updatedAt: '2030-01-01T00:00:00Z' },
+      ],
+    });
+    await storage.importAnnotations(backup);
+    const labels = parseAnnotationsBackup(await storage.exportAnnotations()).labels ?? [];
+    expect(labels.find((item) => item.id === 'highlight:amber')?.name).toBe('Miracles');
+    expect(labels.find((item) => item.id === 'bookmark:amber')?.name).toBe('Study group');
+  });
+
+  it('rejects empty colour meaning names before they are stored', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await expect(storage.setColorLabel('highlight:green', '  ')).rejects.toThrow('Invalid');
+    await expect(storage.setColorLabel('bad:red', 'Something')).rejects.toThrow('Invalid');
+    expect(fake.stores.labels.size).toBe(0);
+  });
+
+  it('deletes personal labels and retains their tombstones on clear-all', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:amber', 'Miracles');
+    await storage.setColorLabel('bookmark:blue', 'Personal reading');
+    await storage.deleteAllAnnotations();
+    expect(fake.stores.labels.size).toBe(0);
+    const removed = (await storage.exportCloudRecords()).filter((item) => item.kind === 'label');
+    expect(removed).toHaveLength(2);
+    expect(removed.every((item) => item.deleted)).toBe(true);
+  });
+
+  it('applies a later remote label deletion but not stale label changes', async () => {
+    installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:green', 'Pray about it');
+    const latest = '2030-01-01T00:00:00Z';
+    await storage.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'highlight:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: null,
+        created_at: latest,
+        updated_at: latest,
+        deleted: true,
+      },
+    ]);
+    expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
+    await storage.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'highlight:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: 'Old meaning',
+        created_at: early,
+        updated_at: early,
+        deleted: false,
+      },
+    ]);
+    expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
+  });
+
+  it('ignores remote labels with invalid IDs or empty meanings', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.applyCloudRecords([
+      {
+        kind: 'label',
+        item_id: 'wrong:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: 'Something',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
+      {
+        kind: 'label',
+        item_id: 'bookmark:green',
+        verse_id: 'Gen.1.1',
+        color: null,
+        body: '',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
+      },
+    ]);
+    expect(fake.stores.labels.size).toBe(0);
   });
 });
