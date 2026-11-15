@@ -41,9 +41,8 @@ describe('verse highlights and personal notes', () => {
   it('offers four highlight choices and removal through the same verse ID', async () => {
     current([], [{ verseId: 'Gen.1.1', color: 'amber', updatedAt: now }]);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Highlight/ }));
-    expect(screen.getByRole('toolbar', { name: 'Highlight' })).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: 'Green' }));
+    expect(screen.getByRole('group', { name: 'Highlight colours' })).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: /Green · Prayer/ }));
     expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', 'green');
     await userEvent.click(screen.getByRole('button', { name: 'Remove highlight' }));
     expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', null);
@@ -51,7 +50,6 @@ describe('verse highlights and personal notes', () => {
 
   it('saves a new personal note only if text is present', async () => {
     render(<VerseAnnotations verseId="John.3.16" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Notes' }));
     const save = screen.getByRole('button', { name: 'Save new note' });
     expect(save.hasAttribute('disabled')).toBe(true);
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'Love of God');
@@ -67,7 +65,6 @@ describe('verse highlights and personal notes', () => {
   it('shows existing notes and saves edits when the editor loses focus', async () => {
     current([note]);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Edited Hebrew note' } });
     fireEvent.blur(editor);
@@ -83,7 +80,6 @@ describe('verse highlights and personal notes', () => {
     const confirm = vi.fn(() => true);
     vi.stubGlobal('confirm', confirm);
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
     expect(confirm).toHaveBeenCalled();
     expect(storage.deletePersonalNote).toHaveBeenCalledWith('read-1');
@@ -100,14 +96,12 @@ describe('verse highlights and personal notes', () => {
     render(<VerseAnnotations verseId="Gen.1.1" />);
     expect(screen.getByText('Device storage is unavailable; notes cannot be saved.')).toBeDefined();
     expect(screen.getByText('Permission denied.')).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: /Highlight/ }));
-    expect(screen.getByRole('button', { name: 'Amber' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /Amber · Miracles/ }).hasAttribute('disabled')).toBe(true);
   });
 
   it('preserves the text and reports a failed new-note write', async () => {
     vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Notes' }));
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'Do not lose this');
     await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
     expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
@@ -121,7 +115,6 @@ describe('verse highlights and personal notes', () => {
     current([note]);
     vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Disk denied'));
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Draft after failed edit' } });
     fireEvent.blur(editor);
@@ -138,7 +131,6 @@ describe('verse highlights and personal notes', () => {
       vi.fn(() => false),
     );
     render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Delete note' }));
     expect(storage.deletePersonalNote).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
@@ -147,7 +139,6 @@ describe('verse highlights and personal notes', () => {
   it('flushes an unsaved edit when its verse panel closes', async () => {
     current([note]);
     const view = render(<VerseAnnotations verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByRole('button', { name: /Notes \(1\)/ }));
     const editor = screen.getByRole('textbox', { name: 'Notes' });
     fireEvent.change(editor, { target: { value: 'Keep this on navigation' } });
     view.unmount();
@@ -169,11 +160,25 @@ describe('colour-coded reading positions', () => {
       bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
     });
     render(<VerseAnnotations verseId="John.3.16" />);
-    await userEvent.click(screen.getByRole('button', { name: /Bookmark/ }));
     const group = screen.getByRole('group', { name: 'Reading bookmark colours' });
     expect(group).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: 'Green' }));
+    await userEvent.click(screen.getByRole('button', { name: /Green · Personal reading/ }));
     expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', 'John.3.16');
     expect(storage.setVerseHighlight).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('always-visible annotation composer', () => {
+  it('allows categorised note creation without expanding any menus', async () => {
+    current();
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'New note title' }), 'Creation');
+    await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'It was good');
+    await userEvent.type(screen.getByPlaceholderText('Choose or type…'), 'Questions');
+    await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
+    await waitFor(() => expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+      expect.objectContaining({title: 'Creation', category: 'Questions', verseId: 'Gen.1.1'})
+    ));
   });
 });
