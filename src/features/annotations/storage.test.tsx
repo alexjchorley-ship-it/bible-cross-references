@@ -602,3 +602,73 @@ describe('colour label and note metadata persistence', () => {
     expect(backup.annotations[0]?.category).toBe('Sermon');
   });
 });
+
+describe('safe colour meaning updates across devices', () => {
+  it('imports independently named colours from another full JSON backup', async () => {
+    installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:amber', 'Original');
+    const backup = JSON.stringify({
+      format: 'bible-study-annotations', schemaVersion: 3,
+      exportedAt: late, appVersion: '1.0',
+      annotations: [], highlights: [], bookmarks: [],
+      labels: [
+        { id: 'highlight:amber', name: 'Miracles', updatedAt: '2030-01-01T00:00:00Z' },
+        { id: 'bookmark:amber', name: 'Study group', updatedAt: '2030-01-01T00:00:00Z' },
+      ],
+    });
+    await storage.importAnnotations(backup);
+    const labels = parseAnnotationsBackup(await storage.exportAnnotations()).labels ?? [];
+    expect(labels.find((item) => item.id === 'highlight:amber')?.name).toBe('Miracles');
+    expect(labels.find((item) => item.id === 'bookmark:amber')?.name).toBe('Study group');
+  });
+
+  it('rejects empty colour meaning names before they are stored', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await expect(storage.setColorLabel('highlight:green', '  ')).rejects.toThrow('Invalid');
+    await expect(storage.setColorLabel('bad:red', 'Something')).rejects.toThrow('Invalid');
+    expect(fake.stores.labels.size).toBe(0);
+  });
+
+  it('deletes personal labels and retains their tombstones on clear-all', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:amber', 'Miracles');
+    await storage.setColorLabel('bookmark:blue', 'Personal reading');
+    await storage.deleteAllAnnotations();
+    expect(fake.stores.labels.size).toBe(0);
+    const removed = (await storage.exportCloudRecords()).filter((item) => item.kind === 'label');
+    expect(removed).toHaveLength(2);
+    expect(removed.every((item) => item.deleted)).toBe(true);
+  });
+
+  it('applies a later remote label deletion but not stale label changes', async () => {
+    installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.setColorLabel('highlight:green', 'Pray about it');
+    const latest = '2030-01-01T00:00:00Z';
+    await storage.applyCloudRecords([{
+      kind: 'label', item_id: 'highlight:green', verse_id: 'Gen.1.1',
+      color: null, body: null, created_at: latest, updated_at: latest, deleted: true,
+    }]);
+    expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
+    await storage.applyCloudRecords([{
+      kind: 'label', item_id: 'highlight:green', verse_id: 'Gen.1.1',
+      color: null, body: 'Old meaning', created_at: early, updated_at: early, deleted: false,
+    }]);
+    expect(parseAnnotationsBackup(await storage.exportAnnotations()).labels).toEqual([]);
+  });
+
+  it('ignores remote labels with invalid IDs or empty meanings', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.applyCloudRecords([
+      { kind: 'label', item_id: 'wrong:green', verse_id: 'Gen.1.1',
+        color: null, body: 'Something', created_at: late, updated_at: late, deleted: false },
+      { kind: 'label', item_id: 'bookmark:green', verse_id: 'Gen.1.1',
+        color: null, body: '', created_at: late, updated_at: late, deleted: false },
+    ]);
+    expect(fake.stores.labels.size).toBe(0);
+  });
+});
