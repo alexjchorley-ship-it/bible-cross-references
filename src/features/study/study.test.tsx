@@ -32,7 +32,10 @@ describe('source-backed theological study', () => {
 
   it('offers competing readings and links to their published research', async () => {
     render(<StudySection verseId="Gen.1.1" />);
-    await userEvent.click(screen.getByText('Theological study'));
+    const toggle = screen.getByRole('button', { name: /Theological study/ });
+    if (toggle.getAttribute('aria-expanded') === 'false') {
+      await userEvent.click(toggle);
+    }
     expect(screen.getByText('An independent opening statement')).toBeDefined();
     expect(screen.getByRole('heading', { name: /A dependent opening:/ })).toBeDefined();
     expect(screen.getAllByRole('link').length).toBeGreaterThan(3);
