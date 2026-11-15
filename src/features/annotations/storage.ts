@@ -550,6 +550,10 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
             updatedAt: row.updated_at,
           } satisfies PersonalNote);
           deletions.delete(id);
+        } else if (row.kind === 'label' && typeof row.body === 'string' &&
+          isColorLabel({ id: row.item_id, name: row.body, updatedAt: row.updated_at })) {
+          labels.put({ id: row.item_id, name: row.body, updatedAt: row.updated_at } satisfies ColorLabel);
+          deletions.delete(id);
         } else if (
           row.kind === 'bookmark' &&
           isHighlightColor(row.color) &&
