@@ -264,10 +264,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.colorDot[data-color='amber'] { --dot-colour: #e6b351; }
-.colorDot[data-color='green'] { --dot-colour: #5ca987; }
-.colorDot[data-color='blue'] { --dot-colour: #6ca8ed; }
-.colorDot[data-color='pink'] { --dot-colour: #d88bba; }
+.colorDot[data-color='amber'] {
+  --dot-colour: #e6b351;
+}
+.colorDot[data-color='green'] {
+  --dot-colour: #5ca987;
+}
+.colorDot[data-color='blue'] {
+  --dot-colour: #6ca8ed;
+}
+.colorDot[data-color='pink'] {
+  --dot-colour: #d88bba;
+}
 
 .colorDot[aria-pressed='true'] {
   outline: 2px solid var(--color-text);
@@ -300,7 +308,9 @@
   cursor: pointer;
   font: inherit;
 }
-.inlineComposer, .savedNotesArea, .savedNote {
+.inlineComposer,
+.savedNotesArea,
+.savedNote {
   display: grid;
   min-inline-size: 0;
   gap: var(--space-2);
@@ -328,7 +338,8 @@
   color: var(--color-text-muted);
   font-size: 0.75rem;
 }
-.noteTitle, .categoryInput {
+.noteTitle,
+.categoryInput {
   inline-size: 100%;
   box-sizing: border-box;
   min-block-size: 2.25rem;
@@ -340,7 +351,8 @@
   font: inherit;
   font-size: 0.85rem;
 }
-.noteTitle::placeholder, .categoryInput::placeholder {
+.noteTitle::placeholder,
+.categoryInput::placeholder {
   color: var(--color-text-muted);
 }
 .composerFooter .fieldLabel {

@@ -11,9 +11,16 @@ export interface ColorLabel {
   readonly updatedAt: string;
 }
 
-export const DEFAULT_COLOR_LABELS: Readonly<Record<ColorPurpose, Readonly<Record<HighlightColor, string>>>> = {
+export const DEFAULT_COLOR_LABELS: Readonly<
+  Record<ColorPurpose, Readonly<Record<HighlightColor, string>>>
+> = {
   highlight: { amber: 'Miracles', green: 'Prayer', blue: 'Promises', pink: 'Love' },
-  bookmark: { amber: 'Bible study', green: 'Personal reading', blue: 'Topical study', pink: 'Reflection' },
+  bookmark: {
+    amber: 'Bible study',
+    green: 'Personal reading',
+    blue: 'Topical study',
+    pink: 'Reflection',
+  },
 };
 
 export function colorLabel(
@@ -21,22 +28,30 @@ export function colorLabel(
   purpose: ColorPurpose,
   color: HighlightColor,
 ): string {
-  return labels.find((label) => label.id === `${purpose}:${color}`)?.name ??
-    DEFAULT_COLOR_LABELS[purpose][color];
+  return (
+    labels.find((label) => label.id === `${purpose}:${color}`)?.name ??
+    DEFAULT_COLOR_LABELS[purpose][color]
+  );
 }
 
 export function isColorLabel(value: unknown): value is ColorLabel {
-  return object(value) &&
+  return (
+    object(value) &&
     typeof value['id'] === 'string' &&
     /^(highlight|bookmark):(amber|green|blue|pink)$/.test(value['id']) &&
     typeof value['name'] === 'string' &&
     value['name'].trim().length > 0 &&
     value['name'].length <= 60 &&
-    isDate(value['updatedAt']);
+    isDate(value['updatedAt'])
+  );
 }
 
 export const SUGGESTED_NOTE_CATEGORIES = [
-  'Bible study', 'Sermon', 'Prayer', 'Questions', 'Personal reflection',
+  'Bible study',
+  'Sermon',
+  'Prayer',
+  'Questions',
+  'Personal reflection',
 ] as const;
 
 export interface VerseHighlight {
@@ -120,8 +135,10 @@ export function isPersonalNote(value: unknown): value is PersonalNote {
     isCanonicalVerseId(value['verseId']) &&
     typeof value['body'] === 'string' &&
     value['body'].length > 0 &&
-    (value['category'] === undefined || (typeof value['category'] === 'string' && value['category'].length <= 80)) &&
-    (value['title'] === undefined || (typeof value['title'] === 'string' && value['title'].length <= 120)) &&
+    (value['category'] === undefined ||
+      (typeof value['category'] === 'string' && value['category'].length <= 80)) &&
+    (value['title'] === undefined ||
+      (typeof value['title'] === 'string' && value['title'].length <= 120)) &&
     isDate(value['createdAt']) &&
     isDate(value['updatedAt'])
   );
@@ -133,7 +150,9 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
   if (
     !object(value) ||
     value['format'] !== 'bible-study-annotations' ||
-    (value['schemaVersion'] !== 1 && value['schemaVersion'] !== 2 && value['schemaVersion'] !== 3) ||
+    (value['schemaVersion'] !== 1 &&
+      value['schemaVersion'] !== 2 &&
+      value['schemaVersion'] !== 3) ||
     typeof value['appVersion'] !== 'string' ||
     !isDate(value['exportedAt']) ||
     !Array.isArray(value['annotations']) ||

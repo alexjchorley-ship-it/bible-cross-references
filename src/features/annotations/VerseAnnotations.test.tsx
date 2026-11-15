@@ -96,7 +96,9 @@ describe('verse highlights and personal notes', () => {
     render(<VerseAnnotations verseId="Gen.1.1" />);
     expect(screen.getByText('Device storage is unavailable; notes cannot be saved.')).toBeDefined();
     expect(screen.getByText('Permission denied.')).toBeDefined();
-    expect(screen.getByRole('button', { name: /Amber · Miracles/ }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /Amber · Miracles/ }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 
   it('preserves the text and reports a failed new-note write', async () => {
@@ -168,7 +170,6 @@ describe('colour-coded reading positions', () => {
   });
 });
 
-
 describe('always-visible annotation composer', () => {
   it('allows categorised note creation without expanding any menus', async () => {
     current();
@@ -177,8 +178,10 @@ describe('always-visible annotation composer', () => {
     await userEvent.type(screen.getByPlaceholderText('Write a note…'), 'It was good');
     await userEvent.type(screen.getByPlaceholderText('Choose or type…'), 'Questions');
     await userEvent.click(screen.getByRole('button', { name: 'Save new note' }));
-    await waitFor(() => expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
-      expect.objectContaining({title: 'Creation', category: 'Questions', verseId: 'Gen.1.1'})
-    ));
+    await waitFor(() =>
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Creation', category: 'Questions', verseId: 'Gen.1.1' }),
+      ),
+    );
   });
 });

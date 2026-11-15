@@ -295,7 +295,12 @@ export function deletePersonalNote(id: string): Promise<void> {
 export async function exportAnnotations(): Promise<string> {
   await pending;
   await requireDatabase();
-  return serializeAnnotationsBackup(snapshot.notes, snapshot.highlights, snapshot.bookmarks, snapshot.labels);
+  return serializeAnnotationsBackup(
+    snapshot.notes,
+    snapshot.highlights,
+    snapshot.bookmarks,
+    snapshot.labels,
+  );
 }
 
 /** Merge imports atomically; never destroy local records or replace newer timestamps. */
@@ -333,27 +338,31 @@ export async function importAnnotations(
       const removedAt = deleted.get(recordId('highlight', item.verseId));
       return !removedAt || item.updatedAt > removedAt;
     });
-    return write(db, ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'], (transaction) => {
-      const noteStore = transaction.objectStore('notes');
-      const highlightStore = transaction.objectStore('highlights');
-      const removalStore = transaction.objectStore('sync_deletions');
-      for (const label of labels) {
-        transaction.objectStore('labels').put(label);
-        removalStore.delete(recordId('label', label.id));
-      }
-      for (const bookmark of bookmarks) {
-        transaction.objectStore('bookmarks').put(bookmark);
-        removalStore.delete(recordId('bookmark', bookmark.color));
-      }
-      for (const note of notes) {
-        noteStore.put(note);
-        removalStore.delete(recordId('note', note.id));
-      }
-      for (const highlight of highlights) {
-        highlightStore.put(highlight);
-        removalStore.delete(recordId('highlight', highlight.verseId));
-      }
-    });
+    return write(
+      db,
+      ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'],
+      (transaction) => {
+        const noteStore = transaction.objectStore('notes');
+        const highlightStore = transaction.objectStore('highlights');
+        const removalStore = transaction.objectStore('sync_deletions');
+        for (const label of labels) {
+          transaction.objectStore('labels').put(label);
+          removalStore.delete(recordId('label', label.id));
+        }
+        for (const bookmark of bookmarks) {
+          transaction.objectStore('bookmarks').put(bookmark);
+          removalStore.delete(recordId('bookmark', bookmark.color));
+        }
+        for (const note of notes) {
+          noteStore.put(note);
+          removalStore.delete(recordId('note', note.id));
+        }
+        for (const highlight of highlights) {
+          highlightStore.put(highlight);
+          removalStore.delete(recordId('highlight', highlight.verseId));
+        }
+      },
+    );
   });
   return { notes: backup.annotations.length, highlights: backup.highlights.length };
 }
@@ -399,10 +408,12 @@ export function setReadingBookmark(
 export function setColorLabel(id: string, name: string): Promise<void> {
   const label: ColorLabel = { id, name: name.trim(), updatedAt: new Date().toISOString() };
   if (!isColorLabel(label)) return Promise.reject(new Error('Invalid colour label.'));
-  return enqueue((db) => write(db, ['labels', 'sync_deletions'], (transaction) => {
-    transaction.objectStore('labels').put(label);
-    transaction.objectStore('sync_deletions').delete(recordId('label', id));
-  }));
+  return enqueue((db) =>
+    write(db, ['labels', 'sync_deletions'], (transaction) => {
+      transaction.objectStore('labels').put(label);
+      transaction.objectStore('sync_deletions').delete(recordId('label', id));
+    }),
+  );
 }
 
 export function deleteAllAnnotations(): Promise<void> {
@@ -450,9 +461,17 @@ export function deleteAllAnnotations(): Promise<void> {
         } satisfies DeletionRecord);
       }
       for (const label of snapshot.labels ?? []) {
-        store.put({ id: recordId('label', label.id), kind: 'label',
-          item_id: label.id, verse_id: 'Gen.1.1', body: null, color: null,
-          created_at: label.updatedAt, updated_at: now, deleted: true } satisfies DeletionRecord);
+        store.put({
+          id: recordId('label', label.id),
+          kind: 'label',
+          item_id: label.id,
+          verse_id: 'Gen.1.1',
+          body: null,
+          color: null,
+          created_at: label.updatedAt,
+          updated_at: now,
+          deleted: true,
+        } satisfies DeletionRecord);
       }
       transaction.objectStore('labels').clear();
       transaction.objectStore('bookmarks').clear();
@@ -500,9 +519,14 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
       deleted: false,
     })),
     ...(snapshot.labels ?? []).map((label) => ({
-      kind: 'label' as const, item_id: label.id, verse_id: 'Gen.1.1',
-      body: label.name, color: null, created_at: label.updatedAt,
-      updated_at: label.updatedAt, deleted: false,
+      kind: 'label' as const,
+      item_id: label.id,
+      verse_id: 'Gen.1.1',
+      body: label.name,
+      color: null,
+      created_at: label.updatedAt,
+      updated_at: label.updatedAt,
+      deleted: false,
     })),
     ...tombstones,
   ];
@@ -521,60 +545,71 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
     const local = new Map(
       (await exportCloudRecordsUnsafe(db)).map((row) => [recordId(row.kind, row.item_id), row]),
     );
-    await write(db, ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'], (transaction) => {
-      const notes = transaction.objectStore('notes');
-      const highlights = transaction.objectStore('highlights');
-      const bookmarks = transaction.objectStore('bookmarks');
-      const labels = transaction.objectStore('labels');
-      const deletions = transaction.objectStore('sync_deletions');
-      for (const row of remote) {
-        if (!isCanonicalVerseId(row.verse_id) || !Number.isFinite(Date.parse(row.updated_at)))
-          continue;
-        const id = recordId(row.kind, row.item_id);
-        const previous = local.get(id);
-        if (previous && previous.updated_at > row.updated_at) continue;
-        if (row.deleted) {
-          if (row.kind === 'note') notes.delete(row.item_id);
-          else if (row.kind === 'highlight') highlights.delete(row.item_id);
-          else if (row.kind === 'bookmark') bookmarks.delete(row.item_id);
-          else labels.delete(row.item_id);
-          deletions.put({ ...row, id } satisfies DeletionRecord);
-        } else if (row.kind === 'note' && typeof row.body === 'string' && row.body.length > 0) {
-          notes.put({
-            id: row.item_id,
-            verseId: row.verse_id,
-            body: row.body,
-            ...(row.category ? { category: row.category } : {}),
-            ...(row.title ? { title: row.title } : {}),
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-          } satisfies PersonalNote);
-          deletions.delete(id);
-        } else if (row.kind === 'label' && typeof row.body === 'string' &&
-          isColorLabel({ id: row.item_id, name: row.body, updatedAt: row.updated_at })) {
-          labels.put({ id: row.item_id, name: row.body, updatedAt: row.updated_at } satisfies ColorLabel);
-          deletions.delete(id);
-        } else if (
-          row.kind === 'bookmark' &&
-          isHighlightColor(row.color) &&
-          row.item_id === row.color
-        ) {
-          bookmarks.put({
-            color: row.color,
-            verseId: row.verse_id,
-            updatedAt: row.updated_at,
-          } satisfies ReadingBookmark);
-          deletions.delete(id);
-        } else if (row.kind === 'highlight' && row.color !== null) {
-          highlights.put({
-            verseId: row.verse_id,
-            color: row.color,
-            updatedAt: row.updated_at,
-          } satisfies VerseHighlight);
-          deletions.delete(id);
+    await write(
+      db,
+      ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'],
+      (transaction) => {
+        const notes = transaction.objectStore('notes');
+        const highlights = transaction.objectStore('highlights');
+        const bookmarks = transaction.objectStore('bookmarks');
+        const labels = transaction.objectStore('labels');
+        const deletions = transaction.objectStore('sync_deletions');
+        for (const row of remote) {
+          if (!isCanonicalVerseId(row.verse_id) || !Number.isFinite(Date.parse(row.updated_at)))
+            continue;
+          const id = recordId(row.kind, row.item_id);
+          const previous = local.get(id);
+          if (previous && previous.updated_at > row.updated_at) continue;
+          if (row.deleted) {
+            if (row.kind === 'note') notes.delete(row.item_id);
+            else if (row.kind === 'highlight') highlights.delete(row.item_id);
+            else if (row.kind === 'bookmark') bookmarks.delete(row.item_id);
+            else labels.delete(row.item_id);
+            deletions.put({ ...row, id } satisfies DeletionRecord);
+          } else if (row.kind === 'note' && typeof row.body === 'string' && row.body.length > 0) {
+            notes.put({
+              id: row.item_id,
+              verseId: row.verse_id,
+              body: row.body,
+              ...(row.category ? { category: row.category } : {}),
+              ...(row.title ? { title: row.title } : {}),
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+            } satisfies PersonalNote);
+            deletions.delete(id);
+          } else if (
+            row.kind === 'label' &&
+            typeof row.body === 'string' &&
+            isColorLabel({ id: row.item_id, name: row.body, updatedAt: row.updated_at })
+          ) {
+            labels.put({
+              id: row.item_id,
+              name: row.body,
+              updatedAt: row.updated_at,
+            } satisfies ColorLabel);
+            deletions.delete(id);
+          } else if (
+            row.kind === 'bookmark' &&
+            isHighlightColor(row.color) &&
+            row.item_id === row.color
+          ) {
+            bookmarks.put({
+              color: row.color,
+              verseId: row.verse_id,
+              updatedAt: row.updated_at,
+            } satisfies ReadingBookmark);
+            deletions.delete(id);
+          } else if (row.kind === 'highlight' && row.color !== null) {
+            highlights.put({
+              verseId: row.verse_id,
+              color: row.color,
+              updatedAt: row.updated_at,
+            } satisfies VerseHighlight);
+            deletions.delete(id);
+          }
         }
-      }
-    });
+      },
+    );
   }, false);
 }
 
@@ -620,9 +655,14 @@ async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotatio
       deleted: false,
     })),
     ...labels.map((label) => ({
-      kind: 'label' as const, item_id: label.id, verse_id: 'Gen.1.1',
-      body: label.name, color: null, created_at: label.updatedAt,
-      updated_at: label.updatedAt, deleted: false,
+      kind: 'label' as const,
+      item_id: label.id,
+      verse_id: 'Gen.1.1',
+      body: label.name,
+      color: null,
+      created_at: label.updatedAt,
+      updated_at: label.updatedAt,
+      deleted: false,
     })),
     ...deletions,
   ];

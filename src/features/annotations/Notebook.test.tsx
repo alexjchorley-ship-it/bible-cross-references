@@ -263,23 +263,32 @@ describe('searchable and exportable personal notebook', () => {
   });
 });
 
-
 describe('notebook enhancements', () => {
   it('filters notes by category and changes their colour meanings', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
       ...snapshot,
-      notes: [{ ...snapshot.notes[0]!, category: 'Prayer', title: 'Morning prayer' },
-        { ...snapshot.notes[1]!, category: 'Sermon' }],
+      notes: [
+        { ...snapshot.notes[0]!, category: 'Prayer', title: 'Morning prayer' },
+        { ...snapshot.notes[1]!, category: 'Sermon' },
+      ],
     });
     render(<Notebook open onClose={vi.fn()} onOpenVerse={vi.fn()} />);
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Filter note category' }), 'Prayer');
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Filter note category' }),
+      'Prayer',
+    );
     expect(screen.getByText('Morning prayer')).toBeDefined();
     expect(screen.queryByText('God so loved')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Customise colours' }));
     await userEvent.clear(screen.getByRole('textbox', { name: 'amber highlight meaning' }));
-    await userEvent.type(screen.getByRole('textbox', { name: 'amber highlight meaning' }), 'Miracles of Jesus');
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'amber highlight meaning' }),
+      'Miracles of Jesus',
+    );
     const section = screen.getByRole('region', { name: 'Colour meanings' });
-    await userEvent.click(within(section).getAllByRole('button', {name: 'Save'})[0]!);
-    await waitFor(() => expect(storage.setColorLabel).toHaveBeenCalledWith('highlight:amber', 'Miracles of Jesus'));
+    await userEvent.click(within(section).getAllByRole('button', { name: 'Save' })[0]!);
+    await waitFor(() =>
+      expect(storage.setColorLabel).toHaveBeenCalledWith('highlight:amber', 'Miracles of Jesus'),
+    );
   });
 });

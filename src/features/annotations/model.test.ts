@@ -134,7 +134,6 @@ describe('canonical annotations and backups', () => {
   });
 });
 
-
 describe('note categories and separate colour meanings', () => {
   it('supports named colours and keeps old backups valid', () => {
     const noteWithCategory = { ...note, category: 'Prayer', title: 'A reflection' };
@@ -147,9 +146,13 @@ describe('note categories and separate colour meanings', () => {
     expect(restored.annotations[0]?.category).toBe('Prayer');
     expect(restored.labels).toEqual(labels);
     const old = JSON.stringify({
-      format: 'bible-study-annotations', schemaVersion: 2,
-      exportedAt: LATE, appVersion: '1.0', bookmarks: [],
-      annotations: [note], highlights: [highlight],
+      format: 'bible-study-annotations',
+      schemaVersion: 2,
+      exportedAt: LATE,
+      appVersion: '1.0',
+      bookmarks: [],
+      annotations: [note],
+      highlights: [highlight],
     });
     expect(parseAnnotationsBackup(old).labels).toEqual([]);
   });

@@ -58,7 +58,8 @@ function installIndexedDB() {
           if (
             name !== 'notes' &&
             name !== 'highlights' &&
-            name !== 'bookmarks' && name !== 'labels' &&
+            name !== 'bookmarks' &&
+            name !== 'labels' &&
             name !== 'sync_deletions'
           ) {
             throw new Error('Unknown store');
@@ -544,7 +545,6 @@ describe('bookmark cloud deletion and backup safety', () => {
   });
 });
 
-
 describe('colour label and note metadata persistence', () => {
   it('keeps a name for each colour purpose independent and cloud-exportable', async () => {
     const fake = installIndexedDB();
@@ -575,14 +575,26 @@ describe('colour label and note metadata persistence', () => {
     const store = await import('./storage.ts');
     await store.applyCloudRecords([
       {
-        kind: 'label', item_id: 'highlight:blue', verse_id: 'Gen.1.1',
-        body: 'God\'s promises', color: null,
-        created_at: late, updated_at: late, deleted: false,
+        kind: 'label',
+        item_id: 'highlight:blue',
+        verse_id: 'Gen.1.1',
+        body: "God's promises",
+        color: null,
+        created_at: late,
+        updated_at: late,
+        deleted: false,
       },
       {
-        kind: 'note', item_id: 'remote-note', verse_id: 'John.3.16',
-        body: 'God loves the world', color: null, category: 'Sermon',
-        title: 'Sunday message', created_at: late, updated_at: late, deleted: false,
+        kind: 'note',
+        item_id: 'remote-note',
+        verse_id: 'John.3.16',
+        body: 'God loves the world',
+        color: null,
+        category: 'Sermon',
+        title: 'Sunday message',
+        created_at: late,
+        updated_at: late,
+        deleted: false,
       },
     ]);
     const backup = parseAnnotationsBackup(await store.exportAnnotations());

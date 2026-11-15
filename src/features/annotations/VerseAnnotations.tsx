@@ -32,7 +32,11 @@ function ColourDots({
   readonly onSelect: (color: HighlightColor) => void;
 }) {
   return (
-    <div className={styles.dotPalette} role="group" aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}>
+    <div
+      className={styles.dotPalette}
+      role="group"
+      aria-label={purpose === 'highlight' ? 'Highlight colours' : 'Reading bookmark colours'}
+    >
       {HIGHLIGHT_COLORS.map((color) => (
         <button
           key={color}
@@ -43,14 +47,19 @@ function ColourDots({
           title={colorLabel(labels, purpose, color)}
           aria-pressed={selected.includes(color)}
           disabled={disabled}
-          onClick={() => { onSelect(color); }}
+          onClick={() => {
+            onSelect(color);
+          }}
         />
       ))}
     </div>
   );
 }
 
-function SavedNote({ note, categories }: {
+function SavedNote({
+  note,
+  categories,
+}: {
   readonly note: PersonalNote;
   readonly categories: readonly string[];
 }) {
@@ -60,11 +69,11 @@ function SavedNote({ note, categories }: {
   const [title, setTitle] = useState(note.title ?? '');
   const [state, setState] = useState<'saved' | 'saving' | 'error'>('saved');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const unsaved = useRef<{body: string; category: string; title: string} | null>(null);
+  const unsaved = useRef<{ body: string; category: string; title: string } | null>(null);
   const mounted = useRef(true);
   const categoryListId = useId();
 
-  async function persist(value: {body: string; category: string; title: string}): Promise<void> {
+  async function persist(value: { body: string; category: string; title: string }): Promise<void> {
     try {
       await upsertPersonalNote({
         ...note,
@@ -95,12 +104,14 @@ function SavedNote({ note, categories }: {
     setDraft(body);
     setCategory(nextCategory);
     setTitle(nextTitle);
-    const value = {body, category: nextCategory, title: nextTitle};
+    const value = { body, category: nextCategory, title: nextTitle };
     unsaved.current = value;
     setState(body.trim() ? 'saving' : 'error');
     if (timer.current !== null) clearTimeout(timer.current);
     if (!body.trim()) return;
-    timer.current = setTimeout(() => { void persist(value); }, 500);
+    timer.current = setTimeout(() => {
+      void persist(value);
+    }, 500);
   }
 
   return (
@@ -111,14 +122,18 @@ function SavedNote({ note, categories }: {
         placeholder="Untitled note"
         maxLength={120}
         value={title}
-        onChange={(event) => { edit(draft, category, event.target.value); }}
+        onChange={(event) => {
+          edit(draft, category, event.target.value);
+        }}
       />
       <textarea
         aria-label={t('annotations.notes')}
         className={styles.textarea}
         value={draft}
         rows={Math.max(3, draft.split('\n').length)}
-        onChange={(event) => { edit(event.target.value, category, title); }}
+        onChange={(event) => {
+          edit(event.target.value, category, title);
+        }}
         onBlur={() => {
           if (timer.current !== null) clearTimeout(timer.current);
           if (unsaved.current?.body.trim()) void persist(unsaved.current);
@@ -132,19 +147,31 @@ function SavedNote({ note, categories }: {
           maxLength={80}
           value={category}
           placeholder="Choose or type a category"
-          onChange={(event) => { edit(draft, event.target.value, title); }}
+          onChange={(event) => {
+            edit(draft, event.target.value, title);
+          }}
         />
         <datalist id={categoryListId}>
-          {categories.map((name) => <option key={name} value={name} />)}
+          {categories.map((name) => (
+            <option key={name} value={name} />
+          ))}
         </datalist>
       </label>
       <div className={styles.noteFooter}>
         <span role="status">
-          {state === 'saved' ? t('annotations.saved') : state === 'saving' ? t('annotations.saving') : t('annotations.error')}
+          {state === 'saved'
+            ? t('annotations.saved')
+            : state === 'saving'
+              ? t('annotations.saving')
+              : t('annotations.error')}
         </span>
-        <button type="button" className={styles.smallButton} onClick={() => {
-          if (window.confirm(t('annotations.delete') + '?')) void deletePersonalNote(note.id);
-        }}>
+        <button
+          type="button"
+          className={styles.smallButton}
+          onClick={() => {
+            if (window.confirm(t('annotations.delete') + '?')) void deletePersonalNote(note.id);
+          }}
+        >
           {t('annotations.delete')}
         </button>
       </div>
@@ -164,9 +191,18 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
   const [localError, setLocalError] = useState<string | null>(null);
   const categoryListId = useId();
   const highlight = highlights.find((entry) => entry.verseId === verseId)?.color ?? null;
-  const verseBookmarks = bookmarks.filter((bookmark) => bookmark.verseId === verseId).map((entry) => entry.color);
-  const verseNotes = notes.filter((note) => note.verseId === verseId).toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const categories = [...new Set([...SUGGESTED_NOTE_CATEGORIES, ...notes.map((note) => note.category ?? '').filter(Boolean)])].toSorted();
+  const verseBookmarks = bookmarks
+    .filter((bookmark) => bookmark.verseId === verseId)
+    .map((entry) => entry.color);
+  const verseNotes = notes
+    .filter((note) => note.verseId === verseId)
+    .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const categories = [
+    ...new Set([
+      ...SUGGESTED_NOTE_CATEGORIES,
+      ...notes.map((note) => note.category ?? '').filter(Boolean),
+    ]),
+  ].toSorted();
   const displayedNotes = allNotes ? verseNotes : verseNotes.slice(0, 1);
 
   async function createNote(): Promise<void> {
@@ -176,9 +212,13 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
     const now = new Date().toISOString();
     try {
       await upsertPersonalNote({
-        id: crypto.randomUUID(), verseId,
-        body: newText.trim(), category: newCategory.trim(), title: newTitle.trim(),
-        createdAt: now, updatedAt: now,
+        id: crypto.randomUUID(),
+        verseId,
+        body: newText.trim(),
+        category: newCategory.trim(),
+        title: newTitle.trim(),
+        createdAt: now,
+        updatedAt: now,
       });
       setNewText('');
       setNewTitle('');
@@ -197,31 +237,52 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
       <div className={styles.annotationColourRow}>
         <span className={styles.annotationLabel}>{t('annotations.highlight')}</span>
         <ColourDots
-          purpose="highlight" labels={labels}
+          purpose="highlight"
+          labels={labels}
           selected={highlight ? [highlight] : []}
           disabled={status !== 'ready'}
-          onSelect={(color) => { void setVerseHighlight(verseId, highlight === color ? null : color); }}
+          onSelect={(color) => {
+            void setVerseHighlight(verseId, highlight === color ? null : color);
+          }}
         />
-        {highlight && <button className={styles.clearDot} type="button" onClick={() => { void setVerseHighlight(verseId, null); }} aria-label={t('annotations.remove')}>×</button>}
+        {highlight && (
+          <button
+            className={styles.clearDot}
+            type="button"
+            onClick={() => {
+              void setVerseHighlight(verseId, null);
+            }}
+            aria-label={t('annotations.remove')}
+          >
+            ×
+          </button>
+        )}
       </div>
       <div className={styles.annotationColourRow}>
         <span className={styles.annotationLabel}>Bookmark</span>
         <ColourDots
-          purpose="bookmark" labels={labels}
+          purpose="bookmark"
+          labels={labels}
           selected={verseBookmarks}
           disabled={status !== 'ready'}
-          onSelect={(color) => { void setReadingBookmark(color, verseBookmarks.includes(color) ? null : verseId); }}
+          onSelect={(color) => {
+            void setReadingBookmark(color, verseBookmarks.includes(color) ? null : verseId);
+          }}
         />
       </div>
       <div className={styles.inlineComposer}>
-        <h3 className={styles.composerHeading}>{t('annotations.notes')} {verseNotes.length > 0 && <span>({verseNotes.length})</span>}</h3>
+        <h3 className={styles.composerHeading}>
+          {t('annotations.notes')} {verseNotes.length > 0 && <span>({verseNotes.length})</span>}
+        </h3>
         <input
           aria-label="New note title"
           className={styles.noteTitle}
           placeholder="Title (optional)"
           maxLength={120}
           value={newTitle}
-          onChange={(event) => { setNewTitle(event.target.value); }}
+          onChange={(event) => {
+            setNewTitle(event.target.value);
+          }}
         />
         <textarea
           className={styles.textarea}
@@ -229,7 +290,9 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
           placeholder={t('annotations.new')}
           value={newText}
           rows={3}
-          onChange={(event) => { setNewText(event.target.value); }}
+          onChange={(event) => {
+            setNewText(event.target.value);
+          }}
         />
         <div className={styles.composerFooter}>
           <label className={styles.fieldLabel}>
@@ -240,22 +303,42 @@ export function VerseAnnotations({ verseId }: { readonly verseId: string }) {
               maxLength={80}
               placeholder="Choose or type…"
               value={newCategory}
-              onChange={(event) => { setNewCategory(event.target.value); }}
+              onChange={(event) => {
+                setNewCategory(event.target.value);
+              }}
             />
             <datalist id={categoryListId}>
-              {categories.map((name) => <option key={name} value={name} />)}
+              {categories.map((name) => (
+                <option key={name} value={name} />
+              ))}
             </datalist>
           </label>
-          <button type="button" className={styles.button} disabled={!newText.trim() || busy || status !== 'ready'} onClick={() => { void createNote(); }}>
+          <button
+            type="button"
+            className={styles.button}
+            disabled={!newText.trim() || busy || status !== 'ready'}
+            onClick={() => {
+              void createNote();
+            }}
+          >
             {busy ? t('annotations.saving') : t('annotations.add')}
           </button>
         </div>
         {verseNotes.length > 0 && (
           <div className={styles.savedNotesArea}>
             <h4>Saved notes</h4>
-            {displayedNotes.map((note) => <SavedNote key={note.id} note={note} categories={categories} />)}
+            {displayedNotes.map((note) => (
+              <SavedNote key={note.id} note={note} categories={categories} />
+            ))}
             {verseNotes.length > 1 && (
-              <button type="button" className={styles.smallButton} aria-expanded={allNotes} onClick={() => { setAllNotes(!allNotes); }}>
+              <button
+                type="button"
+                className={styles.smallButton}
+                aria-expanded={allNotes}
+                onClick={() => {
+                  setAllNotes(!allNotes);
+                }}
+              >
                 {allNotes ? 'Show latest note only' : `Show all ${verseNotes.length} notes`}
               </button>
             )}

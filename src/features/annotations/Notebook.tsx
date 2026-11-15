@@ -2,7 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import { CANONICAL_VERSIFICATION } from '../../core/bible/versification.ts';
 import { useLocalization } from '../../i18n/use-locale.tsx';
-import { HIGHLIGHT_COLORS, colorLabel, SUGGESTED_NOTE_CATEGORIES, parseAnnotationsBackup, type ColorPurpose, type ColorLabel, type PersonalNote, type HighlightColor } from './model.ts';
+import {
+  HIGHLIGHT_COLORS,
+  colorLabel,
+  SUGGESTED_NOTE_CATEGORIES,
+  parseAnnotationsBackup,
+  type ColorPurpose,
+  type ColorLabel,
+  type PersonalNote,
+  type HighlightColor,
+} from './model.ts';
 import {
   deleteAllAnnotations,
   exportAnnotations,
@@ -18,7 +27,11 @@ import { CloudSyncPanel } from './CloudSyncPanel.tsx';
 
 type ColourFilter = HighlightColor | 'all';
 
-function ColourLabelEditor({ purpose, color, labels }: {
+function ColourLabelEditor({
+  purpose,
+  color,
+  labels,
+}: {
   readonly purpose: ColorPurpose;
   readonly color: HighlightColor;
   readonly labels: readonly ColorLabel[];
@@ -28,28 +41,54 @@ function ColourLabelEditor({ purpose, color, labels }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   return (
-    <form className={styles.labelEditor} onSubmit={(event) => {
-      event.preventDefault();
-      if (!value.trim()) return;
-      setBusy(true);
-      void setColorLabel(`${purpose}:${color}`, value).then(
-        () => { setBusy(false); setError(''); },
-        () => { setBusy(false); setError('Could not save label'); },
-      );
-    }}>
+    <form
+      className={styles.labelEditor}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!value.trim()) return;
+        setBusy(true);
+        void setColorLabel(`${purpose}:${color}`, value).then(
+          () => {
+            setBusy(false);
+            setError('');
+          },
+          () => {
+            setBusy(false);
+            setError('Could not save label');
+          },
+        );
+      }}
+    >
       <span className={styles.colorDot} data-color={color} aria-hidden="true" />
       <label className={styles.fieldLabel}>
         {color.charAt(0).toUpperCase() + color.slice(1)} {purpose}
-        <input className={styles.categoryInput} maxLength={60} aria-label={`${color} ${purpose} meaning`}
-          value={value} onChange={(event) => { setValue(event.target.value); }} />
+        <input
+          className={styles.categoryInput}
+          maxLength={60}
+          aria-label={`${color} ${purpose} meaning`}
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+        />
       </label>
-      <button className={styles.smallButton} type="submit" disabled={busy || !value.trim() || value === resolved}>Save</button>
+      <button
+        className={styles.smallButton}
+        type="submit"
+        disabled={busy || !value.trim() || value === resolved}
+      >
+        Save
+      </button>
       {error && <span role="alert">{error}</span>}
     </form>
   );
 }
 
-function NotebookNote({note, categories, onError}: {
+function NotebookNote({
+  note,
+  categories,
+  onError,
+}: {
   readonly note: PersonalNote;
   readonly categories: readonly string[];
   readonly onError: (error: string) => void;
@@ -63,8 +102,13 @@ function NotebookNote({note, categories, onError}: {
     if (!body.trim()) return;
     setSaving(true);
     try {
-      await upsertPersonalNote({ ...note, body: body.trim(), title: title.trim(),
-        category: category.trim(), updatedAt: new Date().toISOString() });
+      await upsertPersonalNote({
+        ...note,
+        body: body.trim(),
+        title: title.trim(),
+        category: category.trim(),
+        updatedAt: new Date().toISOString(),
+      });
       setEditing(false);
     } catch {
       onError('Could not update note. Your edits are still shown.');
@@ -81,39 +125,93 @@ function NotebookNote({note, categories, onError}: {
           <p>{note.body}</p>
           <div className={styles.noteFooter}>
             <time dateTime={note.updatedAt}>{new Date(note.updatedAt).toLocaleDateString()}</time>
-            <button className={styles.smallButton} type="button" onClick={() => { setEditing(true); }}>Edit note</button>
+            <button
+              className={styles.smallButton}
+              type="button"
+              onClick={() => {
+                setEditing(true);
+              }}
+            >
+              Edit note
+            </button>
           </div>
         </>
       ) : (
         <>
-          <input aria-label="Edit note title" className={styles.noteTitle} maxLength={120}
-            value={title} onChange={(event) => { setTitle(event.target.value); }} />
-          <textarea aria-label="Edit note text" className={styles.textarea} rows={4}
-            value={body} onChange={(event) => { setBody(event.target.value); }} />
+          <input
+            aria-label="Edit note title"
+            className={styles.noteTitle}
+            maxLength={120}
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+            }}
+          />
+          <textarea
+            aria-label="Edit note text"
+            className={styles.textarea}
+            rows={4}
+            value={body}
+            onChange={(event) => {
+              setBody(event.target.value);
+            }}
+          />
           <label className={styles.fieldLabel}>
             Category
-            <input className={styles.categoryInput} maxLength={80} value={category}
-              list="notebook-note-categories" onChange={(event) => { setCategory(event.target.value); }} />
+            <input
+              className={styles.categoryInput}
+              maxLength={80}
+              value={category}
+              list="notebook-note-categories"
+              onChange={(event) => {
+                setCategory(event.target.value);
+              }}
+            />
           </label>
           <datalist id="notebook-note-categories">
-            {categories.map((name) => <option key={name} value={name} />)}
+            {categories.map((name) => (
+              <option key={name} value={name} />
+            ))}
           </datalist>
           <div className={styles.notebookActions}>
-            <button className={styles.button} type="button" disabled={saving || !body.trim()}
-              onClick={() => { void save(); }}>Save changes</button>
-            <button className={styles.smallButton} type="button" onClick={() => { setEditing(false); }}>Cancel</button>
-            <button className={styles.smallButton} type="button" onClick={() => {
-              if (window.confirm('Delete this note?')) {
-                void deletePersonalNote(note.id).catch(() => { onError('Could not delete note.'); });
-              }
-            }}>Delete note</button>
+            <button
+              className={styles.button}
+              type="button"
+              disabled={saving || !body.trim()}
+              onClick={() => {
+                void save();
+              }}
+            >
+              Save changes
+            </button>
+            <button
+              className={styles.smallButton}
+              type="button"
+              onClick={() => {
+                setEditing(false);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.smallButton}
+              type="button"
+              onClick={() => {
+                if (window.confirm('Delete this note?')) {
+                  void deletePersonalNote(note.id).catch(() => {
+                    onError('Could not delete note.');
+                  });
+                }
+              }}
+            >
+              Delete note
+            </button>
           </div>
         </>
       )}
     </article>
   );
 }
-
 
 export function Notebook({
   open,
@@ -127,7 +225,14 @@ export function Notebook({
   const { t } = useLocalization();
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const { notes, highlights, bookmarks, labels = [], status, error: storageError } = useAnnotations();
+  const {
+    notes,
+    highlights,
+    bookmarks,
+    labels = [],
+    status,
+    error: storageError,
+  } = useAnnotations();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ColourFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -148,7 +253,12 @@ export function Notebook({
     }
   }, [open]);
 
-  const categories = [...new Set([...SUGGESTED_NOTE_CATEGORIES, ...notes.map((note) => note.category ?? '').filter(Boolean)])].toSorted();
+  const categories = [
+    ...new Set([
+      ...SUGGESTED_NOTE_CATEGORIES,
+      ...notes.map((note) => note.category ?? '').filter(Boolean),
+    ]),
+  ].toSorted();
 
   const rows = useMemo(() => {
     const colors = new Map(highlights.map((highlight) => [highlight.verseId, highlight.color]));
@@ -163,7 +273,8 @@ export function Notebook({
       .filter(
         (row) =>
           (filter === 'all' || row.color === filter) &&
-          (categoryFilter === 'all' || row.notes.some((note) => note.category === categoryFilter)) &&
+          (categoryFilter === 'all' ||
+            row.notes.some((note) => note.category === categoryFilter)) &&
           (query === '' ||
             row.verseId.toLowerCase().includes(query) ||
             row.notes.some((note) => note.body.toLowerCase().includes(query))),
@@ -275,9 +386,14 @@ export function Notebook({
       <section className={styles.section} aria-label="Colour meanings">
         <div className={styles.notebookHeader}>
           <h3>Highlight and bookmark meanings</h3>
-          <button type="button" className={styles.smallButton}
+          <button
+            type="button"
+            className={styles.smallButton}
             aria-expanded={configureColors}
-            onClick={() => { setConfigureColors(!configureColors); }}>
+            onClick={() => {
+              setConfigureColors(!configureColors);
+            }}
+          >
             {configureColors ? 'Close' : 'Customise colours'}
           </button>
         </div>
@@ -285,8 +401,12 @@ export function Notebook({
           <div className={styles.labelEditorGrid}>
             {(['highlight', 'bookmark'] as const).flatMap((purpose) =>
               HIGHLIGHT_COLORS.map((color) => (
-                <ColourLabelEditor key={`${purpose}:${color}`} purpose={purpose}
-                  color={color} labels={labels} />
+                <ColourLabelEditor
+                  key={`${purpose}:${color}`}
+                  purpose={purpose}
+                  color={color}
+                  labels={labels}
+                />
               )),
             )}
           </div>
@@ -347,50 +467,66 @@ export function Notebook({
       </div>
       <h3 className={styles.notebookSectionHeading}>My notes & highlights</h3>
       <div className={styles.notebookFilters}>
-      <input
-        type="search"
-        className={styles.search}
-        style={{ minBlockSize: '2.5rem' }}
-        aria-label={t('annotations.search')}
-        placeholder={t('annotations.search')}
-        value={search}
-        onChange={(event) => {
-          setSearch(event.target.value);
-        }}
-      />
-      <select
-        aria-label={t('annotations.highlight')}
-        className={styles.button}
-        value={filter}
-        onChange={(event) => {
-          setFilter(event.target.value as ColourFilter);
-        }}
-      >
-        <option value="all">{t('menu.filters.votes.all')}</option>
-        {HIGHLIGHT_COLORS.map((color) => (
-          <option key={color} value={color}>
-            {t(
-              color === 'amber'
-                ? 'annotations.amber'
-                : color === 'green'
-                  ? 'annotations.green'
-                  : color === 'blue'
-                    ? 'annotations.blue'
-                    : 'annotations.pink',
-            )}
-          </option>
-        ))}
-      </select>
-      <select className={styles.categoryInput} aria-label="Filter note category"
-        value={categoryFilter} onChange={(event) => { setCategoryFilter(event.target.value); }}>
-        <option value="all">All note categories</option>
-        {categories.map((name) => <option key={name} value={name}>{name}</option>)}
-      </select>
-      <select className={styles.categoryInput} aria-label="Sort notes" value={sort}
-        onChange={(event) => { setSort(event.target.value as 'bible' | 'recent'); }}>
-        <option value="recent">Recently updated</option>
-        <option value="bible">Bible order</option>
-      </select>
+        <input
+          type="search"
+          className={styles.search}
+          style={{ minBlockSize: '2.5rem' }}
+          aria-label={t('annotations.search')}
+          placeholder={t('annotations.search')}
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+          }}
+        />
+        <select
+          aria-label={t('annotations.highlight')}
+          className={styles.button}
+          value={filter}
+          onChange={(event) => {
+            setFilter(event.target.value as ColourFilter);
+          }}
+        >
+          <option value="all">{t('menu.filters.votes.all')}</option>
+          {HIGHLIGHT_COLORS.map((color) => (
+            <option key={color} value={color}>
+              {t(
+                color === 'amber'
+                  ? 'annotations.amber'
+                  : color === 'green'
+                    ? 'annotations.green'
+                    : color === 'blue'
+                      ? 'annotations.blue'
+                      : 'annotations.pink',
+              )}
+            </option>
+          ))}
+        </select>
+        <select
+          className={styles.categoryInput}
+          aria-label="Filter note category"
+          value={categoryFilter}
+          onChange={(event) => {
+            setCategoryFilter(event.target.value);
+          }}
+        >
+          <option value="all">All note categories</option>
+          {categories.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <select
+          className={styles.categoryInput}
+          aria-label="Sort notes"
+          value={sort}
+          onChange={(event) => {
+            setSort(event.target.value as 'bible' | 'recent');
+          }}
+        >
+          <option value="recent">Recently updated</option>
+          <option value="bible">Bible order</option>
+        </select>
       </div>
       {rows.length === 0 && <p>{t('annotations.empty')}</p>}
       <ol className={styles.notebookList}>
@@ -406,8 +542,16 @@ export function Notebook({
             </div>
             {row.notes
               .filter((note) => categoryFilter === 'all' || note.category === categoryFilter)
-              .map((note) => <NotebookNote key={note.id} note={note} categories={categories}
-                onError={(message) => { setError(message); }} />)}
+              .map((note) => (
+                <NotebookNote
+                  key={note.id}
+                  note={note}
+                  categories={categories}
+                  onError={(message) => {
+                    setError(message);
+                  }}
+                />
+              ))}
             <button
               type="button"
               className={styles.button}
