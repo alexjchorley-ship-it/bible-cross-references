@@ -78,7 +78,7 @@ function installIndexedDB() {
               }
               const row = value as Record<string, unknown>;
               const key =
-                name === 'notes' || name === 'sync_deletions'
+                name === 'notes' || name === 'sync_deletions' || name === 'labels'
                   ? row['id']
                   : name === 'bookmarks'
                     ? row['color']
