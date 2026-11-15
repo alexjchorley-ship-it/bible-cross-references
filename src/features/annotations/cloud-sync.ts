@@ -1,19 +1,22 @@
 import { cloudRequest, cloudSession } from './cloud-auth.ts';
 import { applyCloudRecords, exportCloudRecords, type CloudAnnotation } from './storage.ts';
 
-const COLUMNS = 'kind,item_id,verse_id,body,color,created_at,updated_at,deleted';
+const COLUMNS = 'kind,item_id,verse_id,body,color,category,title,created_at,updated_at,deleted';
 let activeSync: Promise<void> | null = null;
 
 function isCloudAnnotation(row: unknown): row is CloudAnnotation {
   if (!row || typeof row !== 'object') return false;
   const data = row as Partial<CloudAnnotation>;
   return (
-    (data.kind === 'note' || data.kind === 'highlight' || data.kind === 'bookmark') &&
+    (data.kind === 'note' || data.kind === 'highlight' || data.kind === 'bookmark' ||
+      data.kind === 'label') &&
     typeof data.item_id === 'string' &&
     typeof data.verse_id === 'string' &&
     typeof data.created_at === 'string' &&
     typeof data.updated_at === 'string' &&
     typeof data.deleted === 'boolean' &&
+    (data.category === undefined || data.category === null || typeof data.category === 'string') &&
+    (data.title === undefined || data.title === null || typeof data.title === 'string') &&
     (data.body === null || typeof data.body === 'string') &&
     (data.color === null ||
       data.color === 'amber' ||
