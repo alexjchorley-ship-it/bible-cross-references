@@ -7,7 +7,9 @@ test.describe('Bible Study reader additions', () => {
   }) => {
     await openPassage(page, 'Gen.1.1');
     const panel = page.locator(PANEL);
-    const amber = panel.getByRole('group', { name: 'Highlight colours' }).getByRole('button', { name: /Amber · Miracles/ });
+    const amber = panel
+      .getByRole('group', { name: 'Highlight colours' })
+      .getByRole('button', { name: /Amber · Miracles/ });
     await expect(amber).toBeVisible();
     await amber.click();
     await expect(amber).toHaveAttribute('aria-pressed', 'true');
