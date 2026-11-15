@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PersonalNote, VerseHighlight } from './model.ts';
 import * as storage from './storage.ts';
@@ -183,5 +183,83 @@ describe('always-visible annotation composer', () => {
         expect.objectContaining({ title: 'Creation', category: 'Questions', verseId: 'Gen.1.1' }),
       );
     });
+  });
+});
+
+describe('inline verse annotation quality-of-life controls', () => {
+  it('removes a highlight when its selected colour dot is tapped again', async () => {
+    current([], [{ verseId: 'Gen.1.1', color: 'amber', updatedAt: now }]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.click(screen.getByRole('button', { name: /Amber · Miracles/ }));
+    expect(storage.setVerseHighlight).toHaveBeenCalledWith('Gen.1.1', null);
+  });
+
+  it('moves one coloured bookmark and removes it by tapping again on its verse', async () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready', error: null, notes: [], highlights: [],
+      bookmarks: [{ color: 'green', verseId: 'Gen.1.1', updatedAt: now }],
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    const group = screen.getByRole('group', { name: 'Reading bookmark colours' });
+    const green = within(group).getByRole('button', { name: /Green · Personal reading/ });
+    expect(green.getAttribute('aria-pressed')).toBe('true');
+    await userEvent.click(green);
+    expect(storage.setReadingBookmark).toHaveBeenCalledWith('green', null);
+  });
+
+  it('uses the saved meaning of a colour on the always visible dots', () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      status: 'ready', error: null, notes: [], highlights: [], bookmarks: [],
+      labels: [{ id: 'highlight:amber', name: 'Miracles of Jesus', updatedAt: now }],
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: /Amber · Miracles of Jesus/ })).toBeDefined();
+  });
+
+  it('shows one of several saved notes at first and expands the full collection', async () => {
+    current([
+      note,
+      { ...note, id: 'read-2', body: 'Second note', createdAt: '2026-11-15T12:00:00Z' },
+    ]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: 'Show all 2 notes' })).toBeDefined();
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Show all 2 notes' }));
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(2);
+    await userEvent.click(screen.getByRole('button', { name: 'Show latest note only' }));
+    expect(screen.getAllByRole('textbox', { name: 'Notes' })).toHaveLength(1);
+  });
+
+  it('edits the saved title and category without changing the verse', async () => {
+    current([note]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'Note title' }), 'Creation note');
+    await userEvent.type(screen.getByPlaceholderText('Choose or type a category'), 'Sermon');
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Notes' }));
+    await waitFor(() => {
+      expect(storage.upsertPersonalNote).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'read-1', title: 'Creation note', category: 'Sermon' }),
+      );
+    });
+  });
+
+  it('keeps a failed note draft ready for another attempt', async () => {
+    vi.mocked(storage.upsertPersonalNote).mockRejectedValueOnce(new Error('Offline'));
+    current([note]);
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    const editor = screen.getByRole('textbox', { name: 'Notes' });
+    fireEvent.change(editor, { target: { value: 'Do not lose this' } });
+    fireEvent.blur(editor);
+    expect(await screen.findByText('Could not save. Copy your text and try again.')).toBeDefined();
+    expect(editor).toHaveProperty('value', 'Do not lose this');
+  });
+
+  it('disables the inline composer and colour choices when storage is blocked', () => {
+    vi.mocked(storage.useAnnotations).mockReturnValue({
+      notes: [], highlights: [], bookmarks: [], status: 'unavailable', error: 'Database blocked',
+    });
+    render(<VerseAnnotations verseId="Gen.1.1" />);
+    expect(screen.getByRole('button', { name: 'Save new note' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /Green · Prayer/ }).hasAttribute('disabled')).toBe(true);
   });
 });
