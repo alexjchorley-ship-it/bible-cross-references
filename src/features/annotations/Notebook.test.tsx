@@ -307,9 +307,11 @@ describe('notebook note editing and colour settings', () => {
     const title = screen.getByRole('textbox', { name: 'Edit note title' });
     const text = screen.getByRole('textbox', { name: 'Edit note text' });
     const category = screen.getByLabelText('Category');
+    await userEvent.clear(title);
     await userEvent.type(title, 'Creation');
     await userEvent.clear(text);
     await userEvent.type(text, 'Let there be light');
+    await userEvent.clear(category);
     await userEvent.type(category, 'Reflection');
     await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => {
