@@ -17,6 +17,10 @@ const note = (
   sourceOrder: order,
   refs: [{ book, startChapter: first, startVerse: 1, endChapter: last, endVerse: 10 }],
   content: ['Note'],
+});
+
+describe('chapter-level scholarly study guides', () => {
+  beforeEach(() => { vi.unstubAllGlobals(); });
   it('reports missing chapter commentary without pretending it is empty', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('', { status: 404 }))));
     render(<ChapterReview verseId="Gen.50.20" />);
@@ -66,7 +70,6 @@ const note = (
     expect(container.textContent).toBe('');
     expect(request).not.toHaveBeenCalled();
   });
-});
 
 describe('chapter-level scholarly study guides', () => {
   beforeEach(() => { vi.unstubAllGlobals(); });
