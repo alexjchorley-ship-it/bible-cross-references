@@ -142,7 +142,7 @@ export function VerseTargetPicker({
           </select>
         </label>
       </div>
-      {(selectedPreview || sample.length > 0) && (
+      {(selectedPreview !== null || sample.length > 0) && (
         <div className={styles.preview} aria-live="polite" aria-label="Bible verse preview">
           <div className={styles.previewHeading}>
             {value ? 'Selected verse' : 'Chapter preview — choose a verse above'}
