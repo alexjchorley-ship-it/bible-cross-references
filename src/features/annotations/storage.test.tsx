@@ -745,3 +745,89 @@ describe('local personal cross-reference persistence', () => {
     ).toBe(true);
   });
 });
+
+describe('personal cross-reference cloud reconciliation and backups', () => {
+  const personalLink = {
+    id: 'linked-verses',
+    fromVerseId: 'Gen.1.1',
+    toVerseId: 'John.1.1',
+    note: 'A connection across testaments',
+    createdAt: early,
+    updatedAt: late,
+  };
+
+  it('imports personal links in a backup and merges newer edits', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.startAnnotations();
+    const backup = JSON.stringify({
+      format: 'bible-study-annotations',
+      schemaVersion: 4,
+      appVersion: '1.0',
+      exportedAt: late,
+      annotations: [],
+      highlights: [],
+      bookmarks: [],
+      labels: [],
+      crossReferences: [personalLink],
+    });
+    await storage.importAnnotations(backup);
+    expect(fake.stores.cross_references.size).toBe(1);
+    expect(storage.useAnnotations).toBeDefined();
+    await storage.upsertPersonalCrossReference({
+      ...personalLink,
+      note: 'Latest understanding',
+      updatedAt: '2026-11-21T14:00:00.000Z',
+    });
+    await storage.importAnnotations(backup);
+    const exported = parseAnnotationsBackup(await storage.exportAnnotations());
+    expect(exported.crossReferences?.[0]?.note).toBe('Latest understanding');
+  });
+
+  it('downloads a cloud cross-reference and applies its later deletion', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.startAnnotations();
+    const cloudRecord = {
+      kind: 'cross-reference' as const,
+      item_id: personalLink.id,
+      verse_id: personalLink.fromVerseId,
+      title: personalLink.toVerseId,
+      body: personalLink.note,
+      color: null,
+      created_at: early,
+      updated_at: late,
+      deleted: false,
+    };
+    await storage.applyCloudRecords([cloudRecord]);
+    expect(fake.stores.cross_references.size).toBe(1);
+    expect((await storage.exportCloudRecords()).some((row) =>
+      row.kind === 'cross-reference' && !row.deleted,
+    )).toBe(true);
+    await storage.applyCloudRecords([{
+      ...cloudRecord,
+      updated_at: '2026-11-21T16:00:00.000Z',
+      deleted: true,
+    }]);
+    expect(fake.stores.cross_references.size).toBe(0);
+    expect((await storage.exportCloudRecords()).some((row) =>
+      row.kind === 'cross-reference' && row.deleted,
+    )).toBe(true);
+  });
+
+  it('clears personal links with other annotations and refuses invalid verses', async () => {
+    const fake = installIndexedDB();
+    const storage = await import('./storage.ts');
+    await storage.startAnnotations();
+    await expect(storage.upsertPersonalCrossReference({
+      ...personalLink,
+      toVerseId: 'John.99.99',
+    })).rejects.toThrow('Invalid personal cross-reference');
+    await storage.upsertPersonalCrossReference(personalLink);
+    await storage.deleteAllAnnotations();
+    expect(fake.stores.cross_references.size).toBe(0);
+    expect((await storage.exportCloudRecords()).some((row) =>
+      row.kind === 'cross-reference' && row.deleted,
+    )).toBe(true);
+  });
+});
