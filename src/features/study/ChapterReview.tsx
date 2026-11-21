@@ -91,12 +91,9 @@ export function ChapterReview({ verseId }: { readonly verseId: string }) {
         <h4>Key verses to examine</h4>
         <div className={styles.verseTags}>
           {review.keyVerses.map((number) => (
-            <a key={number}
-              className={styles.verseTag}
-              href={`#${review.book}.${review.chapter}.${number}`}
-              title={`Study ${title}:${number}`}>
+            <span key={number} className={styles.verseTag} title={`Key verse: ${title}:${number}`}>
               {review.chapter}:{number}
-            </a>
+            </span>
           ))}
         </div>
       </div>
