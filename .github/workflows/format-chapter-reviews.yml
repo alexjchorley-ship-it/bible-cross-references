@@ -1,0 +1,30 @@
+name: Format chapter reviews
+on:
+  push:
+    branches:
+      - feature/genesis-john-chapter-reviews
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/features/study/chapter-reviews.ts src/features/study/ChapterReview.tsx src/features/study/ChapterReview.module.css src/features/study/ChapterReview.test.tsx src/features/study/StudySection.tsx
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/study
+          if ! git diff --staged --quiet; then
+            git commit -m "Format chapter-level study guides"
+            git push
+          fi
