@@ -1,0 +1,32 @@
+name: Format personal link feature
+on:
+  push:
+    branches:
+      - feature/personal-cross-references-and-search
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format the feature code
+        run: |
+          npx prettier --write             src/features/annotations/Notebook.test.tsx             src/features/annotations/VerseAnnotations.test.tsx             src/features/annotations/PersonalCrossReferences.tsx             src/features/annotations/model.ts             src/features/annotations/model.test.ts             src/features/annotations/storage.ts             src/features/annotations/cloud-sync.ts             src/features/study/StudySection.tsx             src/features/study/google-search.ts             src/visualizations/shared/components/PassagePanel.tsx             src/visualizations/shared/personal-links.ts             src/visualizations/shared/personal-links.test.ts             src/visualizations/arcs/ArcsStage.tsx             src/visualizations/threads/ThreadsStage.tsx             src/visualizations/threads/threads-drawing.ts
+      - name: Commit formatting when needed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          if ! git diff --staged --quiet; then
+            git commit -m "Format personal cross-reference feature"
+            git push
+          fi
