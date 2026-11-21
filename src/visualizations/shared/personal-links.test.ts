@@ -7,8 +7,9 @@ import {
 } from './personal-links.ts';
 
 const v = CANONICAL_VERSIFICATION;
-const from = v.indexOf({ book: 'Gen', chapter: 1, verse: 1 })!;
-const to = v.indexOf({ book: 'John', chapter: 1, verse: 1 })!;
+const from = v.indexOf({ book: 'Gen', chapter: 1, verse: 1 });
+const to = v.indexOf({ book: 'John', chapter: 1, verse: 1 });
+if (from === undefined || to === undefined) throw new Error('Test verses unavailable');
 const links = [
   {
     id: 'mine',
