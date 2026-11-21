@@ -1,4 +1,6 @@
 import { TyndaleNotes } from './TyndaleNotes.tsx';
+import { parseOsisId } from '../../core/bible/verse-ref.ts';
+import { googleChapterSearchUrl } from './google-search.ts';
 import { useLocalization } from '../../i18n/use-locale.tsx';
 import { studyForVerse } from './pilot-studies.ts';
 import styles from '../annotations/annotations.module.css';
@@ -8,6 +10,7 @@ import { ReadingIcon } from '../../shared/ui/icons.tsx';
 export function StudySection({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
   const study = studyForVerse(verseId);
+  const verse = parseOsisId(verseId);
   return (
     <PanelSection
       id="theological-notes"
@@ -17,6 +20,7 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
       defaultOpen={false}
     >
       <div className={styles.studyContents}>
+        {verse && <a href={googleChapterSearchUrl(verse.book, verse.chapter)} target="_blank" rel="noopener noreferrer">Search Google for chapter context ↗</a>}
         <TyndaleNotes verseId={verseId} />
         {!study ? (
           <p className={styles.warning}>{t('study.notCurated')}</p>
