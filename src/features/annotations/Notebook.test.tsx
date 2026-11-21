@@ -17,6 +17,7 @@ vi.mock('./storage.ts', () => ({
 
 const now = '2026-11-14T12:00:00.000Z';
 const snapshot = {
+  crossReferences: [],
   status: 'ready' as const,
   error: null,
   notes: [
@@ -106,6 +107,7 @@ describe('searchable and exportable personal notebook', () => {
 
   it('does not allow importing or exporting when IndexedDB is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       ...snapshot,
       status: 'unavailable',
       error: 'Disk denied.',
@@ -196,6 +198,7 @@ describe('searchable and exportable personal notebook', () => {
 
   it('shows a friendly empty state when no annotations exist', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       status: 'ready',
       error: null,
       notes: [],
@@ -208,6 +211,7 @@ describe('searchable and exportable personal notebook', () => {
   });
   it('opens each colour at its own moving bookmark without changing highlights', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       ...snapshot,
       bookmarks: [
         { color: 'amber', verseId: 'John.3.16', updatedAt: now },
@@ -269,6 +273,7 @@ describe('notebook enhancements', () => {
     const second = snapshot.notes[1];
     if (!first || !second) throw new Error('Missing test notes');
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       ...snapshot,
       notes: [
         { ...first, category: 'Prayer', title: 'Morning prayer' },
@@ -403,6 +408,7 @@ describe('notebook note editing and colour settings', () => {
     const second = snapshot.notes[1];
     if (!first || !second) throw new Error('Missing notes');
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       ...snapshot,
       notes: [
         { ...first, updatedAt: '2026-11-14T00:00:00Z', category: 'Prayer' },
