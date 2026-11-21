@@ -24,6 +24,7 @@ const note: PersonalNote = {
 
 function current(notes: readonly PersonalNote[] = [], highlights: readonly VerseHighlight[] = []) {
   vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
     notes,
     highlights,
     bookmarks: [],
@@ -87,6 +88,7 @@ describe('verse highlights and personal notes', () => {
 
   it('never claims a save is possible if device storage is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       notes: [],
       highlights: [],
       bookmarks: [],
@@ -155,6 +157,7 @@ describe('verse highlights and personal notes', () => {
 describe('colour-coded reading positions', () => {
   it('offers bookmark colours independently of permanent highlights', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       status: 'ready',
       error: null,
       notes: [],
@@ -196,6 +199,7 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('moves one coloured bookmark and removes it by tapping again on its verse', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       status: 'ready',
       error: null,
       notes: [],
@@ -212,6 +216,7 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('uses the saved meaning of a colour on the always visible dots', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       status: 'ready',
       error: null,
       notes: [],
@@ -263,6 +268,7 @@ describe('inline verse annotation quality-of-life controls', () => {
 
   it('disables the inline composer and colour choices when storage is blocked', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       notes: [],
       highlights: [],
       bookmarks: [],
@@ -320,6 +326,7 @@ describe('touch-friendly expanded colour legend', () => {
 
   it('displays user-defined meanings in the expanded list', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+    crossReferences: [],
       notes: [],
       highlights: [],
       bookmarks: [],
