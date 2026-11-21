@@ -218,7 +218,7 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
     throw new Error('The backup contains duplicate note IDs or highlighted verses.');
   }
   const bookmarks = value['schemaVersion'] !== 1 ? (value['bookmarks'] as ReadingBookmark[]) : [];
-  const labels = value['schemaVersion'] >= 3 ? (value['labels'] as ColorLabel[]) : [];
+  const labels = (value['schemaVersion'] === 3 || value['schemaVersion'] === 4) ? (value['labels'] as ColorLabel[]) : [];
   if (new Set(bookmarks.map((bookmark) => bookmark.color)).size !== bookmarks.length) {
     throw new Error('The backup contains duplicate bookmark colours.');
   }
