@@ -1,4 +1,6 @@
 import { TyndaleNotes } from './TyndaleNotes.tsx';
+import { ChapterReview } from './ChapterReview.tsx';
+import { reviewForChapter } from './chapter-reviews.ts';
 import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import { googleChapterSearchUrl } from './google-search.ts';
 import { useLocalization } from '../../i18n/use-locale.tsx';
@@ -11,6 +13,7 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
   const { t } = useLocalization();
   const study = studyForVerse(verseId);
   const verse = parseOsisId(verseId);
+  const chapterReview = verse ? reviewForChapter(verse.book, verse.chapter) : null;
   return (
     <PanelSection
       id="theological-notes"
@@ -29,9 +32,10 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
             Search Google for chapter context ↗
           </a>
         )}
+        {chapterReview && <ChapterReview verseId={verseId} />}
         <TyndaleNotes verseId={verseId} />
         {!study ? (
-          <p className={styles.warning}>{t('study.notCurated')}</p>
+          !chapterReview && <p className={styles.warning}>{t('study.notCurated')}</p>
         ) : (
           <>
             <p className={styles.warning}>
