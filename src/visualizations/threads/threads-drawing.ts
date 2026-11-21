@@ -86,8 +86,8 @@ function drawConnections(context: CanvasRenderingContext2D, drawing: ThreadsDraw
       threads.push({
         y: anchor.y,
         target: spine.yOf((connection.otherStart + connection.otherEnd) / 2),
-        color: elementAt(GENRE_HEX, elementAt(drawing.verseGenres, connection.otherStart)),
-        alpha: emphasized ? 0.95 : hasEmphasis ? 0.06 + 0.1 * weight : 0.18 + 0.5 * weight,
+        color: connection.link.id < 0 ? '#b89aff' : elementAt(GENRE_HEX, elementAt(drawing.verseGenres, connection.otherStart)),
+        alpha: emphasized ? 0.95 : hasEmphasis ? 0.06 + 0.1 * weight : connection.link.id < 0 ? 0.85 : 0.18 + 0.5 * weight,
         emphasized,
       });
     }
