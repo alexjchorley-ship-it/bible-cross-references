@@ -71,8 +71,6 @@ describe('chapter-level scholarly study guides', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-describe('chapter-level scholarly study guides', () => {
-  beforeEach(() => { vi.unstubAllGlobals(); });
   it('covers every chapter of Genesis and John exactly once', () => {
     expect(CHAPTER_REVIEWS).toHaveLength(71);
     for (const [book, count] of [
