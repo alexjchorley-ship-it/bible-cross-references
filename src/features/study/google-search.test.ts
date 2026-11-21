@@ -8,7 +8,9 @@ describe('opt-in Google research links', () => {
     expect(url.searchParams.get('q')).toContain('"John 1:1" Bible commentary');
   });
   it('can search selected verse text exactly', () => {
-    const query = new URL(googleVerseSearchUrl('John 1:1', 'In the beginning was the Word')).searchParams.get('q');
+    const query = new URL(
+      googleVerseSearchUrl('John 1:1', 'In the beginning was the Word'),
+    ).searchParams.get('q');
     expect(query).toContain('"In the beginning was the Word"');
     expect(query).toContain('"John 1:1"');
   });

@@ -33,9 +33,7 @@ function setup(links = [link], status: 'ready' | 'unavailable' = 'ready') {
     highlights: [],
     bookmarks: [],
   });
-  return render(
-    <PersonalCrossReferences verseId="Gen.1.1" data={data} onSelect={onSelect} />,
-  );
+  return render(<PersonalCrossReferences verseId="Gen.1.1" data={data} onSelect={onSelect} />);
 }
 
 describe('personal cross-reference editor', () => {
@@ -55,15 +53,20 @@ describe('personal cross-reference editor', () => {
   it('saves a link with a note from a typed reference', async () => {
     setup([]);
     await userEvent.type(screen.getByLabelText('Link to another verse'), 'John 1:1');
-    await userEvent.type(screen.getByLabelText(/Why are these connected/), 'Both start with creation');
+    await userEvent.type(
+      screen.getByLabelText(/Why are these connected/),
+      'Both start with creation',
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Add cross-reference' }));
-    await waitFor(() => expect(storage.upsertPersonalCrossReference).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fromVerseId: 'Gen.1.1',
-        toVerseId: 'John.1.1',
-        note: 'Both start with creation',
-      }),
-    ));
+    await waitFor(() =>
+      expect(storage.upsertPersonalCrossReference).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fromVerseId: 'Gen.1.1',
+          toVerseId: 'John.1.1',
+          note: 'Both start with creation',
+        }),
+      ),
+    );
   });
 
   it('rejects missing verses and self-links before saving', async () => {
@@ -86,16 +89,22 @@ describe('personal cross-reference editor', () => {
     await userEvent.clear(note);
     await userEvent.type(note, 'New connection');
     await userEvent.click(screen.getByRole('button', { name: 'Update cross-reference' }));
-    await waitFor(() => expect(storage.upsertPersonalCrossReference).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'link-1', note: 'New connection' }),
-    ));
+    await waitFor(() =>
+      expect(storage.upsertPersonalCrossReference).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'link-1', note: 'New connection' }),
+      ),
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(storage.deletePersonalCrossReference).toHaveBeenCalledWith('link-1'));
+    await waitFor(() =>
+      expect(storage.deletePersonalCrossReference).toHaveBeenCalledWith('link-1'),
+    );
   });
 
   it('refuses writes when local storage is unavailable', () => {
     setup([], 'unavailable');
     expect(screen.getByRole('alert').textContent).toContain('Storage failed');
-    expect(screen.getByRole('button', { name: 'Add cross-reference' }).hasAttribute('disabled')).toBe(true);
+    expect(
+      screen.getByRole('button', { name: 'Add cross-reference' }).hasAttribute('disabled'),
+    ).toBe(true);
   });
 });

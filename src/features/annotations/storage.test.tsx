@@ -11,7 +11,8 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'labels' | 'cross_references' | 'sync_deletions';
+type StoreName =
+  'notes' | 'highlights' | 'bookmarks' | 'labels' | 'cross_references' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
@@ -80,7 +81,10 @@ function installIndexedDB() {
               }
               const row = value as Record<string, unknown>;
               const key =
-                name === 'notes' || name === 'sync_deletions' || name === 'labels' || name === 'cross_references'
+                name === 'notes' ||
+                name === 'sync_deletions' ||
+                name === 'labels' ||
+                name === 'cross_references'
                   ? row['id']
                   : name === 'bookmarks'
                     ? row['color']
@@ -716,16 +720,28 @@ describe('local personal cross-reference persistence', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     const link = {
-      id: 'my-link', fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1',
-      note: 'Both describe creation', createdAt: early, updatedAt: late,
+      id: 'my-link',
+      fromVerseId: 'Gen.1.1',
+      toVerseId: 'John.1.1',
+      note: 'Both describe creation',
+      createdAt: early,
+      updatedAt: late,
     };
     await store.startAnnotations();
     await store.upsertPersonalCrossReference(link);
     expect(fake.stores.cross_references.size).toBe(1);
     expect(parseAnnotationsBackup(await store.exportAnnotations()).crossReferences).toEqual([link]);
-    expect((await store.exportCloudRecords()).some((row) => row.kind === 'cross-reference' && row.title === 'John.1.1')).toBe(true);
+    expect(
+      (await store.exportCloudRecords()).some(
+        (row) => row.kind === 'cross-reference' && row.title === 'John.1.1',
+      ),
+    ).toBe(true);
     await store.deletePersonalCrossReference(link.id);
     expect(fake.stores.cross_references.size).toBe(0);
-    expect((await store.exportCloudRecords()).some((row) => row.kind === 'cross-reference' && row.deleted)).toBe(true);
+    expect(
+      (await store.exportCloudRecords()).some(
+        (row) => row.kind === 'cross-reference' && row.deleted,
+      ),
+    ).toBe(true);
   });
 });
