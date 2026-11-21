@@ -61,7 +61,7 @@ describe('canonical annotations and backups', () => {
     const content = serializeAnnotationsBackup([note], [highlight]);
     const restored = parseAnnotationsBackup(content);
     expect(restored.format).toBe('bible-study-annotations');
-    expect(restored.schemaVersion).toBe(3);
+    expect(restored.schemaVersion).toBe(4);
     expect(restored.annotations).toEqual([note]);
     expect(restored.highlights).toEqual([highlight]);
   });
@@ -74,7 +74,7 @@ describe('canonical annotations and backups', () => {
       string,
       unknown
     >;
-    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 4 }))).toThrow();
+    expect(() => parseAnnotationsBackup(JSON.stringify({ ...valid, schemaVersion: 5 }))).toThrow();
     expect(() =>
       parseAnnotationsBackup(JSON.stringify({ ...valid, exportedAt: 'tomorrow' })),
     ).toThrow();
@@ -190,5 +190,23 @@ describe('expanded colour options', () => {
     expect(restored.highlights[0]?.color).toBe('purple');
     expect(restored.bookmarks?.[0]?.color).toBe('teal');
     expect(restored.labels?.[0]?.name).toBe('My devotional');
+  });
+});
+
+describe('reader-created cross-references', () => {
+  it('backs up both verse IDs and explanatory notes without affecting older formats', () => {
+    const link = {
+      id: 'personal-1', fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1',
+      note: 'Both passages begin at creation.', createdAt: EARLY, updatedAt: LATE,
+    };
+    const backup = serializeAnnotationsBackup([], [], [], [], [link]);
+    expect(parseAnnotationsBackup(backup).crossReferences).toEqual([link]);
+    expect(() => parseAnnotationsBackup(JSON.stringify({
+      ...JSON.parse(backup), crossReferences: [link, link],
+    }))).toThrow('duplicate cross-reference');
+    const previous = JSON.parse(backup) as Record<string, unknown>;
+    previous['schemaVersion'] = 3;
+    delete previous['crossReferences'];
+    expect(parseAnnotationsBackup(JSON.stringify(previous)).crossReferences).toEqual([]);
   });
 });
