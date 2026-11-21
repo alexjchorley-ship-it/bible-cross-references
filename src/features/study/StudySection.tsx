@@ -35,7 +35,7 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
         {chapterReview && <ChapterReview verseId={verseId} />}
         <TyndaleNotes verseId={verseId} />
         {!study ? (
-          !chapterReview && <p className={styles.warning}>{t('study.notCurated')}</p>
+          <p className={styles.warning}>{t('study.notCurated')}</p>
         ) : (
           <>
             <p className={styles.warning}>
