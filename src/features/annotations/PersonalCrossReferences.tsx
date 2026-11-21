@@ -77,11 +77,17 @@ export function PersonalCrossReferences({
   return (
     <section className={styles.section} aria-label="My cross-references">
       <header className={styles.heading}>
-        <span className={styles.headingMark} aria-hidden="true">↗</span>
+        <span className={styles.headingMark} aria-hidden="true">
+          ↗
+        </span>
         <span>My cross-references</span>
         <span className={styles.count}>{related.length}</span>
       </header>
-      {status === 'unavailable' && <p className={styles.error} role="alert">{error ?? 'Local storage unavailable.'}</p>}
+      {status === 'unavailable' && (
+        <p className={styles.error} role="alert">
+          {error ?? 'Local storage unavailable.'}
+        </p>
+      )}
       {related.length > 0 && (
         <div className={styles.linkList}>
           {related.map((link) => {
@@ -91,10 +97,14 @@ export function PersonalCrossReferences({
             const text = index !== undefined ? data.translation.verseText(index) : '';
             return (
               <article className={styles.linkCard} key={link.id}>
-                <button className={styles.linkTitle} type="button"
-                  disabled={index === undefined} onClick={() => {
+                <button
+                  className={styles.linkTitle}
+                  type="button"
+                  disabled={index === undefined}
+                  onClick={() => {
                     if (index !== undefined) onSelect(versePassage(index));
-                  }}>
+                  }}
+                >
                   <span>{other ? formatVerseRef(other, books) : otherId}</span>
                   <span aria-hidden="true">↗</span>
                 </button>
@@ -102,57 +112,102 @@ export function PersonalCrossReferences({
                 {link.note && <p className={styles.personalNote}>{link.note}</p>}
                 <div className={styles.linkActions}>
                   <span className={styles.personalTag}>Your connection</span>
-                  <button className={styles.textButton} type="button" disabled={busy} onClick={() => {
-                    const next = parseOsisId(link.toVerseId);
-                    setEditing(link.id);
-                    setTarget(next ?? null);
-                    setNote(link.note);
-                    setFailure(null);
-                  }}>Edit</button>
-                  <button className={styles.textButton} type="button" disabled={busy} onClick={() => {
-                    setBusy(true);
-                    void deletePersonalCrossReference(link.id)
-                      .catch((e: unknown) => {
-                        setFailure(e instanceof Error ? e.message : 'Could not delete this link.');
-                      })
-                      .finally(() => {
-                        setBusy(false);
-                      });
-                  }}>Delete</button>
+                  <button
+                    className={styles.textButton}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      const next = parseOsisId(link.toVerseId);
+                      setEditing(link.id);
+                      setTarget(next ?? null);
+                      setNote(link.note);
+                      setFailure(null);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className={styles.textButton}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setBusy(true);
+                      void deletePersonalCrossReference(link.id)
+                        .catch((e: unknown) => {
+                          setFailure(
+                            e instanceof Error ? e.message : 'Could not delete this link.',
+                          );
+                        })
+                        .finally(() => {
+                          setBusy(false);
+                        });
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </article>
             );
           })}
         </div>
       )}
-      <form className={styles.form} onSubmit={(event) => {
-        event.preventDefault();
-        void save();
-      }}>
+      <form
+        className={styles.form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void save();
+        }}
+      >
         <div className={styles.formHeading}>
           <strong>{editing ? 'Edit your connection' : 'Add a personal connection'}</strong>
           <span>Choose a verse and see the text before linking it.</span>
         </div>
-        <VerseTargetPicker key={editing ?? 'new'} data={data} value={target}
+        <VerseTargetPicker
+          key={editing ?? 'new'}
+          data={data}
+          value={target}
           onChange={(next) => {
             setTarget(next);
             setFailure(null);
-          }} disabled={busy || status !== 'ready'} />
+          }}
+          disabled={busy || status !== 'ready'}
+        />
         <label className={styles.field} htmlFor="personal-reference-note">
-          <span>Why are these connected? <span className={styles.optional}>(optional)</span></span>
-          <textarea className={styles.textarea} id="personal-reference-note" value={note}
-            onChange={(event) => { setNote(event.target.value); }}
-            maxLength={5000} rows={3} disabled={busy || status !== 'ready'}
-            placeholder="Your interpretation, theme, or reason for connecting these verses…" />
+          <span>
+            Why are these connected? <span className={styles.optional}>(optional)</span>
+          </span>
+          <textarea
+            className={styles.textarea}
+            id="personal-reference-note"
+            value={note}
+            onChange={(event) => {
+              setNote(event.target.value);
+            }}
+            maxLength={5000}
+            rows={3}
+            disabled={busy || status !== 'ready'}
+            placeholder="Your interpretation, theme, or reason for connecting these verses…"
+          />
         </label>
         <div className={styles.footer}>
-          {editing && <button className={styles.textButton} type="button"
-            onClick={resetEditor}>Cancel editing</button>}
-          <button className={styles.primaryButton} type="submit" disabled={busy || status !== 'ready'}>
+          {editing && (
+            <button className={styles.textButton} type="button" onClick={resetEditor}>
+              Cancel editing
+            </button>
+          )}
+          <button
+            className={styles.primaryButton}
+            type="submit"
+            disabled={busy || status !== 'ready'}
+          >
             {editing ? 'Update cross-reference' : 'Add cross-reference'}
           </button>
         </div>
-        {failure && <p className={styles.error} role="alert">{failure}</p>}
+        {failure && (
+          <p className={styles.error} role="alert">
+            {failure}
+          </p>
+        )}
       </form>
     </section>
   );

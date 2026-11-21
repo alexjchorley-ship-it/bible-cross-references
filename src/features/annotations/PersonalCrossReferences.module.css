@@ -16,7 +16,10 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
-.headingMark { color: var(--color-accent); font-size: 1.25rem; }
+.headingMark {
+  color: var(--color-accent);
+  font-size: 1.25rem;
+}
 .count {
   padding: 0.08rem 0.48rem;
   border: 1px solid var(--color-border);
@@ -25,7 +28,14 @@
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
-.linkList, .form, .picker, .field { display: grid; gap: var(--space-2); min-inline-size: 0; }
+.linkList,
+.form,
+.picker,
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
 .linkCard {
   display: grid;
   gap: var(--space-2);
@@ -50,9 +60,15 @@
   font-weight: 600;
   font-size: 0.875rem;
 }
-.linkTitle:hover { color: var(--color-accent); }
-.linkTitle:disabled { opacity: 0.5; cursor: default; }
-.scripture, .previewText {
+.linkTitle:hover {
+  color: var(--color-accent);
+}
+.linkTitle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.scripture,
+.previewText {
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--color-text-muted);
@@ -71,7 +87,8 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.linkActions, .footer {
+.linkActions,
+.footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -87,13 +104,24 @@
   padding-block-start: var(--space-3);
   border-block-start: 1px solid var(--color-border);
 }
-.formHeading { display: grid; gap: var(--space-1); font-size: 0.85rem; }
-.formHeading span, .field > span, .optional, .hint {
+.formHeading {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+}
+.formHeading span,
+.field > span,
+.optional,
+.hint {
   color: var(--color-text-muted);
   font-size: 0.75rem;
 }
-.field { font-size: 0.83rem; }
-.input, .textarea, .select {
+.field {
+  font-size: 0.83rem;
+}
+.input,
+.textarea,
+.select {
   inline-size: 100%;
   box-sizing: border-box;
   min-block-size: 2.5rem;
@@ -105,16 +133,34 @@
   font: inherit;
   font-size: 0.875rem;
 }
-.textarea { resize: vertical; min-block-size: 5rem; line-height: 1.5; }
-.input::placeholder, .textarea::placeholder { color: var(--color-text-muted); }
-.input:focus-visible, .textarea:focus-visible, .select:focus-visible,
-.suggestion:focus-visible, .textButton:focus-visible, .primaryButton:focus-visible,
+.textarea {
+  resize: vertical;
+  min-block-size: 5rem;
+  line-height: 1.5;
+}
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible,
+.suggestion:focus-visible,
+.textButton:focus-visible,
+.primaryButton:focus-visible,
 .linkTitle:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
-.selectRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.select:disabled { opacity: 0.5; cursor: not-allowed; }
+.selectRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .suggestions {
   display: grid;
   gap: 2px;
@@ -139,7 +185,9 @@
   font: inherit;
   font-size: 0.875rem;
 }
-.suggestion:hover { background: var(--color-surface-muted); }
+.suggestion:hover {
+  background: var(--color-surface-muted);
+}
 .preview {
   display: grid;
   gap: var(--space-2);
@@ -161,8 +209,12 @@
   font-weight: 600;
   color: var(--color-text);
 }
-.hint { margin: 0; line-height: 1.45; }
-.textButton, .primaryButton {
+.hint {
+  margin: 0;
+  line-height: 1.45;
+}
+.textButton,
+.primaryButton {
   min-block-size: 2.25rem;
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-border);
@@ -179,12 +231,33 @@
   color: var(--color-background);
   font-weight: 600;
 }
-.textButton:hover { background: rgb(255 255 255 / 0.11); }
-.primaryButton:hover { filter: brightness(1.08); }
-.textButton:disabled, .primaryButton:disabled, .suggestion:disabled { opacity: 0.45; cursor: not-allowed; }
-.error { margin: 0; color: #e88484; font-size: 0.8rem; line-height: 1.5; }
+.textButton:hover {
+  background: rgb(255 255 255 / 0.11);
+}
+.primaryButton:hover {
+  filter: brightness(1.08);
+}
+.textButton:disabled,
+.primaryButton:disabled,
+.suggestion:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.error {
+  margin: 0;
+  color: #e88484;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
 @media (max-width: 24rem) {
-  .section { padding: var(--space-2); }
-  .linkCard, .preview { padding: var(--space-2); }
-  .selectRow { gap: var(--space-1); }
+  .section {
+    padding: var(--space-2);
+  }
+  .linkCard,
+  .preview {
+    padding: var(--space-2);
+  }
+  .selectRow {
+    gap: var(--space-1);
+  }
 }

@@ -13,7 +13,10 @@ export interface TargetVerse {
 }
 
 export function VerseTargetPicker({
-  data, value, onChange, disabled,
+  data,
+  value,
+  onChange,
+  disabled,
 }: {
   readonly data: VizData;
   readonly value: TargetVerse | null;
@@ -36,8 +39,11 @@ export function VerseTargetPicker({
     if (!search) return [];
     return BOOKS.filter((item) => {
       const name = books[item.id].name.toLocaleLowerCase();
-      return name.includes(search) || item.id.toLowerCase().startsWith(search) ||
-        item.aliases.some((alias) => alias.startsWith(search.replace(/[^a-z0-9]/g, '')));
+      return (
+        name.includes(search) ||
+        item.id.toLowerCase().startsWith(search) ||
+        item.aliases.some((alias) => alias.startsWith(search.replace(/[^a-z0-9]/g, '')))
+      );
     }).slice(0, 8);
   }, [query, books]);
 
@@ -57,26 +63,41 @@ export function VerseTargetPicker({
       const ref = parsed.reference;
       setBook(ref.book);
       setChapter(ref.chapter);
-      onChange(ref.verse === undefined ? null : {
-        book: ref.book, chapter: ref.chapter, verse: ref.verse,
-      });
+      onChange(
+        ref.verse === undefined
+          ? null
+          : {
+              book: ref.book,
+              chapter: ref.chapter,
+              verse: ref.verse,
+            },
+      );
       if (ref.verse !== undefined) setShowSuggestions(false);
       return;
     }
-    const exact = BOOKS.find((item) => books[item.id].name.toLowerCase() === text.toLowerCase() ||
-      item.id.toLowerCase() === text.toLowerCase());
+    const exact = BOOKS.find(
+      (item) =>
+        books[item.id].name.toLowerCase() === text.toLowerCase() ||
+        item.id.toLowerCase() === text.toLowerCase(),
+    );
     setBook(exact?.id ?? null);
     setChapter(null);
     onChange(null);
   }
 
   const chapterCount = activeBook ? data.versification.chapterCountOf(activeBook) : 0;
-  const verseCount = activeBook && activeChapter
-    ? (data.versification.verseCountOf(activeBook, activeChapter) ?? 0) : 0;
+  const verseCount =
+    activeBook && activeChapter
+      ? (data.versification.verseCountOf(activeBook, activeChapter) ?? 0)
+      : 0;
 
   function previewVerse(number: number) {
     if (!activeBook || !activeChapter) return null;
-    const index = data.versification.indexOf({ book: activeBook, chapter: activeChapter, verse: number });
+    const index = data.versification.indexOf({
+      book: activeBook,
+      chapter: activeChapter,
+      verse: number,
+    });
     if (index === undefined) return null;
     return {
       number,
@@ -86,25 +107,44 @@ export function VerseTargetPicker({
   }
 
   const selectedPreview = value ? previewVerse(value.verse) : null;
-  const sample = !value && activeChapter
-    ? Array.from({ length: Math.min(3, verseCount) }, (_, index) => previewVerse(index + 1)).filter(
-        (entry) => entry !== null,
-      ) : [];
+  const sample =
+    !value && activeChapter
+      ? Array.from({ length: Math.min(3, verseCount) }, (_, index) =>
+          previewVerse(index + 1),
+        ).filter((entry) => entry !== null)
+      : [];
 
   return (
     <div className={styles.picker}>
       <label className={styles.field} htmlFor={inputId}>
         <span>Link to another verse</span>
-        <input id={inputId} className={styles.input} autoComplete="off" disabled={disabled}
-          placeholder="Start typing a book, e.g. John" value={query || (value ? formatVerseRef(value, books) : '')}
-          onChange={(event) => { typeBook(event.target.value); }}
-          onFocus={() => { setShowSuggestions(true); }} />
+        <input
+          id={inputId}
+          className={styles.input}
+          autoComplete="off"
+          disabled={disabled}
+          placeholder="Start typing a book, e.g. John"
+          value={query || (value ? formatVerseRef(value, books) : '')}
+          onChange={(event) => {
+            typeBook(event.target.value);
+          }}
+          onFocus={() => {
+            setShowSuggestions(true);
+          }}
+        />
       </label>
       {showSuggestions && matchingBooks.length > 0 && (
         <div className={styles.suggestions} role="group" aria-label="Suggested Bible books">
           {matchingBooks.map((item) => (
-            <button className={styles.suggestion} type="button" key={item.id}
-              onClick={() => { pickBook(item.id); }} disabled={disabled}>
+            <button
+              className={styles.suggestion}
+              type="button"
+              key={item.id}
+              onClick={() => {
+                pickBook(item.id);
+              }}
+              disabled={disabled}
+            >
               {books[item.id].name}
               <span className={styles.hint}>Choose book</span>
             </button>
@@ -114,30 +154,47 @@ export function VerseTargetPicker({
       <div className={styles.selectRow}>
         <label className={styles.field} htmlFor={chapterId}>
           <span>Chapter</span>
-          <select className={styles.select} id={chapterId} disabled={disabled || !activeBook}
-            value={activeChapter ?? ''} onChange={(event) => {
+          <select
+            className={styles.select}
+            id={chapterId}
+            disabled={disabled || !activeBook}
+            value={activeChapter ?? ''}
+            onChange={(event) => {
               const next = Number(event.target.value);
               setChapter(next || null);
               onChange(null);
               setShowSuggestions(false);
-            }}>
+            }}
+          >
             <option value="">Choose chapter</option>
             {Array.from({ length: chapterCount }, (_, i) => i + 1).map((number) => (
-              <option value={number} key={number}>{number}</option>
+              <option value={number} key={number}>
+                {number}
+              </option>
             ))}
           </select>
         </label>
         <label className={styles.field} htmlFor={verseId}>
           <span>Verse</span>
-          <select className={styles.select} id={verseId} disabled={disabled || !activeBook || !activeChapter}
-            value={value?.verse ?? ''} onChange={(event) => {
+          <select
+            className={styles.select}
+            id={verseId}
+            disabled={disabled || !activeBook || !activeChapter}
+            value={value?.verse ?? ''}
+            onChange={(event) => {
               const number = Number(event.target.value);
-              onChange(activeBook && activeChapter && number
-                ? { book: activeBook, chapter: activeChapter, verse: number } : null);
-            }}>
+              onChange(
+                activeBook && activeChapter && number
+                  ? { book: activeBook, chapter: activeChapter, verse: number }
+                  : null,
+              );
+            }}
+          >
             <option value="">Choose verse</option>
             {Array.from({ length: verseCount }, (_, i) => i + 1).map((number) => (
-              <option value={number} key={number}>{number}</option>
+              <option value={number} key={number}>
+                {number}
+              </option>
             ))}
           </select>
         </label>
@@ -150,13 +207,16 @@ export function VerseTargetPicker({
           </div>
           {(selectedPreview ? [selectedPreview] : sample).map((entry) => (
             <p key={entry.number} className={styles.previewText}>
-              <span className={styles.verseNumber}>{entry.reference}</span> {entry.text || 'Verse text unavailable in this translation.'}
+              <span className={styles.verseNumber}>{entry.reference}</span>{' '}
+              {entry.text || 'Verse text unavailable in this translation.'}
             </p>
           ))}
         </div>
       )}
       {activeBook && !activeChapter && (
-        <p className={styles.hint}>Book selected. Choose a chapter to preview its opening verses.</p>
+        <p className={styles.hint}>
+          Book selected. Choose a chapter to preview its opening verses.
+        </p>
       )}
     </div>
   );
