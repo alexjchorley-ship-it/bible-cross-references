@@ -106,7 +106,7 @@ describe('personal cross-reference editor', () => {
     const input = screen.getByLabelText('Link to another verse');
     await userEvent.type(input, 'Joh');
     expect(screen.getByRole('group', { name: 'Suggested Bible books' })).toBeDefined();
-    await userEvent.click(screen.getByRole('button', { name: /John Choose book/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'John Choose book' }));
     const chapter = screen.getByLabelText('Chapter');
     await userEvent.selectOptions(chapter, '1');
     expect(screen.getByLabelText('Bible verse preview')).toBeDefined();
