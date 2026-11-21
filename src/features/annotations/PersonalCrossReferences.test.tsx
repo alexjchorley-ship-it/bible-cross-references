@@ -44,6 +44,7 @@ describe('personal cross-reference editor', () => {
   it('shows notes and navigates to the other verse', async () => {
     setup();
     expect(screen.getByText('Creation imagery')).toBeDefined();
+    expect(screen.getByText('Your connection')).toBeDefined();
     await userEvent.click(screen.getByRole('button', { name: /John 1:1/ }));
     const index = data.versification.indexOf({ book: 'John', chapter: 1, verse: 1 });
     if (index === undefined) throw new Error('Expected John 1:1');
@@ -98,6 +99,33 @@ describe('personal cross-reference editor', () => {
     await waitFor(() => {
       expect(storage.deletePersonalCrossReference).toHaveBeenCalledWith('link-1');
     });
+  });
+
+  it('suggests books, chapters and verses with a live preview', async () => {
+    setup([]);
+    const input = screen.getByLabelText('Link to another verse');
+    await userEvent.type(input, 'Joh');
+    expect(screen.getByRole('group', { name: 'Suggested Bible books' })).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: 'John Choose book' }));
+    const chapter = screen.getByLabelText('Chapter');
+    await userEvent.selectOptions(chapter, '1');
+    expect(screen.getByLabelText('Bible verse preview')).toBeDefined();
+    expect(screen.getByText(/Chapter preview/)).toBeDefined();
+    await userEvent.selectOptions(screen.getByLabelText('Verse'), '1');
+    expect(screen.getByText(/Selected verse/)).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: 'Add cross-reference' }));
+    await waitFor(() => {
+      expect(storage.upsertPersonalCrossReference).toHaveBeenCalledWith(
+        expect.objectContaining({ fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1' }),
+      );
+    });
+  });
+
+  it('supports typing a complete reference and previews it immediately', async () => {
+    setup([]);
+    await userEvent.type(screen.getByLabelText('Link to another verse'), 'John 1:1');
+    expect(screen.getByText(/Selected verse/)).toBeDefined();
+    expect(screen.getByLabelText('Verse')).toHaveProperty('value', '1');
   });
 
   it('refuses writes when local storage is unavailable', () => {
