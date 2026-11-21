@@ -48,6 +48,7 @@ import { GENRE_COLORS, GENRE_HEX } from '../palette.ts';
 import { OriginalWordsSection } from './OriginalWordsSection.tsx';
 import { VerseAnnotations } from '../../../features/annotations/VerseAnnotations.tsx';
 import { StudySection } from '../../../features/study/StudySection.tsx';
+import { googleVerseSearchUrl } from '../../../features/study/google-search.ts';
 import { PanelSection } from './PanelSection.tsx';
 import type { VizData } from '../viz-data.ts';
 import { buildVerseShareRequest } from '../verse-share.ts';
@@ -399,6 +400,10 @@ export function PassagePanel({
               )}
             </div>
             {actionRow}
+            <div className={styles.actions}>
+              <a className={styles.elsewhereLink} href={googleVerseSearchUrl(formatPassage(passage, versification, books))} target="_blank" rel="noopener noreferrer">Search Google commentary <ExternalLinkIcon /></a>
+              <a className={styles.elsewhereLink} href={googleVerseSearchUrl(formatPassage(passage, versification, books), verseTextOrNote(translation, passage.verse))} target="_blank" rel="noopener noreferrer">Search exact verse <ExternalLinkIcon /></a>
+            </div>
             <VerseAnnotations verseId={toPassageOsisId(passage, versification)} />
             <StudySection verseId={toPassageOsisId(passage, versification)} />
           </>
