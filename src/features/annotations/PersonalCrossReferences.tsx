@@ -112,7 +112,9 @@ export function PersonalCrossReferences({
                     .catch((e: unknown) => {
                       setFailure(e instanceof Error ? e.message : 'Could not delete this link.');
                     })
-                    .finally(() => setBusy(false));
+                    .finally(() => {
+                      setBusy(false);
+                    });
                 }}
               >
                 Delete
@@ -132,7 +134,9 @@ export function PersonalCrossReferences({
         <input
           id="personal-reference-target"
           value={target}
-          onChange={(event) => setTarget(event.target.value)}
+          onChange={(event) => {
+            setTarget(event.target.value);
+          }}
           placeholder="John 1:1"
           required
           maxLength={90}
@@ -143,7 +147,9 @@ export function PersonalCrossReferences({
         <textarea
           id="personal-reference-note"
           value={note}
-          onChange={(event) => setNote(event.target.value)}
+          onChange={(event) => {
+            setNote(event.target.value);
+          }}
           maxLength={5000}
           rows={2}
           disabled={busy || status !== 'ready'}
