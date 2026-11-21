@@ -11,7 +11,7 @@ const note: PersonalNote = {
   updatedAt: late,
 };
 
-type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'labels' | 'sync_deletions';
+type StoreName = 'notes' | 'highlights' | 'bookmarks' | 'labels' | 'cross_references' | 'sync_deletions';
 
 /** Minimal event-driven IndexedDB fixture: keep real transactions and asynchronous request order. */
 function installIndexedDB() {
@@ -20,6 +20,7 @@ function installIndexedDB() {
     highlights: new Map(),
     bookmarks: new Map(),
     labels: new Map(),
+    cross_references: new Map(),
     sync_deletions: new Map(),
   };
   const declared = new Set<string>();
@@ -60,6 +61,7 @@ function installIndexedDB() {
             name !== 'highlights' &&
             name !== 'bookmarks' &&
             name !== 'labels' &&
+            name !== 'cross_references' &&
             name !== 'sync_deletions'
           ) {
             throw new Error('Unknown store');
@@ -78,7 +80,7 @@ function installIndexedDB() {
               }
               const row = value as Record<string, unknown>;
               const key =
-                name === 'notes' || name === 'sync_deletions' || name === 'labels'
+                name === 'notes' || name === 'sync_deletions' || name === 'labels' || name === 'cross_references'
                   ? row['id']
                   : name === 'bookmarks'
                     ? row['color']
@@ -174,7 +176,7 @@ describe('local-first verse annotation storage', () => {
     const fake = installIndexedDB();
     const store = await import('./storage.ts');
     await store.startAnnotations();
-    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 4);
+    expect(fake.spy).toHaveBeenCalledWith('bible-study-annotations', 5);
     await store.setVerseHighlight('Gen.1.1', 'amber');
     expect(fake.stores.highlights.size).toBe(1);
     await store.setVerseHighlight('Gen.1.1', 'blue');
@@ -706,5 +708,24 @@ describe('safe colour meaning updates across devices', () => {
       },
     ]);
     expect(fake.stores.labels.size).toBe(0);
+  });
+});
+
+describe('local personal cross-reference persistence', () => {
+  it('saves, exports, synchronizes and removes a reader-created link', async () => {
+    const fake = installIndexedDB();
+    const store = await import('./storage.ts');
+    const link = {
+      id: 'my-link', fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1',
+      note: 'Both describe creation', createdAt: early, updatedAt: late,
+    };
+    await store.startAnnotations();
+    await store.upsertPersonalCrossReference(link);
+    expect(fake.stores.cross_references.size).toBe(1);
+    expect(parseAnnotationsBackup(await store.exportAnnotations()).crossReferences).toEqual([link]);
+    expect((await store.exportCloudRecords()).some((row) => row.kind === 'cross-reference' && row.title === 'John.1.1')).toBe(true);
+    await store.deletePersonalCrossReference(link.id);
+    expect(fake.stores.cross_references.size).toBe(0);
+    expect((await store.exportCloudRecords()).some((row) => row.kind === 'cross-reference' && row.deleted)).toBe(true);
   });
 });
