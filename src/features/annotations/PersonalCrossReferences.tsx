@@ -43,7 +43,7 @@ export function PersonalCrossReferences({
 
   async function save() {
     if (!target || data.versification.indexOf(target) === undefined) {
-      setFailure('Choose a valid book, chapter and verse.');
+      setFailure('Choose a valid verse (book, chapter and verse).');
       return;
     }
     const toVerseId = toOsisId(target);
