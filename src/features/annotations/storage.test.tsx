@@ -801,33 +801,43 @@ describe('personal cross-reference cloud reconciliation and backups', () => {
     };
     await storage.applyCloudRecords([cloudRecord]);
     expect(fake.stores.cross_references.size).toBe(1);
-    expect((await storage.exportCloudRecords()).some((row) =>
-      row.kind === 'cross-reference' && !row.deleted,
-    )).toBe(true);
-    await storage.applyCloudRecords([{
-      ...cloudRecord,
-      updated_at: '2026-11-21T16:00:00.000Z',
-      deleted: true,
-    }]);
+    expect(
+      (await storage.exportCloudRecords()).some(
+        (row) => row.kind === 'cross-reference' && !row.deleted,
+      ),
+    ).toBe(true);
+    await storage.applyCloudRecords([
+      {
+        ...cloudRecord,
+        updated_at: '2026-11-21T16:00:00.000Z',
+        deleted: true,
+      },
+    ]);
     expect(fake.stores.cross_references.size).toBe(0);
-    expect((await storage.exportCloudRecords()).some((row) =>
-      row.kind === 'cross-reference' && row.deleted,
-    )).toBe(true);
+    expect(
+      (await storage.exportCloudRecords()).some(
+        (row) => row.kind === 'cross-reference' && row.deleted,
+      ),
+    ).toBe(true);
   });
 
   it('clears personal links with other annotations and refuses invalid verses', async () => {
     const fake = installIndexedDB();
     const storage = await import('./storage.ts');
     await storage.startAnnotations();
-    await expect(storage.upsertPersonalCrossReference({
-      ...personalLink,
-      toVerseId: 'John.99.99',
-    })).rejects.toThrow('Invalid personal cross-reference');
+    await expect(
+      storage.upsertPersonalCrossReference({
+        ...personalLink,
+        toVerseId: 'John.99.99',
+      }),
+    ).rejects.toThrow('Invalid personal cross-reference');
     await storage.upsertPersonalCrossReference(personalLink);
     await storage.deleteAllAnnotations();
     expect(fake.stores.cross_references.size).toBe(0);
-    expect((await storage.exportCloudRecords()).some((row) =>
-      row.kind === 'cross-reference' && row.deleted,
-    )).toBe(true);
+    expect(
+      (await storage.exportCloudRecords()).some(
+        (row) => row.kind === 'cross-reference' && row.deleted,
+      ),
+    ).toBe(true);
   });
 });
