@@ -17,6 +17,12 @@ const note = (
   sourceOrder: order,
   refs: [{ book, startChapter: first, startVerse: 1, endChapter: last, endVerse: 10 }],
   content: ['Note'],
+  it('reports missing chapter commentary without pretending it is empty', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('', { status: 404 }))));
+    render(<ChapterReview verseId="Gen.50.20" />);
+    expect((await screen.findByRole('alert')).textContent).toContain('not available offline');
+  });
+
   it('renders editorial analysis, key passages and every relevant source note', async () => {
     const passage = note('Creation context', 'genesis', 1, 2, 1);
     const direct = note('First verse', 'genesis', 1, 1, 2);
@@ -51,12 +57,6 @@ const note = (
       expect(screen.getByText(/0 source notes covering this chapter/)).toBeDefined();
     });
     expect(screen.getByText(/No Tyndale notes have been matched/)).toBeDefined();
-  });
-
-  it('reports missing chapter commentary without pretending it is empty', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('', { status: 404 }))));
-    render(<ChapterReview verseId="Gen.50.20" />);
-    expect((await screen.findByRole('alert')).textContent).toContain('not available offline');
   });
 
   it('does not render editorial chapter guides for unsupported books', () => {
