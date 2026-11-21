@@ -107,8 +107,7 @@ describe('searchable and exportable personal notebook', () => {
 
   it('does not allow importing or exporting when IndexedDB is unavailable', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-    crossReferences: [],
-      ...snapshot,
+    ...snapshot,
       status: 'unavailable',
       error: 'Disk denied.',
     });
@@ -211,8 +210,7 @@ describe('searchable and exportable personal notebook', () => {
   });
   it('opens each colour at its own moving bookmark without changing highlights', async () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
-    crossReferences: [],
-      ...snapshot,
+    ...snapshot,
       bookmarks: [
         { color: 'amber', verseId: 'John.3.16', updatedAt: now },
         { color: 'green', verseId: 'Gen.1.1', updatedAt: now },
@@ -273,8 +271,7 @@ describe('notebook enhancements', () => {
     const second = snapshot.notes[1];
     if (!first || !second) throw new Error('Missing test notes');
     vi.mocked(storage.useAnnotations).mockReturnValue({
-    crossReferences: [],
-      ...snapshot,
+    ...snapshot,
       notes: [
         { ...first, category: 'Prayer', title: 'Morning prayer' },
         { ...second, category: 'Sermon' },
@@ -408,8 +405,7 @@ describe('notebook note editing and colour settings', () => {
     const second = snapshot.notes[1];
     if (!first || !second) throw new Error('Missing notes');
     vi.mocked(storage.useAnnotations).mockReturnValue({
-    crossReferences: [],
-      ...snapshot,
+    ...snapshot,
       notes: [
         { ...first, updatedAt: '2026-11-14T00:00:00Z', category: 'Prayer' },
         { ...second, updatedAt: '2026-11-15T00:00:00Z', category: 'Sermon' },
