@@ -1,0 +1,116 @@
+.chapterReview {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.025);
+  color: var(--color-text);
+}
+.header,
+.section {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+.header h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+.kicker {
+  color: var(--color-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+.section {
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--color-border);
+}
+.section h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.section p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.section .disclosure,
+.disclosure,
+.credit {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.verseTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.verseTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2rem;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.noteCollection {
+  min-inline-size: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+}
+.noteCollection > summary {
+  padding: var(--space-3);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.noteList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3) 2rem;
+}
+.noteItem {
+  min-inline-size: 0;
+  font-size: 0.82rem;
+}
+.noteItem details {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.noteItem summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.noteItem p {
+  margin-block-start: var(--space-2);
+  font-family: var(--font-serif);
+  white-space: pre-wrap;
+}
+.noteRef {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+.credit a {
+  color: var(--color-text);
+  text-underline-offset: 0.2em;
+}
+@media (max-width: 24rem) {
+  .chapterReview {
+    padding: var(--space-2);
+  }
+}
