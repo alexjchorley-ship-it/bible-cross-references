@@ -2,7 +2,13 @@ import type { PersonalCrossReference } from '../../features/annotations/model.ts
 import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import type { Versification, VerseIndexRange } from '../../core/bible/versification.ts';
 import type { Connection } from './connections.ts';
-import type { ArcInstances } from '../arcs/arc-instances.ts';
+/** Shape shared with Arcs without importing a visualization-specific module. */
+interface ArcInstances {
+  readonly count: number;
+  readonly endpoints: Float32Array;
+  readonly genres: Float32Array;
+  readonly weights: Float32Array;
+}
 import { elementAt } from '../../core/lib/array.ts';
 
 /** Synthetic negative IDs never collide with the immutable source dataset. */
