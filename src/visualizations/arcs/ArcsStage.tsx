@@ -7,6 +7,9 @@ import type { LinkFilter } from '../shared/link-filter.ts';
 import { useElementSize } from '../shared/use-element-size.ts';
 import type { VizData } from '../shared/viz-data.ts';
 import { buildArcInstances } from './arc-instances.ts';
+import { useAnnotations } from '../../features/annotations/storage.ts';
+import { personalArcInstances, combineArcInstances } from '../shared/personal-links.ts';
+import { parseOsisId } from '../../core/bible/verse-ref.ts';
 import { ArcsController, type ArcHover } from './arcs-controller.ts';
 import styles from './ArcsStage.module.css';
 
@@ -34,6 +37,7 @@ export function ArcsStage({
   onSelect,
 }: ArcsStageProps) {
   const { t, books, locale } = useLocalization();
+  const { crossReferences: personalLinks } = useAnnotations();
   const genres = locale.genres;
   // The axis needs names to paint its first frame, but a change of language must not tear down
   // the WebGL context: the effect below hands the controller the new ones instead.
@@ -92,20 +96,39 @@ export function ArcsStage({
 
   useEffect(() => {
     controllerRef.current?.setLinks(
-      buildArcInstances(data.crossReferences.index, linkIds, data.verseGenres),
+      combineArcInstances(
+        buildArcInstances(data.crossReferences.index, linkIds, data.verseGenres),
+        personalArcInstances(personalLinks, data.versification, data.verseGenres),
+      ),
     );
-  }, [data, linkIds]);
+  }, [data, linkIds, personalLinks]);
 
   useEffect(() => {
     const { index } = data.crossReferences;
     controllerRef.current?.setLinkResolver((range) =>
-      buildArcInstances(
-        index,
-        connectionLinkIds(collectConnections(index, range, filter, data.verseGenres)),
-        data.verseGenres,
+      combineArcInstances(
+        buildArcInstances(
+          index,
+          connectionLinkIds(collectConnections(index, range, filter, data.verseGenres)),
+          data.verseGenres,
+        ),
+        personalArcInstances(
+          personalLinks.filter((link) => {
+            const a = parseOsisId(link.fromVerseId);
+            const b = parseOsisId(link.toVerseId);
+            const from = a && data.versification.indexOf(a);
+            const to = b && data.versification.indexOf(b);
+            return (
+              (from !== undefined && from >= range.start && from <= range.end) ||
+              (to !== undefined && to >= range.start && to <= range.end)
+            );
+          }),
+          data.versification,
+          data.verseGenres,
+        ),
       ),
     );
-  }, [data, filter]);
+  }, [data, filter, personalLinks]);
 
   useEffect(() => {
     controllerRef.current?.setFocus(focus && passageRange(focus, data.versification));

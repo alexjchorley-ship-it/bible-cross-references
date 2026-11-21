@@ -13,13 +13,15 @@ import {
   type VerseHighlight,
   type ColorLabel,
   isColorLabel,
+  isPersonalCrossReference,
+  type PersonalCrossReference,
 } from './model.ts';
 
 type StorageStatus = 'loading' | 'ready' | 'unavailable';
 
 /** A cloud record is a note, highlight, or retained deletion tombstone. */
 export interface CloudAnnotation {
-  readonly kind: 'note' | 'highlight' | 'bookmark' | 'label';
+  readonly kind: 'note' | 'highlight' | 'bookmark' | 'label' | 'cross-reference';
   readonly item_id: string;
   readonly verse_id: string;
   readonly body: string | null;
@@ -43,6 +45,7 @@ export interface AnnotationSnapshot {
   readonly highlights: readonly VerseHighlight[];
   readonly bookmarks: readonly ReadingBookmark[];
   readonly labels?: readonly ColorLabel[];
+  readonly crossReferences: readonly PersonalCrossReference[];
 }
 
 let snapshot: AnnotationSnapshot = {
@@ -52,6 +55,7 @@ let snapshot: AnnotationSnapshot = {
   highlights: [],
   bookmarks: [],
   labels: [],
+  crossReferences: [],
 };
 const listeners = new Set<() => void>();
 let connection: Promise<IDBDatabase> | null = null;
@@ -78,7 +82,7 @@ function database(): Promise<IDBDatabase> {
       reject(new Error('IndexedDB is unavailable. Notes cannot be saved in this browser.'));
       return;
     }
-    const request = indexedDB.open('bible-study-annotations', 4);
+    const request = indexedDB.open('bible-study-annotations', 5);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('notes')) {
@@ -92,6 +96,9 @@ function database(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains('bookmarks')) {
         db.createObjectStore('bookmarks', { keyPath: 'color' });
+      }
+      if (!db.objectStoreNames.contains('cross_references')) {
+        db.createObjectStore('cross_references', { keyPath: 'id' });
       }
       if (!db.objectStoreNames.contains('sync_deletions')) {
         db.createObjectStore('sync_deletions', { keyPath: 'id' });
@@ -159,15 +166,16 @@ function write(
 
 async function reload(): Promise<void> {
   const db = await database();
-  const [notes, highlights, bookmarks, labels, deletions] = await Promise.all([
+  const [notes, highlights, bookmarks, labels, crossReferences, deletions] = await Promise.all([
     all<PersonalNote>(db, 'notes'),
     all<VerseHighlight>(db, 'highlights'),
     all<ReadingBookmark>(db, 'bookmarks'),
     all<ColorLabel>(db, 'labels'),
+    all<PersonalCrossReference>(db, 'cross_references'),
     all<DeletionRecord>(db, 'sync_deletions'),
   ]);
   tombstones = deletions;
-  publish({ status: 'ready', error: null, notes, highlights, bookmarks, labels });
+  publish({ status: 'ready', error: null, notes, highlights, bookmarks, labels, crossReferences });
 }
 
 /** Start lazily. A missing IndexedDB does not masquerade as successful in-memory saving. */
@@ -292,6 +300,39 @@ export function deletePersonalNote(id: string): Promise<void> {
   );
 }
 
+export function upsertPersonalCrossReference(link: PersonalCrossReference): Promise<void> {
+  if (!isPersonalCrossReference(link))
+    return Promise.reject(new Error('Invalid personal cross-reference.'));
+  return enqueue((db) =>
+    write(db, ['cross_references', 'sync_deletions'], (transaction) => {
+      transaction.objectStore('cross_references').put(link);
+      transaction.objectStore('sync_deletions').delete(recordId('cross-reference', link.id));
+    }),
+  );
+}
+
+export function deletePersonalCrossReference(id: string): Promise<void> {
+  return enqueue((db) =>
+    write(db, ['cross_references', 'sync_deletions'], (transaction) => {
+      transaction.objectStore('cross_references').delete(id);
+      const prior = snapshot.crossReferences.find((entry) => entry.id === id);
+      if (prior)
+        transaction.objectStore('sync_deletions').put({
+          id: recordId('cross-reference', id),
+          kind: 'cross-reference',
+          item_id: id,
+          verse_id: prior.fromVerseId,
+          body: null,
+          title: prior.toVerseId,
+          color: null,
+          created_at: prior.createdAt,
+          updated_at: new Date().toISOString(),
+          deleted: true,
+        } satisfies DeletionRecord);
+    }),
+  );
+}
+
 export async function exportAnnotations(): Promise<string> {
   await pending;
   await requireDatabase();
@@ -300,6 +341,7 @@ export async function exportAnnotations(): Promise<string> {
     snapshot.highlights,
     snapshot.bookmarks,
     snapshot.labels,
+    snapshot.crossReferences,
   );
 }
 
@@ -312,6 +354,16 @@ export async function importAnnotations(
     const deleted = new Map(tombstones.map((entry) => [entry.id, entry.updated_at]));
     const bookmarks = [...snapshot.bookmarks];
     const labels = [...(snapshot.labels ?? [])];
+    const crossReferences = new Map(snapshot.crossReferences.map((link) => [link.id, link]));
+    for (const link of backup.crossReferences ?? []) {
+      const prior = crossReferences.get(link.id);
+      if (
+        (!prior || prior.updatedAt < link.updatedAt) &&
+        (!deleted.get(recordId('cross-reference', link.id)) ||
+          link.updatedAt > (deleted.get(recordId('cross-reference', link.id)) ?? ''))
+      )
+        crossReferences.set(link.id, link);
+    }
     for (const label of backup.labels ?? []) {
       const previous = labels.find((entry) => entry.id === label.id);
       if (!previous || label.updatedAt > previous.updatedAt) {
@@ -340,11 +392,15 @@ export async function importAnnotations(
     });
     return write(
       db,
-      ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'],
+      ['notes', 'highlights', 'bookmarks', 'labels', 'cross_references', 'sync_deletions'],
       (transaction) => {
         const noteStore = transaction.objectStore('notes');
         const highlightStore = transaction.objectStore('highlights');
         const removalStore = transaction.objectStore('sync_deletions');
+        for (const link of crossReferences.values()) {
+          transaction.objectStore('cross_references').put(link);
+          removalStore.delete(recordId('cross-reference', link.id));
+        }
         for (const label of labels) {
           transaction.objectStore('labels').put(label);
           removalStore.delete(recordId('label', label.id));
@@ -418,66 +474,85 @@ export function setColorLabel(id: string, name: string): Promise<void> {
 
 export function deleteAllAnnotations(): Promise<void> {
   return enqueue((db) =>
-    write(db, ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'], (transaction) => {
-      const store = transaction.objectStore('sync_deletions');
-      const now = new Date().toISOString();
-      for (const note of snapshot.notes) {
-        store.put({
-          id: recordId('note', note.id),
-          kind: 'note',
-          item_id: note.id,
-          verse_id: note.verseId,
-          body: null,
-          color: null,
-          created_at: note.createdAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const highlight of snapshot.highlights) {
-        store.put({
-          id: recordId('highlight', highlight.verseId),
-          kind: 'highlight',
-          item_id: highlight.verseId,
-          verse_id: highlight.verseId,
-          body: null,
-          color: null,
-          created_at: highlight.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const bookmark of snapshot.bookmarks) {
-        store.put({
-          id: recordId('bookmark', bookmark.color),
-          kind: 'bookmark',
-          item_id: bookmark.color,
-          verse_id: bookmark.verseId,
-          body: null,
-          color: bookmark.color,
-          created_at: bookmark.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const label of snapshot.labels ?? []) {
-        store.put({
-          id: recordId('label', label.id),
-          kind: 'label',
-          item_id: label.id,
-          verse_id: 'Gen.1.1',
-          body: null,
-          color: null,
-          created_at: label.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      transaction.objectStore('labels').clear();
-      transaction.objectStore('bookmarks').clear();
-      transaction.objectStore('notes').clear();
-      transaction.objectStore('highlights').clear();
-    }),
+    write(
+      db,
+      ['notes', 'highlights', 'bookmarks', 'labels', 'cross_references', 'sync_deletions'],
+      (transaction) => {
+        const store = transaction.objectStore('sync_deletions');
+        const now = new Date().toISOString();
+        for (const link of snapshot.crossReferences) {
+          store.put({
+            id: recordId('cross-reference', link.id),
+            kind: 'cross-reference',
+            item_id: link.id,
+            verse_id: link.fromVerseId,
+            body: null,
+            title: link.toVerseId,
+            color: null,
+            created_at: link.createdAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const note of snapshot.notes) {
+          store.put({
+            id: recordId('note', note.id),
+            kind: 'note',
+            item_id: note.id,
+            verse_id: note.verseId,
+            body: null,
+            color: null,
+            created_at: note.createdAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const highlight of snapshot.highlights) {
+          store.put({
+            id: recordId('highlight', highlight.verseId),
+            kind: 'highlight',
+            item_id: highlight.verseId,
+            verse_id: highlight.verseId,
+            body: null,
+            color: null,
+            created_at: highlight.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const bookmark of snapshot.bookmarks) {
+          store.put({
+            id: recordId('bookmark', bookmark.color),
+            kind: 'bookmark',
+            item_id: bookmark.color,
+            verse_id: bookmark.verseId,
+            body: null,
+            color: bookmark.color,
+            created_at: bookmark.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const label of snapshot.labels ?? []) {
+          store.put({
+            id: recordId('label', label.id),
+            kind: 'label',
+            item_id: label.id,
+            verse_id: 'Gen.1.1',
+            body: null,
+            color: null,
+            created_at: label.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        transaction.objectStore('labels').clear();
+        transaction.objectStore('bookmarks').clear();
+        transaction.objectStore('cross_references').clear();
+        transaction.objectStore('notes').clear();
+        transaction.objectStore('highlights').clear();
+      },
+    ),
   );
 }
 
@@ -486,6 +561,18 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
   await pending;
   await requireDatabase();
   const rows: CloudAnnotation[] = [
+    ...snapshot.crossReferences.map((link) => ({
+      kind: 'cross-reference' as const,
+      item_id: link.id,
+      verse_id: link.fromVerseId,
+      body: link.note,
+      title: link.toVerseId,
+      category: null,
+      color: null,
+      created_at: link.createdAt,
+      updated_at: link.updatedAt,
+      deleted: false,
+    })),
     ...snapshot.notes.map((note) => ({
       kind: 'note' as const,
       item_id: note.id,
@@ -547,12 +634,13 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
     );
     await write(
       db,
-      ['notes', 'highlights', 'bookmarks', 'labels', 'sync_deletions'],
+      ['notes', 'highlights', 'bookmarks', 'labels', 'cross_references', 'sync_deletions'],
       (transaction) => {
         const notes = transaction.objectStore('notes');
         const highlights = transaction.objectStore('highlights');
         const bookmarks = transaction.objectStore('bookmarks');
         const labels = transaction.objectStore('labels');
+        const crossReferences = transaction.objectStore('cross_references');
         const deletions = transaction.objectStore('sync_deletions');
         for (const row of remote) {
           if (!isCanonicalVerseId(row.verse_id) || !Number.isFinite(Date.parse(row.updated_at)))
@@ -561,11 +649,25 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
           const previous = local.get(id);
           if (previous && previous.updated_at > row.updated_at) continue;
           if (row.deleted) {
-            if (row.kind === 'note') notes.delete(row.item_id);
+            if (row.kind === 'cross-reference') crossReferences.delete(row.item_id);
+            else if (row.kind === 'note') notes.delete(row.item_id);
             else if (row.kind === 'highlight') highlights.delete(row.item_id);
             else if (row.kind === 'bookmark') bookmarks.delete(row.item_id);
             else labels.delete(row.item_id);
             deletions.put({ ...row, id } satisfies DeletionRecord);
+          } else if (row.kind === 'cross-reference' && typeof row.title === 'string') {
+            const link: PersonalCrossReference = {
+              id: row.item_id,
+              fromVerseId: row.verse_id,
+              toVerseId: row.title,
+              note: row.body ?? '',
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+            };
+            if (isPersonalCrossReference(link)) {
+              crossReferences.put(link);
+              deletions.delete(id);
+            }
           } else if (row.kind === 'note' && typeof row.body === 'string' && row.body.length > 0) {
             notes.put({
               id: row.item_id,
@@ -614,14 +716,26 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
 }
 
 async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotation[]> {
-  const [notes, highlights, bookmarks, labels, deletions] = await Promise.all([
+  const [notes, highlights, bookmarks, labels, crossReferences, deletions] = await Promise.all([
     all<PersonalNote>(db, 'notes'),
     all<VerseHighlight>(db, 'highlights'),
     all<ReadingBookmark>(db, 'bookmarks'),
     all<ColorLabel>(db, 'labels'),
+    all<PersonalCrossReference>(db, 'cross_references'),
     all<DeletionRecord>(db, 'sync_deletions'),
   ]);
   return [
+    ...crossReferences.map((link) => ({
+      kind: 'cross-reference' as const,
+      item_id: link.id,
+      verse_id: link.fromVerseId,
+      body: link.note,
+      title: link.toVerseId,
+      color: null,
+      created_at: link.createdAt,
+      updated_at: link.updatedAt,
+      deleted: false,
+    })),
     ...notes.map((n) => ({
       kind: 'note' as const,
       item_id: n.id,

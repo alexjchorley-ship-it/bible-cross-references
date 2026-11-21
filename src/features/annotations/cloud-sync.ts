@@ -12,7 +12,8 @@ function isCloudAnnotation(row: unknown): row is CloudAnnotation {
     (data.kind === 'note' ||
       data.kind === 'highlight' ||
       data.kind === 'bookmark' ||
-      data.kind === 'label') &&
+      data.kind === 'label' ||
+      data.kind === 'cross-reference') &&
     typeof data.item_id === 'string' &&
     typeof data.verse_id === 'string' &&
     typeof data.created_at === 'string' &&

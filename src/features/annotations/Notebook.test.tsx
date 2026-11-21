@@ -17,6 +17,7 @@ vi.mock('./storage.ts', () => ({
 
 const now = '2026-11-14T12:00:00.000Z';
 const snapshot = {
+  crossReferences: [],
   status: 'ready' as const,
   error: null,
   notes: [
@@ -196,6 +197,7 @@ describe('searchable and exportable personal notebook', () => {
 
   it('shows a friendly empty state when no annotations exist', () => {
     vi.mocked(storage.useAnnotations).mockReturnValue({
+      crossReferences: [],
       status: 'ready',
       error: null,
       notes: [],
