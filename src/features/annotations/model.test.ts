@@ -196,14 +196,23 @@ describe('expanded colour options', () => {
 describe('reader-created cross-references', () => {
   it('backs up both verse IDs and explanatory notes without affecting older formats', () => {
     const link = {
-      id: 'personal-1', fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1',
-      note: 'Both passages begin at creation.', createdAt: EARLY, updatedAt: LATE,
+      id: 'personal-1',
+      fromVerseId: 'Gen.1.1',
+      toVerseId: 'John.1.1',
+      note: 'Both passages begin at creation.',
+      createdAt: EARLY,
+      updatedAt: LATE,
     };
     const backup = serializeAnnotationsBackup([], [], [], [], [link]);
     expect(parseAnnotationsBackup(backup).crossReferences).toEqual([link]);
-    expect(() => parseAnnotationsBackup(JSON.stringify({
-      ...JSON.parse(backup), crossReferences: [link, link],
-    }))).toThrow('duplicate cross-reference');
+    expect(() =>
+      parseAnnotationsBackup(
+        JSON.stringify({
+          ...JSON.parse(backup),
+          crossReferences: [link, link],
+        }),
+      ),
+    ).toThrow('duplicate cross-reference');
     const previous = JSON.parse(backup) as Record<string, unknown>;
     previous['schemaVersion'] = 3;
     delete previous['crossReferences'];

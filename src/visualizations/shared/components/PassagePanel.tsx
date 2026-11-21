@@ -402,11 +402,32 @@ export function PassagePanel({
             </div>
             {actionRow}
             <div className={styles.actions}>
-              <a className={styles.elsewhereLink} href={googleVerseSearchUrl(formatPassage(passage, versification, books))} target="_blank" rel="noopener noreferrer">Search Google commentary <ExternalLinkIcon /></a>
-              <a className={styles.elsewhereLink} href={googleVerseSearchUrl(formatPassage(passage, versification, books), verseTextOrNote(translation, passage.verse))} target="_blank" rel="noopener noreferrer">Search exact verse <ExternalLinkIcon /></a>
+              <a
+                className={styles.elsewhereLink}
+                href={googleVerseSearchUrl(formatPassage(passage, versification, books))}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Search Google commentary <ExternalLinkIcon />
+              </a>
+              <a
+                className={styles.elsewhereLink}
+                href={googleVerseSearchUrl(
+                  formatPassage(passage, versification, books),
+                  verseTextOrNote(translation, passage.verse),
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Search exact verse <ExternalLinkIcon />
+              </a>
             </div>
             <VerseAnnotations verseId={toPassageOsisId(passage, versification)} />
-            <PersonalCrossReferences verseId={toPassageOsisId(passage, versification)} data={data} onSelect={onSelect} />
+            <PersonalCrossReferences
+              verseId={toPassageOsisId(passage, versification)}
+              data={data}
+              onSelect={onSelect}
+            />
             <StudySection verseId={toPassageOsisId(passage, versification)} />
           </>
         ) : (

@@ -121,12 +121,19 @@ export interface PersonalCrossReference {
 }
 
 export function isPersonalCrossReference(value: unknown): value is PersonalCrossReference {
-  return object(value) &&
-    typeof value['id'] === 'string' && value['id'].length > 0 && value['id'].length <= 100 &&
-    isCanonicalVerseId(value['fromVerseId']) && isCanonicalVerseId(value['toVerseId']) &&
+  return (
+    object(value) &&
+    typeof value['id'] === 'string' &&
+    value['id'].length > 0 &&
+    value['id'].length <= 100 &&
+    isCanonicalVerseId(value['fromVerseId']) &&
+    isCanonicalVerseId(value['toVerseId']) &&
     value['fromVerseId'] !== value['toVerseId'] &&
-    typeof value['note'] === 'string' && value['note'].length <= 5000 &&
-    isDate(value['createdAt']) && isDate(value['updatedAt']);
+    typeof value['note'] === 'string' &&
+    value['note'].length <= 5000 &&
+    isDate(value['createdAt']) &&
+    isDate(value['updatedAt'])
+  );
 }
 
 export interface AnnotationsBackup {
@@ -196,7 +203,8 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
     value['format'] !== 'bible-study-annotations' ||
     (value['schemaVersion'] !== 1 &&
       value['schemaVersion'] !== 2 &&
-      value['schemaVersion'] !== 3 && value['schemaVersion'] !== 4) ||
+      value['schemaVersion'] !== 3 &&
+      value['schemaVersion'] !== 4) ||
     typeof value['appVersion'] !== 'string' ||
     !isDate(value['exportedAt']) ||
     !Array.isArray(value['annotations']) ||
@@ -208,7 +216,8 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
     ((value['schemaVersion'] === 3 || value['schemaVersion'] === 4) &&
       (!Array.isArray(value['labels']) || !value['labels'].every(isColorLabel))) ||
     (value['schemaVersion'] === 4 &&
-      (!Array.isArray(value['crossReferences']) || !value['crossReferences'].every(isPersonalCrossReference)))
+      (!Array.isArray(value['crossReferences']) ||
+        !value['crossReferences'].every(isPersonalCrossReference)))
   ) {
     throw new Error('This file is not a supported Bible Study annotations backup.');
   }
@@ -218,14 +227,18 @@ export function parseAnnotationsBackup(json: string): AnnotationsBackup {
     throw new Error('The backup contains duplicate note IDs or highlighted verses.');
   }
   const bookmarks = value['schemaVersion'] !== 1 ? (value['bookmarks'] as ReadingBookmark[]) : [];
-  const labels = (value['schemaVersion'] === 3 || value['schemaVersion'] === 4) ? (value['labels'] as ColorLabel[]) : [];
+  const labels =
+    value['schemaVersion'] === 3 || value['schemaVersion'] === 4
+      ? (value['labels'] as ColorLabel[])
+      : [];
   if (new Set(bookmarks.map((bookmark) => bookmark.color)).size !== bookmarks.length) {
     throw new Error('The backup contains duplicate bookmark colours.');
   }
   if (new Set(labels.map((label) => label.id)).size !== labels.length) {
     throw new Error('The backup contains duplicate colour labels.');
   }
-  const crossReferences = value['schemaVersion'] === 4 ? value['crossReferences'] as PersonalCrossReference[] : [];
+  const crossReferences =
+    value['schemaVersion'] === 4 ? (value['crossReferences'] as PersonalCrossReference[]) : [];
   if (new Set(crossReferences.map((entry) => entry.id)).size !== crossReferences.length) {
     throw new Error('The backup contains duplicate cross-reference IDs.');
   }

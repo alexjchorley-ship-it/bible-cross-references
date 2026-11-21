@@ -20,7 +20,15 @@ export function StudySection({ verseId }: { readonly verseId: string }) {
       defaultOpen={false}
     >
       <div className={styles.studyContents}>
-        {verse && <a href={googleChapterSearchUrl(verse.book, verse.chapter)} target="_blank" rel="noopener noreferrer">Search Google for chapter context ↗</a>}
+        {verse && (
+          <a
+            href={googleChapterSearchUrl(verse.book, verse.chapter)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Search Google for chapter context ↗
+          </a>
+        )}
         <TyndaleNotes verseId={verseId} />
         {!study ? (
           <p className={styles.warning}>{t('study.notCurated')}</p>

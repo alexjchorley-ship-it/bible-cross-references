@@ -116,14 +116,25 @@ export function ThreadsStage({
     const shown: Connection[] = [
       ...(direction === 'incoming' ? [] : connections.outgoing),
       ...(direction === 'outgoing' ? [] : connections.incoming),
-      ...personal.filter((connection) => direction === 'both' || connection.direction === direction),
+      ...personal.filter(
+        (connection) => direction === 'both' || connection.direction === direction,
+      ),
     ];
     const byVerse = new Map<VerseIndex, Connection[]>();
     for (const connection of shown) {
       byVerse.set(connection.here, [...(byVerse.get(connection.here) ?? []), connection]);
     }
     return byVerse;
-  }, [crossReferences.index, start, end, filter, verseGenres, direction, personalLinks, versification]);
+  }, [
+    crossReferences.index,
+    start,
+    end,
+    filter,
+    verseGenres,
+    direction,
+    personalLinks,
+    versification,
+  ]);
 
   const spine = useMemo(
     () =>

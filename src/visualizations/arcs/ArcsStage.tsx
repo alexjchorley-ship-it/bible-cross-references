@@ -107,15 +107,25 @@ export function ArcsStage({
     const { index } = data.crossReferences;
     controllerRef.current?.setLinkResolver((range) =>
       combineArcInstances(
-        buildArcInstances(index, connectionLinkIds(collectConnections(index, range, filter, data.verseGenres)), data.verseGenres),
-        personalArcInstances(personalLinks.filter((link) => {
-          const a = parseOsisId(link.fromVerseId);
-          const b = parseOsisId(link.toVerseId);
-          const from = a && data.versification.indexOf(a);
-          const to = b && data.versification.indexOf(b);
-          return (from !== undefined && from >= range.start && from <= range.end) ||
-            (to !== undefined && to >= range.start && to <= range.end);
-        }), data.versification, data.verseGenres),
+        buildArcInstances(
+          index,
+          connectionLinkIds(collectConnections(index, range, filter, data.verseGenres)),
+          data.verseGenres,
+        ),
+        personalArcInstances(
+          personalLinks.filter((link) => {
+            const a = parseOsisId(link.fromVerseId);
+            const b = parseOsisId(link.toVerseId);
+            const from = a && data.versification.indexOf(a);
+            const to = b && data.versification.indexOf(b);
+            return (
+              (from !== undefined && from >= range.start && from <= range.end) ||
+              (to !== undefined && to >= range.start && to <= range.end)
+            );
+          }),
+          data.versification,
+          data.verseGenres,
+        ),
       ),
     );
   }, [data, filter, personalLinks]);

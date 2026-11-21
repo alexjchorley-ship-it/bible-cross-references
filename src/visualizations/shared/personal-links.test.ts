@@ -1,15 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { CANONICAL_VERSIFICATION } from '../../core/bible/versification.ts';
-import { personalArcInstances, personalConnections, combineArcInstances } from './personal-links.ts';
+import {
+  personalArcInstances,
+  personalConnections,
+  combineArcInstances,
+} from './personal-links.ts';
 
 const v = CANONICAL_VERSIFICATION;
 const from = v.indexOf({ book: 'Gen', chapter: 1, verse: 1 })!;
 const to = v.indexOf({ book: 'John', chapter: 1, verse: 1 })!;
-const links = [{
-  id: 'mine', fromVerseId: 'Gen.1.1', toVerseId: 'John.1.1',
-  note: 'Creation imagery', createdAt: '2026-11-21T10:00:00Z',
-  updatedAt: '2026-11-21T10:00:00Z',
-}];
+const links = [
+  {
+    id: 'mine',
+    fromVerseId: 'Gen.1.1',
+    toVerseId: 'John.1.1',
+    note: 'Creation imagery',
+    createdAt: '2026-11-21T10:00:00Z',
+    updatedAt: '2026-11-21T10:00:00Z',
+  },
+];
 
 describe('personal cross-reference rendering', () => {
   it('finds both endpoints without changing the public link index', () => {

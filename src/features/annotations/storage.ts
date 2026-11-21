@@ -301,24 +301,36 @@ export function deletePersonalNote(id: string): Promise<void> {
 }
 
 export function upsertPersonalCrossReference(link: PersonalCrossReference): Promise<void> {
-  if (!isPersonalCrossReference(link)) return Promise.reject(new Error('Invalid personal cross-reference.'));
-  return enqueue((db) => write(db, ['cross_references', 'sync_deletions'], (transaction) => {
-    transaction.objectStore('cross_references').put(link);
-    transaction.objectStore('sync_deletions').delete(recordId('cross-reference', link.id));
-  }));
+  if (!isPersonalCrossReference(link))
+    return Promise.reject(new Error('Invalid personal cross-reference.'));
+  return enqueue((db) =>
+    write(db, ['cross_references', 'sync_deletions'], (transaction) => {
+      transaction.objectStore('cross_references').put(link);
+      transaction.objectStore('sync_deletions').delete(recordId('cross-reference', link.id));
+    }),
+  );
 }
 
 export function deletePersonalCrossReference(id: string): Promise<void> {
-  return enqueue((db) => write(db, ['cross_references', 'sync_deletions'], (transaction) => {
-    transaction.objectStore('cross_references').delete(id);
-    const prior = snapshot.crossReferences.find((entry) => entry.id === id);
-    if (prior) transaction.objectStore('sync_deletions').put({
-      id: recordId('cross-reference', id),
-      kind: 'cross-reference', item_id: id, verse_id: prior.fromVerseId,
-      body: null, title: prior.toVerseId, color: null, created_at: prior.createdAt,
-      updated_at: new Date().toISOString(), deleted: true,
-    } satisfies DeletionRecord);
-  }));
+  return enqueue((db) =>
+    write(db, ['cross_references', 'sync_deletions'], (transaction) => {
+      transaction.objectStore('cross_references').delete(id);
+      const prior = snapshot.crossReferences.find((entry) => entry.id === id);
+      if (prior)
+        transaction.objectStore('sync_deletions').put({
+          id: recordId('cross-reference', id),
+          kind: 'cross-reference',
+          item_id: id,
+          verse_id: prior.fromVerseId,
+          body: null,
+          title: prior.toVerseId,
+          color: null,
+          created_at: prior.createdAt,
+          updated_at: new Date().toISOString(),
+          deleted: true,
+        } satisfies DeletionRecord);
+    }),
+  );
 }
 
 export async function exportAnnotations(): Promise<string> {
@@ -345,9 +357,12 @@ export async function importAnnotations(
     const crossReferences = new Map(snapshot.crossReferences.map((link) => [link.id, link]));
     for (const link of backup.crossReferences ?? []) {
       const prior = crossReferences.get(link.id);
-      if ((!prior || prior.updatedAt < link.updatedAt) &&
-          (!deleted.get(recordId('cross-reference', link.id)) ||
-           link.updatedAt > (deleted.get(recordId('cross-reference', link.id)) ?? ''))) crossReferences.set(link.id, link);
+      if (
+        (!prior || prior.updatedAt < link.updatedAt) &&
+        (!deleted.get(recordId('cross-reference', link.id)) ||
+          link.updatedAt > (deleted.get(recordId('cross-reference', link.id)) ?? ''))
+      )
+        crossReferences.set(link.id, link);
     }
     for (const label of backup.labels ?? []) {
       const previous = labels.find((entry) => entry.id === label.id);
@@ -459,73 +474,85 @@ export function setColorLabel(id: string, name: string): Promise<void> {
 
 export function deleteAllAnnotations(): Promise<void> {
   return enqueue((db) =>
-    write(db, ['notes', 'highlights', 'bookmarks', 'labels', 'cross_references', 'sync_deletions'], (transaction) => {
-      const store = transaction.objectStore('sync_deletions');
-      const now = new Date().toISOString();
-      for (const link of snapshot.crossReferences) {
-        store.put({ id: recordId('cross-reference', link.id), kind: 'cross-reference',
-          item_id: link.id, verse_id: link.fromVerseId, body: null,
-          title: link.toVerseId, color: null, created_at: link.createdAt,
-          updated_at: now, deleted: true } satisfies DeletionRecord);
-      }
-      for (const note of snapshot.notes) {
-        store.put({
-          id: recordId('note', note.id),
-          kind: 'note',
-          item_id: note.id,
-          verse_id: note.verseId,
-          body: null,
-          color: null,
-          created_at: note.createdAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const highlight of snapshot.highlights) {
-        store.put({
-          id: recordId('highlight', highlight.verseId),
-          kind: 'highlight',
-          item_id: highlight.verseId,
-          verse_id: highlight.verseId,
-          body: null,
-          color: null,
-          created_at: highlight.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const bookmark of snapshot.bookmarks) {
-        store.put({
-          id: recordId('bookmark', bookmark.color),
-          kind: 'bookmark',
-          item_id: bookmark.color,
-          verse_id: bookmark.verseId,
-          body: null,
-          color: bookmark.color,
-          created_at: bookmark.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      for (const label of snapshot.labels ?? []) {
-        store.put({
-          id: recordId('label', label.id),
-          kind: 'label',
-          item_id: label.id,
-          verse_id: 'Gen.1.1',
-          body: null,
-          color: null,
-          created_at: label.updatedAt,
-          updated_at: now,
-          deleted: true,
-        } satisfies DeletionRecord);
-      }
-      transaction.objectStore('labels').clear();
-      transaction.objectStore('bookmarks').clear();
-      transaction.objectStore('cross_references').clear();
-      transaction.objectStore('notes').clear();
-      transaction.objectStore('highlights').clear();
-    }),
+    write(
+      db,
+      ['notes', 'highlights', 'bookmarks', 'labels', 'cross_references', 'sync_deletions'],
+      (transaction) => {
+        const store = transaction.objectStore('sync_deletions');
+        const now = new Date().toISOString();
+        for (const link of snapshot.crossReferences) {
+          store.put({
+            id: recordId('cross-reference', link.id),
+            kind: 'cross-reference',
+            item_id: link.id,
+            verse_id: link.fromVerseId,
+            body: null,
+            title: link.toVerseId,
+            color: null,
+            created_at: link.createdAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const note of snapshot.notes) {
+          store.put({
+            id: recordId('note', note.id),
+            kind: 'note',
+            item_id: note.id,
+            verse_id: note.verseId,
+            body: null,
+            color: null,
+            created_at: note.createdAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const highlight of snapshot.highlights) {
+          store.put({
+            id: recordId('highlight', highlight.verseId),
+            kind: 'highlight',
+            item_id: highlight.verseId,
+            verse_id: highlight.verseId,
+            body: null,
+            color: null,
+            created_at: highlight.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const bookmark of snapshot.bookmarks) {
+          store.put({
+            id: recordId('bookmark', bookmark.color),
+            kind: 'bookmark',
+            item_id: bookmark.color,
+            verse_id: bookmark.verseId,
+            body: null,
+            color: bookmark.color,
+            created_at: bookmark.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        for (const label of snapshot.labels ?? []) {
+          store.put({
+            id: recordId('label', label.id),
+            kind: 'label',
+            item_id: label.id,
+            verse_id: 'Gen.1.1',
+            body: null,
+            color: null,
+            created_at: label.updatedAt,
+            updated_at: now,
+            deleted: true,
+          } satisfies DeletionRecord);
+        }
+        transaction.objectStore('labels').clear();
+        transaction.objectStore('bookmarks').clear();
+        transaction.objectStore('cross_references').clear();
+        transaction.objectStore('notes').clear();
+        transaction.objectStore('highlights').clear();
+      },
+    ),
   );
 }
 
@@ -535,9 +562,16 @@ export async function exportCloudRecords(): Promise<CloudAnnotation[]> {
   await requireDatabase();
   const rows: CloudAnnotation[] = [
     ...snapshot.crossReferences.map((link) => ({
-      kind: 'cross-reference' as const, item_id: link.id, verse_id: link.fromVerseId,
-      body: link.note, title: link.toVerseId, category: null, color: null,
-      created_at: link.createdAt, updated_at: link.updatedAt, deleted: false,
+      kind: 'cross-reference' as const,
+      item_id: link.id,
+      verse_id: link.fromVerseId,
+      body: link.note,
+      title: link.toVerseId,
+      category: null,
+      color: null,
+      created_at: link.createdAt,
+      updated_at: link.updatedAt,
+      deleted: false,
     })),
     ...snapshot.notes.map((note) => ({
       kind: 'note' as const,
@@ -623,8 +657,12 @@ export function applyCloudRecords(remote: readonly CloudAnnotation[]): Promise<v
             deletions.put({ ...row, id } satisfies DeletionRecord);
           } else if (row.kind === 'cross-reference' && typeof row.title === 'string') {
             const link: PersonalCrossReference = {
-              id: row.item_id, fromVerseId: row.verse_id, toVerseId: row.title,
-              note: row.body ?? '', createdAt: row.created_at, updatedAt: row.updated_at,
+              id: row.item_id,
+              fromVerseId: row.verse_id,
+              toVerseId: row.title,
+              note: row.body ?? '',
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
             };
             if (isPersonalCrossReference(link)) {
               crossReferences.put(link);
@@ -688,9 +726,15 @@ async function exportCloudRecordsUnsafe(db: IDBDatabase): Promise<CloudAnnotatio
   ]);
   return [
     ...crossReferences.map((link) => ({
-      kind: 'cross-reference' as const, item_id: link.id, verse_id: link.fromVerseId,
-      body: link.note, title: link.toVerseId, color: null,
-      created_at: link.createdAt, updated_at: link.updatedAt, deleted: false,
+      kind: 'cross-reference' as const,
+      item_id: link.id,
+      verse_id: link.fromVerseId,
+      body: link.note,
+      title: link.toVerseId,
+      color: null,
+      created_at: link.createdAt,
+      updated_at: link.updatedAt,
+      deleted: false,
     })),
     ...notes.map((n) => ({
       kind: 'note' as const,
