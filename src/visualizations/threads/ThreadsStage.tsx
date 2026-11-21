@@ -9,6 +9,7 @@ import {
 } from '../../core/bible/passage.ts';
 import { toOsisId, type VerseIndex } from '../../core/bible/verse-ref.ts';
 import { useAnnotations } from '../../features/annotations/storage.ts';
+import { personalConnections } from '../shared/personal-links.ts';
 import { NextIcon, PreviousIcon, ShareVerseIcon } from '../../shared/ui/icons.tsx';
 import { collectConnections, type Connection } from '../shared/connections.ts';
 import type { LinkFilter } from '../shared/link-filter.ts';
@@ -82,7 +83,7 @@ export function ThreadsStage({
   const localization = useLocalization();
   const { t, n, books, genreName } = localization;
   const { versification, translation, crossReferences, verseGenres } = data;
-  const { notes, highlights } = useAnnotations();
+  const { notes, highlights, crossReferences: personalLinks } = useAnnotations();
   const highlighted = useMemo(
     () => new Map(highlights.map((entry) => [entry.verseId, entry.color])),
     [highlights],
@@ -111,16 +112,18 @@ export function ThreadsStage({
       filter,
       verseGenres,
     );
+    const personal = personalConnections(personalLinks, versification, { start, end });
     const shown: Connection[] = [
       ...(direction === 'incoming' ? [] : connections.outgoing),
       ...(direction === 'outgoing' ? [] : connections.incoming),
+      ...personal.filter((connection) => direction === 'both' || connection.direction === direction),
     ];
     const byVerse = new Map<VerseIndex, Connection[]>();
     for (const connection of shown) {
       byVerse.set(connection.here, [...(byVerse.get(connection.here) ?? []), connection]);
     }
     return byVerse;
-  }, [crossReferences.index, start, end, filter, verseGenres, direction]);
+  }, [crossReferences.index, start, end, filter, verseGenres, direction, personalLinks, versification]);
 
   const spine = useMemo(
     () =>
